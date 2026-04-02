@@ -1,0 +1,66 @@
+{
+  "name": "use-digit-mask",
+  "version": "0.1.0",
+  "description": "Headless React hook for digit-only masked inputs — phone numbers, cards, dates, PINs and more",
+  "license": "ISC",
+  "author": "Vyacheslav Nesterenko (https://github.com/FranzZZz1)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FranzZZz1/use-digit-mask.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FranzZZz1/use-digit-mask/issues"
+  },
+  "homepage": "https://github.com/FranzZZz1/use-digit-mask#readme",
+  "keywords": [
+    "react",
+    "hook",
+    "mask",
+    "input",
+    "phone",
+    "masked-input",
+    "input-mask",
+    "digit-mask",
+    "phone-mask",
+    "headless"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-wizardry": "^0.1.0",
+    "react": "^19.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}
