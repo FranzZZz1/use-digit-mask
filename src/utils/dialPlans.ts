@@ -1,5 +1,5 @@
 export type AltPrefix = {
-  digits: string;
+  cc: string;
   hasPlus: boolean;
 };
 
@@ -16,7 +16,7 @@ export const MOCK_DIAL_PLANS: DialPlan[] = [
     cc: '7',
     pattern: '(###) ###-##-##',
     label: 'Russia',
-    altPrefixes: [{ digits: '8', hasPlus: false }],
+    altPrefixes: [{ cc: '8', hasPlus: false }],
   },
   { cc: '44', pattern: '#### ######', label: 'UK' },
   { cc: '49', pattern: '(###) ########', label: 'Germany' },
@@ -64,15 +64,15 @@ export function selectPhoneMask(rawDigits: string, plans: DialPlan[] = MOCK_DIAL
         : [];
 
     const alts: PhoneMaskCandidate[] = (plan.altPrefixes ?? [])
-      .filter((alt) => digits.startsWith(alt.digits) || alt.digits.startsWith(digits))
+      .filter((alt) => digits.startsWith(alt.cc) || alt.cc.startsWith(digits))
       .map((alt) => {
         const plusSign = alt.hasPlus ? '+' : '';
-        const prefix = `${plusSign}${alt.digits}`;
+        const prefix = `${plusSign}${alt.cc}`;
         return {
           cc: plan.cc,
           prefix,
           prefixDigits: extractDigits(prefix),
-          mask: `${plusSign}${'#'.repeat(alt.digits.length)} ${plan.pattern}`,
+          mask: `${plusSign}${'#'.repeat(alt.cc.length)} ${plan.pattern}`,
           label: plan.label,
         };
       });
