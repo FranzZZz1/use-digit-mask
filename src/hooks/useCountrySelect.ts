@@ -1,0 +1,257 @@
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { type DialPlan, type PhoneMaskCandidate } from '../utils/dialPlans';
+
+export type UseCountrySelectOptions = {
+  /** Full list of dial plans to display. Typically `allPlans` from `usePhoneMask`. */
+  allPlans: DialPlan[];
+  /** Called when the user picks a country. Wire to `selectPlan` from `usePhoneMask`. */
+  onSelect: (plan: DialPlan) => void;
+  /** ISO id of the currently active plan (e.g. `"RU"`). Pass `id` from `usePhoneMask`. */
+  currentId?: string | null;
+  /**
+   * Live candidates from `usePhoneMask` — prefix-matched plans that are surfaced
+   * when the user types a phone number.
+   */
+  candidates?: PhoneMaskCandidate[];
+  /**
+   * ISO ids to pin at the top of the list.
+   * Example: `['US', 'GB', 'RU']`
+   */
+  priorityIds?: string[];
+  /**
+   * Controls whether `priorityIds` are always visible at the top of the list.
+   *
+   * - `false` (default) — **dynamic mode**: when the phone input is empty, `priorityIds`
+   *   float to the top. As soon as the user starts typing, candidates take over and
+   *   `priorityIds` step aside — the list reflects only the current prefix match.
+   *
+   * - `true` — **sticky mode**: `priorityIds` are always pinned at the top regardless
+   *   of what is typed. Candidates that are not already pinned bubble to the top of
+   *   the section *below* the pinned group (just after the divider).
+   *
+   * @default false
+   */
+  stickyPins?: boolean;
+};
+
+export type UseCountrySelectResult = {
+  /** Whether the dropdown is currently open. */
+  isOpen: boolean;
+  /** Toggle the dropdown open/closed. Attach to the trigger button's `onClick`. */
+  toggle: () => void;
+  /** Close the dropdown and clear the search query. */
+  close: () => void;
+  /** Current search query string. */
+  query: string;
+  /** Update the search query. Attach to the search input's `onChange`. */
+  setQuery: (query: string) => void;
+  /** The currently selected `DialPlan`, or `undefined` if nothing is selected yet. */
+  currentPlan: DialPlan | undefined;
+  /**
+   * Sorted + filtered list of plans to render.
+   * When searching: filtered by label / dial code, no reordering.
+   * When idle: ordered according to `stickyPins` + `candidates` + `priorityIds` rules.
+   */
+  items: DialPlan[];
+  /**
+   * Index at which to insert a visual divider *before* `items[dividerAfter]`.
+   * `-1` means no divider is needed.
+   */
+  dividerAfter: number;
+  /** Attach to the root container element to enable close-on-outside-click. */
+  containerRef: RefObject<HTMLDivElement | null>;
+  /** Attach to the search `<input>` — auto-focused when the dropdown opens. */
+  searchRef: RefObject<HTMLInputElement | null>;
+  /** Select a plan: calls `onSelect` and closes the dropdown. */
+  select: (plan: DialPlan) => void;
+};
+
+function buildPlansMap(plans: DialPlan[]): Map<string, DialPlan> {
+  return new Map(plans.map((p) => [p.id ?? p.cc, p]));
+}
+
+/** Return true if `plan` matches a lowercased search query. */
+function matchesQuery(plan: DialPlan, q: string): boolean {
+  return (
+    (plan.label?.toLowerCase().includes(q) ?? false) ||
+    // "+7".includes("7") ✓  "+7".includes("+7") ✓  covers both typed forms
+    `+${plan.cc}`.includes(q)
+  );
+}
+
+/**
+ * Build the sorted item list and divider position for idle mode (no search query).
+ *
+ * `currentId` distinguishes "input is empty" (`null`) from "single plan resolved,
+ * no ambiguous candidates" (non-null). `selectPhoneMask` returns `candidates: []`
+ * in both cases, so `currentId` is the only reliable signal.
+ *
+ * Floating only happens when there are **multiple** candidates (genuine ambiguity,
+ * e.g. `+7` → RU / KZ). A single resolved plan needs no special treatment.
+ *
+ * **Dynamic mode** (`stickyPins = false`, default):
+ *   - `currentId === null` (empty input) → `priorityIds` float to the top.
+ *   - Multiple candidates → candidates float to the top; `priorityIds` are ignored.
+ *   - Single resolved plan, or no match → natural order, no grouping.
+ *
+ * **Sticky mode** (`stickyPins = true`):
+ *   - `priorityIds` are always pinned first; divider placed after them.
+ *   - Multiple candidates not already pinned bubble just below the divider.
+ *   - If there are no `priorityIds`, behaves like dynamic mode.
+ */
+function buildIdleItems(
+  allPlans: DialPlan[],
+  candidates: PhoneMaskCandidate[] | undefined,
+  currentId: string | null | undefined,
+  priorityIds: string[] | undefined,
+  plansById: Map<string, DialPlan>,
+  stickyPins: boolean,
+): { items: DialPlan[]; dividerAfter: number } {
+  // IDs of unambiguous candidates from selectPhoneMask (empty when single match).
+  const candidateIds = candidates?.length ? candidates.map((c) => c.id).filter((id) => plansById.has(id)) : [];
+
+  // Only float when there is genuine ambiguity (multiple candidates).
+  // A single resolved plan (currentId set, no candidates) needs no special treatment —
+  // the country selector button already reflects it.
+  const activeIds = candidateIds.length > 1 ? candidateIds : [];
+
+  if (stickyPins) {
+    const pinnedIds = priorityIds?.filter((id) => plansById.has(id)) ?? [];
+
+    if (pinnedIds.length) {
+      const pinnedSet = new Set(pinnedIds);
+      const pinned = pinnedIds.map((id) => plansById.get(id)!);
+
+      // Active plans not already pinned float just below the divider.
+      const floatingIds = activeIds.filter((id) => !pinnedSet.has(id));
+      const floatingSet = new Set(floatingIds);
+      const floating = floatingIds.map((id) => plansById.get(id)!);
+
+      const rest = allPlans.filter((p) => {
+        const pid = p.id ?? p.cc;
+        return !pinnedSet.has(pid) && !floatingSet.has(pid);
+      });
+
+      return { items: [...pinned, ...floating, ...rest], dividerAfter: pinned.length };
+    }
+  }
+
+  // Empty input (currentId === null): show priorityIds at top.
+  // Any input: ignore priorityIds — surface active plans instead.
+  if (currentId == null) {
+    const pinnedIds = priorityIds?.filter((id) => plansById.has(id)) ?? [];
+    if (!pinnedIds.length) return { items: allPlans, dividerAfter: -1 };
+
+    const pinnedSet = new Set(pinnedIds);
+    const pinned = pinnedIds.map((id) => plansById.get(id)!);
+    const rest = allPlans.filter((p) => !pinnedSet.has(p.id ?? p.cc));
+    return { items: [...pinned, ...rest], dividerAfter: pinned.length };
+  }
+
+  if (!activeIds.length) return { items: allPlans, dividerAfter: -1 };
+
+  const activeSet = new Set(activeIds);
+  const top = activeIds.map((id) => plansById.get(id)!);
+  const rest = allPlans.filter((p) => !activeSet.has(p.id ?? p.cc));
+
+  return { items: [...top, ...rest], dividerAfter: top.length };
+}
+
+/**
+ * Headless hook for building a country-selector dropdown that pairs with `usePhoneMask`.
+ *
+ * Handles: sorting by candidates / pinned ids, search filtering, open state,
+ * outside-click to close, Escape to close, and auto-focusing the search input.
+ *
+ * The hook returns pure data + refs — rendering is entirely up to the consumer.
+ *
+ * @example
+ * ```tsx
+ * const { isOpen, toggle, query, setQuery, items, dividerAfter,
+ *         containerRef, searchRef, select, currentPlan } = useCountrySelect({
+ *   allPlans, currentId: id, onSelect: selectPlan,
+ *   candidates, priorityIds: ['US', 'GB'], stickyPins: true,
+ * });
+ * ```
+ */
+export function useCountrySelect({
+  allPlans,
+  currentId,
+  onSelect,
+  candidates,
+  priorityIds,
+  stickyPins = false,
+}: UseCountrySelectOptions): UseCountrySelectResult {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  const plansById = useMemo(() => buildPlansMap(allPlans), [allPlans]);
+
+  const currentPlan = useMemo(() => (currentId != null ? plansById.get(currentId) : undefined), [currentId, plansById]);
+
+  const { items, dividerAfter } = useMemo(() => {
+    const q = query.trim().toLowerCase();
+
+    // Search mode: filter in natural order, no reordering.
+    if (q) {
+      return { items: allPlans.filter((p) => matchesQuery(p, q)), dividerAfter: -1 };
+    }
+
+    return buildIdleItems(allPlans, candidates, currentId, priorityIds, plansById, stickyPins);
+  }, [allPlans, candidates, currentId, plansById, priorityIds, query, stickyPins]);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setQuery('');
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    searchRef.current?.focus();
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) close();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [close, isOpen]);
+
+  const toggle = useCallback(() => {
+    setIsOpen((v) => !v);
+  }, []);
+
+  const select = useCallback(
+    (plan: DialPlan) => {
+      onSelect(plan);
+      close();
+    },
+    [close, onSelect],
+  );
+
+  return {
+    isOpen,
+    toggle,
+    close,
+    query,
+    setQuery,
+    currentPlan,
+    items,
+    dividerAfter,
+    containerRef,
+    searchRef,
+    select,
+  };
+}

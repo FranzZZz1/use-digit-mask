@@ -1,6 +1,6 @@
 {
   "name": "use-digit-mask",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Headless React hook for digit-only masked inputs — phone numbers, cards, dates, PINs and more",
   "license": "ISC",
   "author": "Vyacheslav Nesterenko (https://github.com/FranzZZz1)",
@@ -48,19 +48,48 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint src/",
+    "lint:styles": "stylelint \"src/demo/**/*.scss\"",
     "typecheck": "tsc --noEmit",
+    "typecheck:demo": "tsc --project tsconfig.demo.json",
+    "demo:dev": "vite --config vite.config.demo.ts",
+    "demo:build": "vite build --config vite.config.demo.ts",
+    "demo:preview": "vite preview --config vite.config.demo.ts",
+    "prepare": "husky",
     "prepublishOnly": "npm run build"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": "eslint --fix",
+    "src/demo/**/*.scss": "stylelint --fix"
   },
   "peerDependencies": {
     "react": ">=17.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "clsx": "^2.1.1",
     "eslint": "^9.0.0",
     "eslint-config-wizardry": "^0.1.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.8.3",
     "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "sass": "^1.0.0",
+    "shiki": "^4.0.2",
+    "stylelint": "16.12.0",
+    "stylelint-config-clean-order": "6.1.0",
+    "stylelint-config-standard-scss": "14.0.0",
+    "stylelint-no-unsupported-browser-features": "8.1.1",
+    "stylelint-order": "6.0.4",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vite": "^6.0.0",
+    "vite-plugin-readable-classnames": "^1.5.9",
+    "vite-plugin-svgr": "^5.2.0"
   }
 }

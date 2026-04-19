@@ -326,7 +326,7 @@ export function useMask({
 
       const completedByLength = rawWithoutPrefix.length === maskMeta.maxDigits;
       const completedByPlaceholder = hasPlaceholderChar
-        ? !formattedWithPrefix.includes(placeholderChar)
+        ? formattedWithPrefix.length > 0 && !formattedWithPrefix.includes(placeholderChar)
         : completedByLength;
 
       const isMaskCompleted = trimMaskTail ? completedByLength : completedByPlaceholder;

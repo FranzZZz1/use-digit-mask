@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type DialPlan, MOCK_DIAL_PLANS, type PhoneMaskCandidate, selectPhoneMask } from '../utils/dialPlans';
+import {
+  DEFAULT_DIAL_PLANS,
+  type DialPlan,
+  E164_MASK,
+  type PhoneMaskCandidate,
+  selectPhoneMask,
+} from '../utils/dialPlans';
+import { formatDigitsWithMask } from '../utils/formatDigitsWithMask';
 
 import { type ParsedValues, useMask } from './useMask';
 
@@ -13,35 +20,91 @@ export type UsePhoneMaskProps = {
   trimMaskTail?: boolean;
 };
 
+type ResolvedPlan = {
+  mask: string;
+  cc: string | null;
+  id: string | null;
+  prefix: string;
+  /** Digit-only portion of `prefix`. Derived once, used in multiple places. */
+  prefixDigits: string;
+  candidates: PhoneMaskCandidate[];
+};
+
 const extractDigits = (str: string) => str.replace(/\D/g, '');
+
+const EMPTY_PLAN: ResolvedPlan = {
+  mask: E164_MASK,
+  cc: null,
+  id: null,
+  prefix: '',
+  prefixDigits: '',
+  candidates: [],
+};
+
+/**
+ * Pure resolver — the single source of truth for mask/prefix derivation.
+ * Called both during render (useMemo) and inside onChange to avoid stale closures.
+ */
+function resolvePlan(digits: string, plans: DialPlan[], forcedId: string | null): ResolvedPlan {
+  if (!digits) return EMPTY_PLAN;
+
+  const result = selectPhoneMask(digits, plans);
+
+  if (forcedId) {
+    const forced = result.candidates.find((c) => c.id === forcedId);
+    if (forced) return { ...forced, candidates: result.candidates };
+  }
+
+  return { ...result, prefixDigits: extractDigits(result.prefix) };
+}
+
+/**
+ * Builds ParsedValues for a candidate switch (selectCandidate / selectPlan).
+ * Uses only the data we already have — no useMask api dependency.
+ */
+function buildCandidateParsedValues(
+  candidate: PhoneMaskCandidate,
+  nextDigits: string,
+  body: string,
+  nextFormatted: string,
+): ParsedValues {
+  const totalSlots = (candidate.mask.match(/#/g) ?? []).length;
+
+  let lastDigitIdx = -1;
+  for (let i = 0; i < nextFormatted.length; i += 1) {
+    if (/\d/.test(nextFormatted[i])) lastDigitIdx = i;
+  }
+
+  return {
+    prefix: candidate.prefix,
+    rawWithPrefix: nextDigits,
+    rawWithoutPrefix: body,
+    formattedWithPrefix: nextFormatted,
+    formattedWithoutPrefix: nextFormatted.slice(candidate.prefix.length).replace(/^\s+/, ''),
+    formattedWithoutPlaceholderChars: lastDigitIdx >= 0 ? nextFormatted.slice(0, lastDigitIdx + 1) : candidate.prefix,
+    isMaskCompleted: nextDigits.length >= totalSlots,
+  };
+}
 
 export function usePhoneMask({
   value,
   defaultValue = '',
   onChange,
   placeholderChar = '_',
-  dialPlans = MOCK_DIAL_PLANS,
+  dialPlans = DEFAULT_DIAL_PLANS,
   trimMaskTail = false,
 }: UsePhoneMaskProps) {
   const isControlled = value != null;
   const [localValue, setLocalValue] = useState(defaultValue);
-  const [forcedCC, setForcedCC] = useState<string | null>(null);
+  const [forcedId, setForcedId] = useState<string | null>(null);
 
   const sourceValue = isControlled ? value : localValue;
-  const digits = useMemo(() => sourceValue.replace(/\D/g, ''), [sourceValue]);
+  const digits = useMemo(() => extractDigits(sourceValue), [sourceValue]);
 
-  const { mask, cc, prefix, candidates } = useMemo(() => {
-    const result = selectPhoneMask(digits, dialPlans);
-
-    if (forcedCC) {
-      const forced = result.candidates.find((c) => c.cc === forcedCC);
-      if (forced) return { ...forced, candidates: result.candidates };
-    }
-
-    return result;
-  }, [digits, dialPlans, forcedCC]);
-
-  const prefixDigits = useMemo(() => extractDigits(prefix), [prefix]);
+  const { mask, cc, id, prefix, prefixDigits, candidates } = useMemo(
+    () => resolvePlan(digits, dialPlans, forcedId),
+    [digits, dialPlans, forcedId],
+  );
 
   const { props, api } = useMask({
     mask,
@@ -49,48 +112,65 @@ export function usePhoneMask({
     placeholderChar,
     trimMaskTail,
     onChange: (next, parsed) => {
+      // `prefix`/`prefixDigits` from the closure reflect the *previous* render.
+      // Re-resolve from the new digits so ParsedValues are always current.
       const rawDigits = extractDigits(parsed.rawWithPrefix);
+      const fresh = resolvePlan(rawDigits, dialPlans, forcedId);
 
-      const enriched: ParsedValues = {
-        ...parsed,
-        prefix,
-        rawWithoutPrefix: rawDigits.startsWith(prefixDigits) ? rawDigits.slice(prefixDigits.length) : rawDigits,
-      };
       if (!isControlled) setLocalValue(next);
-      onChange?.(next, enriched);
+      onChange?.(next, {
+        ...parsed,
+        prefix: fresh.prefix,
+        rawWithoutPrefix: rawDigits.startsWith(fresh.prefixDigits)
+          ? rawDigits.slice(fresh.prefixDigits.length)
+          : rawDigits,
+      });
     },
   });
 
   const selectCandidate = useCallback(
     (candidate: PhoneMaskCandidate) => {
-      setForcedCC(candidate.cc);
+      setForcedId(candidate.id);
 
-      const currentDigits = extractDigits(isControlled ? value : localValue);
-      const oldPrefixDigits = prefixDigits;
-      const newPrefixDigits = candidate.prefixDigits;
+      const currentDigits = extractDigits(value ?? localValue);
 
-      let nextDigits: string;
-
-      if (candidate.cc === cc) {
-        const body = currentDigits.startsWith(oldPrefixDigits)
-          ? currentDigits.slice(oldPrefixDigits.length)
-          : currentDigits;
-        nextDigits = newPrefixDigits + body;
+      // Preserve the body digits; swap only the prefix.
+      let body: string;
+      if (currentDigits.startsWith(candidate.prefixDigits)) {
+        body = currentDigits.slice(candidate.prefixDigits.length);
+      } else if (currentDigits.startsWith(prefixDigits)) {
+        body = currentDigits.slice(prefixDigits.length);
       } else {
-        nextDigits = currentDigits;
+        body = currentDigits;
       }
 
-      const { text: nextFormatted } = api.formatDigits(nextDigits);
+      const nextDigits = candidate.prefixDigits + body;
+      const nextFormatted = formatDigitsWithMask(nextDigits, candidate.mask, placeholderChar);
 
       if (!isControlled) setLocalValue(nextFormatted);
-      onChange?.(nextFormatted, api.getParsedValues(nextFormatted));
+      onChange?.(nextFormatted, buildCandidateParsedValues(candidate, nextDigits, body, nextFormatted));
     },
-    [api, cc, isControlled, localValue, onChange, prefixDigits, value],
+    [isControlled, localValue, onChange, placeholderChar, prefixDigits, value],
+  );
+
+  const selectPlan = useCallback(
+    (plan: DialPlan) => {
+      const hasPlus = plan.hasPlus !== false;
+      selectCandidate({
+        id: plan.id ?? plan.cc,
+        cc: plan.cc,
+        prefix: hasPlus ? `+${plan.cc}` : plan.cc,
+        prefixDigits: plan.cc,
+        mask: `${hasPlus ? '+' : ''}${'#'.repeat(plan.cc.length)} ${plan.pattern}`,
+        label: plan.label,
+      });
+    },
+    [selectCandidate],
   );
 
   useEffect(() => {
-    if (digits.length === 0) setForcedCC(null);
+    if (digits.length === 0) setForcedId(null);
   }, [digits, dialPlans]);
 
-  return { props, api, mask, cc, prefix, candidates, selectCandidate } as const;
+  return { props, api, mask, cc, id, prefix, candidates, allPlans: dialPlans, selectCandidate, selectPlan } as const;
 }
