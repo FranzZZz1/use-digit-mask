@@ -3,8 +3,8 @@ import tseslint from 'typescript-eslint';
 
 const config = [
   ...tseslint.config(...wizardryConfig),
+  { ignores: ['dist/', 'dist-demo/', '**/*.config.ts', '**/*.config.mts', '**/*.config.js'] },
   {
-    ignores: ['dist/', 'dist-demo/'],
     rules: {
       '@typescript-eslint/dot-notation': 'off',
       // eslint-config-wizardry bundles its own @typescript-eslint version that

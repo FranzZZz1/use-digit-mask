@@ -1,0 +1,23 @@
+{
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "proseWrap": "always",
+  "tabWidth": 2,
+  "printWidth": 120,
+  "endOfLine": "lf",
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": false,
+  "overrides": [
+    {
+      "files": "*.svg",
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}

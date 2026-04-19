@@ -1,0 +1,71 @@
+{
+  "extends": ["stylelint-config-standard-scss", "stylelint-config-clean-order/error"],
+  "plugins": ["stylelint-order", "stylelint-no-unsupported-browser-features"],
+  "rules": {
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "media-feature-range-notation": "prefix",
+    "selector-class-pattern": [
+      "^([a-z][a-z0-9]*)((__|_|-|--)[a-z0-9]+)*$",
+      {
+        "message": "Expected class selector in BEM convention"
+      }
+    ],
+    "plugin/no-unsupported-browser-features": [
+      true,
+      {
+        "severity": "error",
+        "ignore": [
+          "css-touch-action",
+          "text-size-adjust",
+          "css-math-functions",
+          "css-nesting",
+          "css-when-else",
+          "css3-cursors",
+          "pointer"
+        ],
+        "ignorePartialSupport": true
+      }
+    ],
+    "declaration-block-no-redundant-longhand-properties": [
+      true,
+      {
+        "ignoreShorthands": ["inset"]
+      }
+    ],
+    "at-rule-empty-line-before": [
+      "always",
+      {
+        "except": ["first-nested", "blockless-after-blockless"],
+        "ignore": ["after-comment"],
+        "ignoreAtRules": ["else"]
+      }
+    ],
+    "rule-empty-line-before": [
+      "always",
+      {
+        "except": ["first-nested"],
+        "ignore": ["after-comment"]
+      }
+    ],
+    "order/order": [
+      "custom-properties",
+      "dollar-variables",
+      {
+        "type": "at-rule",
+        "name": "extend"
+      },
+      "declarations",
+      {
+        "type": "at-rule",
+        "name": "include",
+        "parameter": "media"
+      },
+      "rules"
+    ]
+  }
+}

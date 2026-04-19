@@ -1,0 +1,45 @@
+@use '../../styles/mixins' as *;
+
+.header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+
+  height: var(--header-height);
+
+  background: rgb(9 9 9 / 80%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inner {
+  @include container;
+  @include flex(row, center, space-between);
+
+  height: 100%;
+}
+
+.logo {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.nav {
+  @include flex(row, center, flex-end);
+
+  gap: var(--space-4);
+}
+
+.link {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+
+  &:hover {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+}

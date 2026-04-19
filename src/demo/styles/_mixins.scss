@@ -1,0 +1,12 @@
+@mixin container {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+@mixin flex($dir: row, $align: center, $justify: flex-start) {
+  display: flex;
+  flex-direction: $dir;
+  align-items: $align;
+  justify-content: $justify;
+}
