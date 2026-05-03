@@ -1,0 +1,82 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+
+  &__title {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    margin-left: auto;
+  }
+
+  &__badge {
+    padding: 2px var(--space-2);
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+
+    background: rgb(255 255 255 / 5%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  &__copy {
+    cursor: pointer;
+
+    padding: var(--space-1) var(--space-2);
+
+    @include tg(xs);
+
+    color: var(--color-text-secondary);
+
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+
+    transition:
+      color var(--transition),
+      border-color var(--transition);
+
+    @include hover {
+      color: var(--color-text);
+      border-color: var(--color-border-focus);
+    }
+  }
+
+  &__close {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    @include tg(sm);
+
+    color: var(--color-text-muted);
+
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+
+    transition: color var(--transition);
+
+    @include hover {
+      color: var(--color-text);
+    }
+  }
+}

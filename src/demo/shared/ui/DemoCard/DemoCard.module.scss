@@ -1,0 +1,147 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.card {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+
+  padding: var(--space-6);
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+
+  &__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--space-2);
+    align-items: center;
+    order: 2;
+
+    margin-left: auto;
+  }
+}
+
+.title {
+  flex-shrink: 0;
+  order: 1;
+  color: var(--color-text);
+
+  @include tg(base, sb);
+}
+
+.description {
+  flex-basis: 100%;
+  order: 0;
+
+  @include tg(xs, r, mono);
+
+  color: var(--color-text-muted);
+}
+
+.variants {
+  display: flex;
+  gap: var(--space-1);
+
+  &__select {
+    display: none;
+  }
+}
+
+@container (max-width: 360px) {
+  .variants {
+    display: none;
+
+    &__select {
+      display: block;
+    }
+  }
+}
+
+.variant__btn {
+  cursor: pointer;
+
+  padding: var(--space-1) var(--space-2);
+
+  color: var(--color-text-muted);
+  white-space: nowrap;
+
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+
+  @include tg(xs, r, mono);
+
+  &:not(&--active) {
+    @include hover {
+      color: var(--color-text-secondary);
+      border-color: var(--color-text-muted);
+    }
+  }
+
+  &--active {
+    color: var(--color-accent);
+    background: rgb(99 102 241 / 8%);
+    border-color: var(--color-accent);
+  }
+}
+
+.code__btn {
+  cursor: pointer;
+
+  flex-shrink: 0;
+
+  padding: var(--space-1) var(--space-2);
+
+  @include tg(xs, sb, mono);
+
+  color: var(--color-text-muted);
+  letter-spacing: -0.02em;
+
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+
+  @include hover {
+    color: var(--color-accent-hover);
+    background: rgb(99 102 241 / 8%);
+    border-color: var(--color-accent);
+  }
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &__badge {
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-muted);
+    letter-spacing: 0.01em;
+
+    &::before {
+      content: '↳ ';
+      opacity: 0.5;
+    }
+  }
+}

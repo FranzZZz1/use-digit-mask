@@ -1,0 +1,86 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.doc {
+  max-width: var(--docs-max-width);
+  margin-inline: auto;
+
+  &__title {
+    margin-bottom: var(--space-3);
+
+    @include tg(3xl, b, mono);
+
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+
+    @include screen-size(mobile) {
+      @include tg(2xl, b, mono);
+    }
+  }
+
+  &__lead {
+    margin-bottom: var(--space-10);
+
+    @include tg(base);
+
+    color: var(--color-text-secondary);
+
+    & .doc__code {
+      @include tg(sm, r, mono);
+    }
+  }
+
+  &__section {
+    scroll-margin-top: calc(var(--sticky-top, var(--header-height)) + 24px);
+    margin-bottom: var(--space-12);
+  }
+
+  &__heading {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+
+    @include tg(xl, sb);
+
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__subheading {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-3);
+
+    @include tg(base, sb);
+
+    color: var(--color-text);
+  }
+
+  &__text {
+    margin-bottom: var(--space-4);
+
+    @include tg(sm);
+
+    line-height: 24px;
+    color: var(--color-text-secondary);
+  }
+
+  &__link {
+    color: var(--color-accent);
+    text-decoration: none;
+
+    @include hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__code {
+    padding: 2px 6px;
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+}

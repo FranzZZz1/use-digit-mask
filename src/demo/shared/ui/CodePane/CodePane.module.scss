@@ -1,0 +1,82 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.pane {
+  display: flex;
+  min-height: 100%;
+
+  &__gutter,
+  &__code {
+    @include tg(sm, r, mono);
+
+    line-height: 1.7;
+
+    @include screen-size(tablet-small) {
+      @include tg(xs, r, mono);
+    }
+  }
+
+  &__gutter {
+    user-select: none;
+
+    position: sticky;
+    z-index: 1;
+    left: 0;
+
+    flex: none;
+
+    padding: var(--space-4) 0;
+
+
+    color: var(--color-text-muted);
+    text-align: right;
+
+    background: var(--code-background);
+    border-right: 1px solid var(--color-border);
+  }
+
+  &__gutter-num {
+    display: block;
+    padding: 0 var(--space-3);
+  }
+
+  &__code {
+    flex: 1;
+    min-width: 0;
+
+    :global(pre) {
+      margin: 0;
+      padding: var(--space-4);
+      tab-size: 2;
+      white-space: pre;
+    }
+  }
+
+  &__spinner-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 80px;
+    padding: var(--space-6);
+  }
+
+  &__spinner {
+    display: block;
+
+    width: 24px;
+    height: 24px;
+
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-text-muted);
+    border-radius: 50%;
+
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,100 @@
+@use "sass:meta";
+@use "sass:map";
+
+@mixin typography-apply($size, $height, $weight, $family) {
+  font-family: $family;
+  font-size: $size;
+  font-weight: $weight;
+  line-height: $height;
+}
+
+// Размеры текста (font-size и line-height)
+$font-sizes: (
+  xxs: (
+    size: 10px,
+    height: 12px
+  ),
+  xs: (
+    size: 12px,
+    height: 16px
+  ),
+  sm: (
+    size: 14px,
+    height: 20px
+  ),
+  base: (
+    size: 16px,
+    height: 22px
+  ),
+  lg: (
+    size: 18px,
+    height: 24px
+  ),
+  xl: (
+    size: 20px,
+    height: 28px
+  ),
+  2xl: (
+    size: 24px,
+    height: 30px
+  ),
+  3xl: (
+    size: 30px,
+    height: 30px
+  ),
+  4xl: (
+    size: 36px,
+    height: 36px
+  ),
+  5xl: (
+    size: 48px,
+    height: 48px
+  ),
+  6xl: (
+    size: 60px,
+    height: 60px
+  ),
+  7xl: (
+    size: 72px,
+    height: 72px
+  ),
+  8xl: (
+    size: 96px,
+    height: 96px
+  ),
+  9xl: (
+    size: 128px,
+    height: 128px
+  ),
+);
+
+// Ширина текста
+$font-weights: (
+  t: 300,
+  r: 400,
+  m: 500,
+  sb: 600,
+  b: 700,
+);
+
+// Шрифты
+$font-families: (
+  sans: var(--font-sans),
+  mono: var(--font-mono),
+);
+
+// Миксин типографии
+@mixin tg($size-key: base, $weight-key: r, $family-key: sans) {
+  $size: map.get($font-sizes, $size-key);
+  $font-size: map.get($size, size);
+  $height: map.get($size, height);
+  $weight: map.get($font-weights, $weight-key);
+  $family: map.get($font-families, $family-key);
+
+  @if not $size { @error "Unknown size: #{$size-key}"; }
+
+  @if not $weight-key { @error "Unknown text width: #{$weight-key}"; }
+
+  @include typography-apply($font-size, $height, $weight, $family);
+}
+

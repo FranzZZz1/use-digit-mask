@@ -1,0 +1,77 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.input {
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+
+    &--select {
+      flex-direction: row;
+      gap: 0;
+      align-items: stretch;
+    }
+  }
+
+  &--attached {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+
+    &:focus {
+      border-color: var(--color-border-focus);
+    }
+  }
+}
+
+.candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.candidate {
+  cursor: pointer;
+
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+
+  padding: var(--space-1) var(--space-3);
+
+  @include tg(sm);
+
+  color: var(--color-text-secondary);
+
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  transition:
+    border-color var(--transition),
+    color var(--transition);
+
+  @include hover {
+    color: var(--color-text);
+    border-color: var(--color-accent);
+  }
+
+  &__prefix {
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-muted);
+  }
+}
+
+.active {
+  color: var(--color-accent-hover);
+  background: rgb(99 102 241 / 10%);
+  border-color: var(--color-accent);
+}
+
+

@@ -1,0 +1,23 @@
+@use 'styles/typography' as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.input {
+  &__wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+
+.mask__hint {
+  @include tg(xs, r, mono);
+
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+

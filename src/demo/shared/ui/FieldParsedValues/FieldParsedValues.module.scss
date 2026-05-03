@@ -1,0 +1,43 @@
+@use 'styles/typography' as *;
+
+.parsed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  padding: var(--space-3) var(--space-4);
+
+  background: rgb(0 0 0 / 30%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+
+  dt {
+    flex-shrink: 0;
+
+    @include tg(xs);
+
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    overflow: hidden;
+
+    @include tg(xs);
+
+    color: var(--color-text-secondary);
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.mono {
+  @include tg(xs, r, mono);
+}

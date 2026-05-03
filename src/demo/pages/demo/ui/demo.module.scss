@@ -1,0 +1,136 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  @include container;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-16);
+
+  width: 100%;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-16);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+
+  text-align: center;
+
+  &__title {
+    font-family: var(--font-mono);
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+  }
+
+  &__desc {
+    max-width: 480px;
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+  }
+}
+
+.install {
+  user-select: all;
+
+  display: inline-block;
+
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+
+  @include tg(sm, r, mono);
+
+  color: var(--color-text-secondary);
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.section {
+  scroll-margin-top: calc(var(--header-height) + var(--space-8));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+
+  &__header {
+    display: flex;
+    gap: var(--space-4);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  &__title {
+    @include tg(2xl, sb, mono);
+
+    color: var(--color-text);
+
+    &::before {
+      content: '// ';
+      font-weight: 400;
+      color: var(--color-text-muted);
+    }
+
+    @include screen-size(tablet-small) {
+      @include tg(base, sb, mono);
+    }
+  }
+
+  &__docs {
+    flex-shrink: 0;
+
+    @include tg(sm);
+
+    color: var(--color-text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: color var(--transition);
+
+    @include hover {
+      color: var(--color-text);
+    }
+  }
+
+  &__desc {
+    margin-top: calc(-1 * var(--space-3));
+
+    @include tg(sm);
+
+    color: var(--color-text-secondary);
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+
+  @include screen-size(mobile) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+.footer {
+  padding: var(--space-8);
+
+  @include tg(sm);
+
+  color: var(--color-text-muted);
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}

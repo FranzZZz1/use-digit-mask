@@ -1,0 +1,136 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+@keyframes banner-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes banner-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.banner {
+  position: fixed;
+  z-index: 40;
+  top: calc(var(--header-height));
+
+  overflow: hidden;
+
+  width: 100%;
+  height: var(--banner-height);
+
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+
+  animation: banner-in 200ms ease forwards;
+
+  &--closing {
+    pointer-events: none;
+    animation: banner-out 200ms ease forwards;
+  }
+
+  &__inner {
+    @include container;
+    @include flex(row, center, space-between);
+
+    height: 100%;
+  }
+
+  &__back,
+  &__section,
+  &__hook {
+    transition: color var(--transition);
+  }
+
+  &__back {
+    @include flex(row, center, flex-start);
+
+    cursor: pointer;
+
+    gap: var(--space-1);
+
+    padding: 0;
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-secondary);
+
+    background: none;
+    border: none;
+
+    @include hover {
+      color: var(--color-text);
+
+      .banner__section {
+        color: var(--color-accent-hover);
+      }
+    }
+
+    @include screen-size(tablet) {
+      overflow: hidden;
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__back-label {
+    @include screen-size(tablet) {
+      overflow: hidden;
+      display: block;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__section {
+    color: var(--color-accent);
+  }
+
+  &__sep {
+    color: var(--color-text-muted);
+  }
+
+  &__hook {
+    color: var(--color-text-secondary);
+  }
+
+  &__dismiss {
+    @include flex(row, center, center);
+
+    cursor: pointer;
+
+    width: 20px;
+    height: 20px;
+    padding: 0;
+
+    @include tg(sm);
+
+    line-height: 1;
+    color: var(--color-text-muted);
+
+    background: none;
+    border: none;
+
+    transition: color var(--transition);
+
+    @include hover {
+      color: var(--color-text-secondary);
+    }
+  }
+}

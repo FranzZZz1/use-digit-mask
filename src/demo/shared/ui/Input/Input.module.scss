@@ -1,0 +1,27 @@
+@use 'styles/typography' as *;
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+
+  @include tg(base, r, mono);
+
+  color: var(--color-text);
+
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  transition: border-color var(--transition);
+
+  &:focus {
+    border-color: var(--color-border-focus);
+    outline: none;
+  }
+
+  &::placeholder {
+    @include tg(sm);
+
+    color: var(--color-text-muted);
+  }
+}

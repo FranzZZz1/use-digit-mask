@@ -16,6 +16,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src/demo'),
       'use-digit-mask': path.resolve(__dirname, 'src/index.ts'),
+      styles: path.resolve(__dirname, 'src/demo/app/styles'),
     },
   },
   server: {

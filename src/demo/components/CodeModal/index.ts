@@ -1,1 +1,0 @@
-export { CodeModal } from './CodeModal';
