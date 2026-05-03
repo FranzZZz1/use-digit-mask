@@ -1,4 +1,7 @@
+import { extractDigits } from '../extractDigits';
+
 import { DEFAULT_DIAL_PLANS } from './defaultPlans';
+import { dialPlanToCandidate } from './dialPlanToCandidate';
 import { type DialPlan, type PhoneMaskCandidate, type PhoneMaskResult } from './types';
 
 export const E164_MASK = '+###############';
@@ -11,30 +14,15 @@ const FALLBACK: PhoneMaskResult = {
   candidates: [],
 };
 
-const extractDigits = (str: string) => str.replace(/\D/g, '');
-
 export function selectPhoneMask(rawDigits: string, plans: DialPlan[] = DEFAULT_DIAL_PLANS): PhoneMaskResult {
   const digits = extractDigits(rawDigits);
   if (!digits) return FALLBACK;
 
   const candidates: PhoneMaskCandidate[] = plans.flatMap((plan) => {
     const planId = plan.id ?? plan.cc;
-    const hasPlus = plan.hasPlus !== false;
-    const mainPrefix = hasPlus ? `+${plan.cc}` : plan.cc;
 
     const main: PhoneMaskCandidate[] =
-      digits.startsWith(plan.cc) || plan.cc.startsWith(digits)
-        ? [
-            {
-              id: planId,
-              cc: plan.cc,
-              prefix: mainPrefix,
-              prefixDigits: plan.cc,
-              mask: `${hasPlus ? '+' : ''}${'#'.repeat(plan.cc.length)} ${plan.pattern}`,
-              label: plan.label,
-            },
-          ]
-        : [];
+      digits.startsWith(plan.cc) || plan.cc.startsWith(digits) ? [dialPlanToCandidate(plan)] : [];
 
     const alts: PhoneMaskCandidate[] = (plan.altPrefixes ?? [])
       .map((altPrefix) => {

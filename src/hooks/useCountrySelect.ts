@@ -1,4 +1,5 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { type DialPlan, type PhoneMaskCandidate } from '../utils/dialPlans';
 
@@ -33,6 +34,29 @@ export type UseCountrySelectOptions = {
    * @default false
    */
   stickyPins?: boolean;
+  /**
+   * Ref to the phone input element. When provided, focus is automatically
+   * returned to the input after the user selects a country from the dropdown.
+   */
+  inputRef?: RefObject<HTMLInputElement | null>;
+  /**
+   * When `true`, items are returned in the natural order of `allPlans` —
+   * no floating of candidates or `priorityIds`. Search-based filtering still applies.
+   *
+   * Useful when you manage ordering externally (server-side sort, custom comparator, etc.).
+   *
+   * @default false
+   */
+  disableSort?: boolean;
+  /**
+   * When `true`, the hook skips its built-in outside-click and Escape-key listeners
+   * as well as the auto-focus of `searchRef`.
+   * Use this when integrating with a component library (e.g. Radix UI) that manages
+   * those interactions on its own.
+   *
+   * @default false
+   */
+  noInternalListeners?: boolean;
 };
 
 export type UseCountrySelectResult = {
@@ -73,11 +97,7 @@ function buildPlansMap(plans: DialPlan[]): Map<string, DialPlan> {
 
 /** Return true if `plan` matches a lowercased search query. */
 function matchesQuery(plan: DialPlan, q: string): boolean {
-  return (
-    (plan.label?.toLowerCase().includes(q) ?? false) ||
-    // "+7".includes("7") ✓  "+7".includes("+7") ✓  covers both typed forms
-    `+${plan.cc}`.includes(q)
-  );
+  return (plan.label?.toLowerCase().includes(q) ?? false) || `+${plan.cc}`.includes(q);
 }
 
 /**
@@ -112,8 +132,6 @@ function buildIdleItems(
   const candidateIds = candidates?.length ? candidates.map((c) => c.id).filter((id) => plansById.has(id)) : [];
 
   // Only float when there is genuine ambiguity (multiple candidates).
-  // A single resolved plan (currentId set, no candidates) needs no special treatment —
-  // the country selector button already reflects it.
   const activeIds = candidateIds.length > 1 ? candidateIds : [];
 
   if (stickyPins) {
@@ -137,7 +155,7 @@ function buildIdleItems(
     }
   }
 
-  // Empty input (currentId === null): show priorityIds at top.
+  // Empty input: show priorityIds at top.
   // Any input: ignore priorityIds — surface active plans instead.
   if (currentId == null) {
     const pinnedIds = priorityIds?.filter((id) => plansById.has(id)) ?? [];
@@ -182,9 +200,17 @@ export function useCountrySelect({
   candidates,
   priorityIds,
   stickyPins = false,
+  inputRef,
+  disableSort = false,
+  noInternalListeners = false,
 }: UseCountrySelectOptions): UseCountrySelectResult {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -201,8 +227,13 @@ export function useCountrySelect({
       return { items: allPlans.filter((p) => matchesQuery(p, q)), dividerAfter: -1 };
     }
 
+    // Natural order: skip all sorting / floating logic.
+    if (disableSort) {
+      return { items: allPlans, dividerAfter: -1 };
+    }
+
     return buildIdleItems(allPlans, candidates, currentId, priorityIds, plansById, stickyPins);
-  }, [allPlans, candidates, currentId, plansById, priorityIds, query, stickyPins]);
+  }, [allPlans, candidates, currentId, disableSort, plansById, priorityIds, query, stickyPins]);
 
   const close = useCallback(() => {
     setIsOpen(false);
@@ -210,7 +241,7 @@ export function useCountrySelect({
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return undefined;
+    if (!isOpen || noInternalListeners) return undefined;
 
     searchRef.current?.focus();
 
@@ -227,7 +258,7 @@ export function useCountrySelect({
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [close, isOpen]);
+  }, [close, isOpen, noInternalListeners]);
 
   const toggle = useCallback(() => {
     setIsOpen((v) => !v);
@@ -235,10 +266,18 @@ export function useCountrySelect({
 
   const select = useCallback(
     (plan: DialPlan) => {
-      onSelect(plan);
-      close();
+      onSelectRef.current(plan);
+
+      // flushSync forces React to flush the setState from close() synchronously
+      // so the dropdown is removed from the DOM before focus() is called —
+      // otherwise the browser moves focus to body and the input never receives it.
+      flushSync(() => {
+        close();
+      });
+
+      inputRef?.current?.focus();
     },
-    [close, onSelect],
+    [close, inputRef],
   );
 
   return {

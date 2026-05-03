@@ -43,5 +43,12 @@ export type PhoneMaskResult = {
   cc: string | null;
   id: string | null;
   prefix: string;
+  /**
+   * Ambiguous candidates sharing the same prefix (e.g. `+7` → Russia / Kazakhstan).
+   *
+   * **Invariant**: always either empty (`[]`) or contains ≥ 2 items.
+   * The array is never exactly length 1.
+   * Use `candidates.length > 0` to check for ambiguity — safe.
+   */
   candidates: PhoneMaskCandidate[];
 };

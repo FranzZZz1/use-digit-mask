@@ -1,6 +1,6 @@
 {
   "name": "use-digit-mask",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Headless React hook for digit-only masked inputs — phone numbers, cards, dates, PINs and more",
   "license": "ISC",
   "author": "Vyacheslav Nesterenko (https://github.com/FranzZZz1)",
@@ -54,8 +54,13 @@
     "demo:dev": "vite --config vite.config.demo.ts",
     "demo:build": "vite build --config vite.config.demo.ts",
     "demo:preview": "vite preview --config vite.config.demo.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "steiger": "steiger ./src/demo",
+    "check": "tsc --noEmit && eslint src --fix --cache && stylelint **/*.scss --fix --cache && steiger ./src"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": "eslint --fix",
@@ -64,15 +69,26 @@
   "peerDependencies": {
     "react": ">=17.0.0"
   },
+  "overrides": {
+    "typescript-eslint": "^8.0.0"
+  },
   "devDependencies": {
+    "@feature-sliced/steiger-plugin": "^0.5.7",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "clsx": "^2.1.1",
     "eslint": "^9.0.0",
     "eslint-config-wizardry": "^0.1.0",
+    "happy-dom": "^20.9.0",
     "husky": "^9.0.0",
+    "jsdom": "^27.0.1",
     "lint-staged": "^15.0.0",
     "prettier": "^3.8.3",
     "react": "^19.0.0",
@@ -80,6 +96,7 @@
     "react-router-dom": "^7.0.0",
     "sass": "^1.0.0",
     "shiki": "^4.0.2",
+    "steiger": "^0.5.11",
     "stylelint": "16.12.0",
     "stylelint-config-clean-order": "6.1.0",
     "stylelint-config-standard-scss": "14.0.0",
@@ -90,6 +107,11 @@
     "typescript-eslint": "^8.0.0",
     "vite": "^6.0.0",
     "vite-plugin-readable-classnames": "^1.5.9",
-    "vite-plugin-svgr": "^5.2.0"
+    "vite-plugin-svgr": "^5.2.0",
+    "vitest": "^4.1.5",
+    "zustand": "^5.0.12"
+  },
+  "dependencies": {
+    "@radix-ui/react-select": "^2.2.6"
   }
 }

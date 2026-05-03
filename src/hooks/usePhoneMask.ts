@@ -3,21 +3,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DEFAULT_DIAL_PLANS,
   type DialPlan,
+  dialPlanToCandidate,
   E164_MASK,
   type PhoneMaskCandidate,
   selectPhoneMask,
 } from '../utils/dialPlans';
+import { extractDigits } from '../utils/extractDigits';
 import { formatDigitsWithMask } from '../utils/formatDigitsWithMask';
 
-import { type ParsedValues, useMask } from './useMask';
+import { type ParsedValues, useMask, type UseMaskProps } from './useMask';
 
-export type UsePhoneMaskProps = {
+export type UsePhoneMaskProps = Omit<UseMaskProps, 'value' | 'mask'> & {
   value?: string;
   defaultValue?: string;
-  onChange?: (value: string, parsed: ParsedValues) => void;
-  placeholderChar?: string;
   dialPlans?: DialPlan[];
-  trimMaskTail?: boolean;
 };
 
 type ResolvedPlan = {
@@ -25,12 +24,9 @@ type ResolvedPlan = {
   cc: string | null;
   id: string | null;
   prefix: string;
-  /** Digit-only portion of `prefix`. Derived once, used in multiple places. */
   prefixDigits: string;
   candidates: PhoneMaskCandidate[];
 };
-
-const extractDigits = (str: string) => str.replace(/\D/g, '');
 
 const EMPTY_PLAN: ResolvedPlan = {
   mask: E164_MASK,
@@ -93,6 +89,7 @@ export function usePhoneMask({
   placeholderChar = '_',
   dialPlans = DEFAULT_DIAL_PLANS,
   trimMaskTail = false,
+  ...rest
 }: UsePhoneMaskProps) {
   const isControlled = value != null;
   const [localValue, setLocalValue] = useState(defaultValue);
@@ -107,6 +104,7 @@ export function usePhoneMask({
   );
 
   const { props, api } = useMask({
+    ...rest,
     mask,
     value: sourceValue,
     placeholderChar,
@@ -117,13 +115,16 @@ export function usePhoneMask({
       const rawDigits = extractDigits(parsed.rawWithPrefix);
       const fresh = resolvePlan(rawDigits, dialPlans, forcedId);
 
+      const body = rawDigits.startsWith(fresh.prefixDigits) ? rawDigits.slice(fresh.prefixDigits.length) : rawDigits;
+
+      const freshTotalSlots = (fresh.mask.match(/#/g) ?? []).length;
+
       if (!isControlled) setLocalValue(next);
       onChange?.(next, {
         ...parsed,
         prefix: fresh.prefix,
-        rawWithoutPrefix: rawDigits.startsWith(fresh.prefixDigits)
-          ? rawDigits.slice(fresh.prefixDigits.length)
-          : rawDigits,
+        rawWithoutPrefix: body,
+        isMaskCompleted: freshTotalSlots > 0 && rawDigits.length >= freshTotalSlots,
       });
     },
   });
@@ -134,14 +135,13 @@ export function usePhoneMask({
 
       const currentDigits = extractDigits(value ?? localValue);
 
-      // Preserve the body digits; swap only the prefix.
       let body: string;
       if (currentDigits.startsWith(candidate.prefixDigits)) {
         body = currentDigits.slice(candidate.prefixDigits.length);
-      } else if (currentDigits.startsWith(prefixDigits)) {
+      } else if (prefixDigits && currentDigits.startsWith(prefixDigits)) {
         body = currentDigits.slice(prefixDigits.length);
       } else {
-        body = currentDigits;
+        body = '';
       }
 
       const nextDigits = candidate.prefixDigits + body;
@@ -155,22 +155,21 @@ export function usePhoneMask({
 
   const selectPlan = useCallback(
     (plan: DialPlan) => {
-      const hasPlus = plan.hasPlus !== false;
-      selectCandidate({
-        id: plan.id ?? plan.cc,
-        cc: plan.cc,
-        prefix: hasPlus ? `+${plan.cc}` : plan.cc,
-        prefixDigits: plan.cc,
-        mask: `${hasPlus ? '+' : ''}${'#'.repeat(plan.cc.length)} ${plan.pattern}`,
-        label: plan.label,
-      });
+      selectCandidate(dialPlanToCandidate(plan));
     },
     [selectCandidate],
   );
 
   useEffect(() => {
-    if (digits.length === 0) setForcedId(null);
-  }, [digits, dialPlans]);
+    if (!forcedId) return;
+    if (!digits) {
+      setForcedId(null);
+      return;
+    }
+    const { candidates: activeCandidates } = selectPhoneMask(digits, dialPlans);
+    const stillValid = activeCandidates.some((c) => c.id === forcedId);
+    if (!stillValid) setForcedId(null);
+  }, [digits, dialPlans, forcedId]);
 
   return { props, api, mask, cc, id, prefix, candidates, allPlans: dialPlans, selectCandidate, selectPlan } as const;
 }

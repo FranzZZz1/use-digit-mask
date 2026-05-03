@@ -26,7 +26,8 @@
           "css-nesting",
           "css-when-else",
           "css3-cursors",
-          "pointer"
+          "pointer",
+          "css-container-queries"
         ],
         "ignorePartialSupport": true
       }

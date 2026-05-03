@@ -1,8 +1,8 @@
 import wizardryConfig from 'eslint-config-wizardry';
 import tseslint from 'typescript-eslint';
 
-const config = [
-  ...tseslint.config(...wizardryConfig),
+const config = tseslint.config(
+  ...wizardryConfig,
   { ignores: ['dist/', 'dist-demo/', '**/*.config.ts', '**/*.config.mts', '**/*.config.js'] },
   {
     rules: {
@@ -22,10 +22,14 @@ const config = [
             ['^\\u0000'],
             // React, then other external packages
             ['^react', '^@?\\w'],
+            // Internal aliases (@/)
+            ['^@/'],
             // Parent imports
             ['^\\.\\.(?!/?$)', '^\\.\\./?$'],
-            // Sibling imports, then current dir
-            ['^\\./(?=.*/)(?!/?$)', '^\\.(?!/?$)', '^\\./?$'],
+            // Sibling imports, then current dir (styles excluded — matched separately below)
+            ['^\\./(?=.*/)(?!/?$)(?!.*\\.s?css$)', '^\\.(?!/?$)(?!.*\\.s?css$)', '^\\./?$'],
+            // Styles last
+            ['\\.s?css$'],
           ],
         },
       ],
@@ -38,11 +42,12 @@ const config = [
     files: ['src/demo/**/*.{ts,tsx}'],
     rules: {
       'react/require-default-props': 'off',
+      'react/no-danger': 'off',
       'jsx-a11y/prefer-tag-over-role': 'off',
       'jsx-a11y/click-events-have-key-events': 'off',
       'jsx-a11y/no-static-element-interactions': 'off',
     },
   },
-];
+);
 
 export default config;

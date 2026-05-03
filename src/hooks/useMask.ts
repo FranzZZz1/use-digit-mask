@@ -3,7 +3,6 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
   type MouseEvent,
-  type RefObject,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -12,16 +11,33 @@ import {
   useState,
 } from 'react';
 
+import { extractDigits } from '../utils/extractDigits';
+
+import { useCaretManager } from './internal/useCaretManager';
+import { useMaskMeta } from './internal/useMaskMeta';
+import { usePrefixHandling } from './internal/usePrefixHandling';
+
+const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
+
 const MASK_CONFIG = {
   MASK_SLOT_DIGIT: '#',
-  NON_DIGIT_REGEX: /\D/g,
   MASK_PLACEHOLDER_CHAR: '_',
 } as const;
 
-const { MASK_SLOT_DIGIT, NON_DIGIT_REGEX, MASK_PLACEHOLDER_CHAR } = MASK_CONFIG;
+const { MASK_SLOT_DIGIT, MASK_PLACEHOLDER_CHAR } = MASK_CONFIG;
 
-const useBrowserLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+const isMobile = () => typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+/**
+ * Parsed representation of the current mask input value.
+ *
+ * @remarks
+ * When used via `useMask` directly, `prefix` is the literal mask prefix —
+ * everything before the first `#` slot (e.g. `'+7 ('` for mask `'+7 (###)...'`).
+ *
+ * When used via `usePhoneMask`, `prefix` is overridden with the resolved
+ * phone-plan prefix (e.g. `'+7'`, `'+44'`, `'8'`) and may differ from the mask literal.
+ */
 export type ParsedValues = {
   prefix: string;
   rawWithPrefix: string;
@@ -44,79 +60,10 @@ export type UseMaskProps = {
   trimMaskTail?: boolean;
 };
 
-const extractDigits = (str: string) => str.replace(NON_DIGIT_REGEX, '');
-
 const clamp = (num: number, min: number, max: number) => Math.max(min, Math.min(max, num));
 
 const createCleanDigitsExtractor = (stripFn: (digits: string) => string) => (str: string) =>
   stripFn(extractDigits(str));
-
-type CaretManager = {
-  queue: (pos: number) => void;
-  setImmediate: (pos: number) => void;
-  setImmediateWithRaf: (pos: number) => void;
-  flush: () => void;
-  cleanup: () => void;
-  pendingDigitsRef: RefObject<number | null>;
-};
-
-function useCaretManager(inputRef: RefObject<HTMLInputElement | null>): CaretManager {
-  const pendingRef = useRef<number | null>(null);
-  const rafIdRef = useRef<number | null>(null);
-  const pendingDigitsRef = useRef<number | null>(null);
-
-  const setImmediate = useCallback(
-    (pos: number) => {
-      const el = inputRef.current;
-      if (!el) return;
-      try {
-        if (!el.isConnected) return;
-        el.setSelectionRange(pos, pos);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    [inputRef],
-  );
-
-  const queue = useCallback((pos: number) => {
-    pendingRef.current = pos;
-  }, []);
-
-  const flush = useCallback(() => {
-    const pos = pendingRef.current;
-    if (pos != null) {
-      setImmediate(pos);
-      pendingRef.current = null;
-    }
-  }, [setImmediate]);
-
-  const cleanup = useCallback(() => {
-    if (typeof cancelAnimationFrame !== 'undefined' && rafIdRef.current != null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
-  }, []);
-
-  const setImmediateWithRaf = useCallback(
-    (pos: number) => {
-      if (typeof requestAnimationFrame !== 'undefined') {
-        rafIdRef.current = requestAnimationFrame(() => {
-          setImmediate(pos);
-          rafIdRef.current = null;
-        });
-      } else {
-        setImmediate(pos);
-      }
-    },
-    [setImmediate],
-  );
-
-  return useMemo(
-    () => ({ queue, setImmediate, setImmediateWithRaf, flush, cleanup, pendingDigitsRef }),
-    [queue, setImmediate, setImmediateWithRaf, flush, cleanup],
-  );
-}
 
 export function useMask({
   value,
@@ -146,81 +93,30 @@ export function useMask({
     isComposingRef.current = false;
   };
 
-  const maskMeta = useMemo(() => {
-    const chars = [...mask];
-    const digitSlotIndexes: number[] = [];
-    let prefixLength = 0;
-    let metDigit = false;
+  const maskMeta = useMaskMeta(mask);
 
-    chars.forEach((char, idx) => {
-      if (char === MASK_SLOT_DIGIT) {
-        digitSlotIndexes.push(idx);
-        metDigit = true;
-      } else if (!metDigit) {
-        prefixLength += 1;
-      }
-    });
+  const { allowedPrefixesDigits, stripAllowedPrefix, getVisiblePrefix } = usePrefixHandling(allowedPrefixes, maskMeta);
 
-    const visiblePrefix = mask.slice(0, prefixLength);
-
-    return {
-      chars,
-      digitSlotIndexes,
-      maxDigits: digitSlotIndexes.length,
-      prefixLength,
-      visiblePrefix,
-      visiblePrefixDigits: extractDigits(visiblePrefix),
-      maskLength: mask.length,
-    } as const;
-  }, [mask]);
-
-  const allowedPrefixesDigits = useMemo(() => {
-    const base = allowedPrefixes.length > 0 ? allowedPrefixes : [maskMeta.visiblePrefix];
-    return base.map((prefix) => extractDigits(prefix)).filter(Boolean);
-  }, [allowedPrefixes, maskMeta.visiblePrefix]);
-
-  const activationCharSet = useMemo(() => {
-    const starters: string[] = [];
-    if (maskMeta.visiblePrefix) starters.push(maskMeta.visiblePrefix.charAt(0));
-    allowedPrefixes.forEach((prefix) => {
-      const char = prefix.charAt(0);
-      if (char) starters.push(char);
-    });
-    return new Set(starters);
-  }, [allowedPrefixes, maskMeta.visiblePrefix]);
-
-  const stripAllowedPrefix = useCallback(
-    (digits: string) => {
-      if (allowedPrefixesDigits.length === 0) return digits;
-      const match = allowedPrefixesDigits.find((prefixDigits) => prefixDigits && digits.startsWith(prefixDigits));
-      return match ? digits.slice(match.length) : digits;
-    },
-    [allowedPrefixesDigits],
+  const shouldActivate = useCallback(
+    (digits: string) =>
+      allowedPrefixes.some((prefix) => {
+        const prefixDigits = extractDigits(prefix);
+        return digits.startsWith(prefixDigits);
+      }),
+    [allowedPrefixes],
   );
 
   const extractCleanDigits = useMemo(() => createCleanDigitsExtractor(stripAllowedPrefix), [stripAllowedPrefix]);
 
-  const getVisiblePrefix = useCallback(
-    (rawInput: string) => {
-      const fromAllowed = allowedPrefixes.find((prefix) => rawInput.startsWith(prefix));
-      if (fromAllowed) return fromAllowed;
-      return rawInput.startsWith(maskMeta.visiblePrefix) ? maskMeta.visiblePrefix : '';
-    },
-    [allowedPrefixes, maskMeta.visiblePrefix],
-  );
-
-  const formatDigits = useCallback(
-    (digitsRaw: string) => {
-      const cleaned = (normalize ? normalize(extractDigits(digitsRaw)) : extractDigits(digitsRaw)).slice(
-        0,
-        maskMeta.maxDigits,
-      );
+  const renderSlots = useCallback(
+    (cleanDigits: string) => {
+      const digits = cleanDigits.slice(0, maskMeta.maxDigits);
       const outputChars: string[] = [...maskMeta.chars];
 
       let digitIndex = 0;
       for (let i = 0; i < maskMeta.chars.length; i += 1) {
         if (maskMeta.chars[i] === MASK_SLOT_DIGIT) {
-          const digit = cleaned[digitIndex];
+          const digit = digits[digitIndex];
           outputChars[i] = digit ?? placeholderChar;
           digitIndex += 1;
         }
@@ -229,37 +125,45 @@ export function useMask({
       let text = outputChars.join('');
 
       if (trimMaskTail) {
-        if (cleaned.length === 0) {
+        if (digits.length === 0) {
           text = isMaskActiveRef.current ? maskMeta.visiblePrefix : '';
-        } else if (cleaned.length < maskMeta.maxDigits) {
-          const lastSlotIdx = maskMeta.digitSlotIndexes[cleaned.length - 1];
+        } else if (digits.length < maskMeta.maxDigits) {
+          const lastSlotIdx = maskMeta.digitSlotIndexes[digits.length - 1];
           if (lastSlotIdx != null) text = text.slice(0, lastSlotIdx + 1);
         }
 
         if (placeholderChar) text = text.split(placeholderChar).join('');
       }
 
-      return { text, digits: cleaned } as const;
+      return { text, digits } as const;
     },
     [
       maskMeta.chars,
       maskMeta.digitSlotIndexes,
       maskMeta.maxDigits,
       maskMeta.visiblePrefix,
-      normalize,
       placeholderChar,
       trimMaskTail,
     ],
   );
 
+  const formatDigits = useCallback(
+    (digitsRaw: string) => {
+      const extracted = extractDigits(digitsRaw);
+      const normalized = normalize ? normalize(extracted) : extracted;
+      return renderSlots(normalized);
+    },
+    [normalize, renderSlots],
+  );
+
   const renderText = useCallback(
     (digits: string) => {
       if (digits.length === 0) {
-        return isMaskActiveRef.current ? formatDigits('').text : '';
+        return isMaskActiveRef.current ? renderSlots('').text : '';
       }
-      return formatDigits(digits).text;
+      return renderSlots(digits).text;
     },
-    [formatDigits],
+    [renderSlots],
   );
 
   const getCaretPosAfterDigits = useCallback(
@@ -352,10 +256,9 @@ export function useMask({
     ],
   );
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const external = value || '';
-    const digitsOnly = extractCleanDigits(external);
-    const cleaned = normalize ? normalize(digitsOnly) : digitsOnly;
+    const cleaned = extractCleanDigits(external);
 
     const nextText = renderText(cleaned);
 
@@ -370,18 +273,12 @@ export function useMask({
     } else {
       const logicalPos = caret.pendingDigitsRef.current;
       const caretDigits = logicalPos != null ? Math.min(logicalPos, cleaned.length) : cleaned.length;
-      caret.queue(getCaretPosAfterDigits(caretDigits));
+      caret.setCaret(getCaretPosAfterDigits(caretDigits));
       caret.pendingDigitsRef.current = null;
     }
 
-    // rootValue намеренно исключён: эффект реагирует только на внешний value,
-    // добавление rootValue приведёт к лишним перезапускам после setRootValue внутри.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, extractCleanDigits, normalize, renderText, caret, getCaretPosAfterDigits]);
-
-  useBrowserLayoutEffect(() => {
-    caret.flush();
-  });
+    // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
+  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits]);
 
   useEffect(
     () => () => {
@@ -393,47 +290,32 @@ export function useMask({
   const applyDigits = useCallback(
     (nextDigits: string, caretDigitsOnLeft?: number) => {
       const clampedDigits = nextDigits.slice(0, maskMeta.maxDigits);
-      const willBeEmpty = clampedDigits.length === 0;
 
+      const willBeEmpty = clampedDigits.length === 0;
       if (willBeEmpty) {
         isMaskActiveRef.current = false;
       }
 
       digitsRawRef.current = clampedDigits;
+
       const nextText = renderText(clampedDigits);
-      setRootValue(nextText);
+      const valueChanged = nextText !== rootValue;
+
+      if (valueChanged) {
+        setRootValue(nextText);
+      }
 
       if (typeof caretDigitsOnLeft === 'number') {
-        caret.pendingDigitsRef.current = caretDigitsOnLeft;
         const pos = willBeEmpty ? 0 : getCaretPosAfterDigits(caretDigitsOnLeft);
-
-        if (nextText === rootValue) {
-          caret.setImmediateWithRaf(pos);
-        }
-
-        caret.queue(pos);
+        caret.setCaret(pos);
+        caret.pendingDigitsRef.current = willBeEmpty ? null : caretDigitsOnLeft;
       }
 
-      onChange(nextText, getParsedValues(nextText));
+      if (valueChanged) {
+        onChange(nextText, getParsedValues(nextText));
+      }
     },
     [caret, getCaretPosAfterDigits, getParsedValues, maskMeta.maxDigits, onChange, renderText, rootValue],
-  );
-
-  const handleOvertypeInsert = useCallback(
-    (input: string, cursor: number, prev: string, digitsLeft: number) => {
-      const inserted = extractCleanDigits(input.slice(0, cursor)).slice(-1);
-      if (!inserted) {
-        caret.queue(getCaretPosAfterDigits(digitsLeft));
-        return;
-      }
-      const insertionIndex = clamp(digitsLeft - 1, 0, maskMeta.maxDigits - 1);
-      const mergedDigits = (prev.slice(0, insertionIndex) + inserted + prev.slice(insertionIndex)).slice(
-        0,
-        maskMeta.maxDigits,
-      );
-      applyDigits(mergedDigits, insertionIndex + 1);
-    },
-    [applyDigits, caret, extractCleanDigits, getCaretPosAfterDigits, maskMeta.maxDigits],
   );
 
   const handleChange = useCallback(
@@ -441,52 +323,27 @@ export function useMask({
       if (isComposingRef.current) return;
 
       const input = e.target.value;
-      const cursor = e.target.selectionStart ?? input.length;
+      const fullDigits = extractCleanDigits(input);
 
-      const prev = digitsRawRef.current;
+      if (!isMaskActiveRef.current && digitsRawRef.current.length === 0) {
+        const rawDigits = extractDigits(input);
+        const firstChar = rawDigits.charAt(0);
 
-      if (!isMaskActiveRef.current && prev.length === 0) {
-        const singleChar = input.length === 1 ? input : '';
-
-        if (singleChar && activationCharSet.has(singleChar)) {
+        if (rawDigits.length === 1 && shouldActivate(firstChar)) {
           isMaskActiveRef.current = true;
-          const { text } = formatDigits('');
-          setRootValue(text);
-          caret.queue(maskMeta.prefixLength);
+          setRootValue(formatDigits('').text);
+          caret.setCaret(maskMeta.prefixLength);
           return;
         }
       }
 
+      const cursor = e.target.selectionStart ?? input.length;
       const digitsLeft = extractCleanDigits(input.slice(0, cursor)).length;
-      const fullDigits = extractCleanDigits(input);
+
       const normalized = normalize ? normalize(fullDigits) : fullDigits;
-
-      if (normalized.length > maskMeta.maxDigits && cursor === input.length) {
-        caret.queue(getCaretPosAfterDigits(prev.length));
-        setRootValue(renderText(prev));
-        return;
-      }
-
-      if (normalized.length > maskMeta.maxDigits && cursor !== input.length) {
-        handleOvertypeInsert(input, cursor, prev, digitsLeft);
-        return;
-      }
-
       applyDigits(normalized, digitsLeft);
     },
-    [
-      activationCharSet,
-      applyDigits,
-      caret,
-      extractCleanDigits,
-      formatDigits,
-      getCaretPosAfterDigits,
-      handleOvertypeInsert,
-      maskMeta.maxDigits,
-      maskMeta.prefixLength,
-      normalize,
-      renderText,
-    ],
+    [applyDigits, caret, extractCleanDigits, formatDigits, maskMeta.prefixLength, normalize, shouldActivate],
   );
 
   const isPrefixOnlyPaste = useCallback(
@@ -550,8 +407,7 @@ export function useMask({
         digitsRawRef.current = '';
         const { text } = formatDigits('');
         setRootValue(text);
-        caret.queue(maskMeta.prefixLength);
-        caret.setImmediate(maskMeta.prefixLength);
+        caret.setCaret(maskMeta.prefixLength);
         onChange(text, getParsedValues(text));
         return;
       }
@@ -564,8 +420,8 @@ export function useMask({
         prefixOnly,
       );
 
-      const insertDigitsRaw = shouldStrip ? stripAllowedPrefix(pastedDigitsRaw) : pastedDigitsRaw;
-      const insertDigits = normalize ? normalize(insertDigitsRaw) : insertDigitsRaw;
+      const strippedRaw = shouldStrip ? stripAllowedPrefix(pastedDigitsRaw) : pastedDigitsRaw;
+      const insertDigits = normalize ? normalize(strippedRaw) : strippedRaw;
 
       const nextRaw = prev.slice(0, leftDigitsStart) + insertDigits + prev.slice(leftDigitsEnd);
       const next = nextRaw.slice(0, maskMeta.maxDigits);
@@ -602,23 +458,26 @@ export function useMask({
 
       if (key === 'Backspace') {
         e.preventDefault();
+
         if (leftStart !== leftEnd) {
           const next = prev.slice(0, leftStart) + prev.slice(leftEnd);
           applyDigits(next, leftStart);
-        } else {
-          if (leftStart === 0) {
-            if (isMaskActiveRef.current) {
-              isMaskActiveRef.current = false;
-              applyDigits('');
-              caret.queue(0);
-              return;
-            }
-            return;
-          }
-          const deleteIndex = leftStart - 1;
-          const next = prev.slice(0, deleteIndex) + prev.slice(deleteIndex + 1);
-          applyDigits(next, deleteIndex);
+          return;
         }
+
+        if (leftStart === 0) {
+          if (isMaskActiveRef.current) {
+            isMaskActiveRef.current = false;
+            applyDigits('');
+            caret.setCaret(0);
+          }
+          return;
+        }
+
+        const deleteIndex = leftStart - 1;
+        const next = prev.slice(0, deleteIndex) + prev.slice(deleteIndex + 1);
+
+        applyDigits(next, deleteIndex);
         return;
       }
 
@@ -632,7 +491,7 @@ export function useMask({
             if (isMaskActiveRef.current && prev.length === 0) {
               isMaskActiveRef.current = false;
               applyDigits('');
-              caret.queue(0);
+              caret.setCaret(0);
             }
             return;
           }
@@ -647,23 +506,20 @@ export function useMask({
         const selectionPos = key === 'ArrowLeft' ? selectionStart : selectionEnd;
         const currentPos = clamp(selectionPos, maskMeta.prefixLength, maskMeta.maskLength);
         const nextPos = key === 'ArrowLeft' ? getPrevCaretPos(currentPos) : getNextCaretPos(currentPos);
-        caret.queue(nextPos);
-        caret.setImmediate(nextPos);
+        caret.setCaret(nextPos);
       }
 
       if (key === 'ArrowUp' || key === 'Home') {
         e.preventDefault();
         const pos = maskMeta.prefixLength;
-        caret.queue(pos);
-        caret.setImmediate(pos);
+        caret.setCaret(pos);
         return;
       }
 
       if (key === 'ArrowDown' || key === 'End') {
         e.preventDefault();
         const pos = getCaretPosAfterDigits(prev.length);
-        caret.queue(pos);
-        caret.setImmediate(pos);
+        caret.setCaret(pos);
       }
     },
     [
@@ -687,8 +543,7 @@ export function useMask({
 
       if (start < maskMeta.prefixLength) {
         e.preventDefault();
-        caret.queue(maskMeta.prefixLength);
-        caret.setImmediate(maskMeta.prefixLength);
+        caret.setCaret(maskMeta.prefixLength);
       }
     },
     [caret, maskMeta.prefixLength],
@@ -699,14 +554,13 @@ export function useMask({
 
     if (!isMaskActiveRef.current) {
       isMaskActiveRef.current = true;
-      setRootValue(formatDigits(digitsRawRef.current).text);
+      setRootValue(renderSlots(digitsRawRef.current).text);
     }
 
     const digitsLen = digitsRawRef.current.length;
     const pos = digitsLen > 0 ? getCaretPosAfterDigits(digitsLen) : maskMeta.prefixLength;
-    caret.queue(pos);
-    caret.setImmediate(pos);
-  }, [activateOnFocus, caret, formatDigits, getCaretPosAfterDigits, maskMeta.prefixLength]);
+    caret.setCaret(pos);
+  }, [activateOnFocus, caret, renderSlots, getCaretPosAfterDigits, maskMeta.prefixLength]);
 
   const onBlur = useCallback(() => {
     if (!deactivateOnEmptyBlur) return;
@@ -720,25 +574,23 @@ export function useMask({
   const onMouseDown = useCallback(
     (e: MouseEvent<HTMLInputElement>) => {
       if (!activateOnFocus) return;
-
       if (digitsRawRef.current.length !== 0) return;
-
-      e.preventDefault();
-
+      if (!isMobile()) {
+        e.preventDefault();
+      }
       if (!isMaskActiveRef.current) {
         isMaskActiveRef.current = true;
         setRootValue(formatDigits('').text);
       }
-
       const el = inputRef.current ?? (e.currentTarget as HTMLInputElement);
-      try {
-        el.focus({ preventScroll: true });
-      } catch (error) {
-        console.error(error);
+      if (!isMobile()) {
+        try {
+          el.focus({ preventScroll: true });
+        } catch (error) {
+          console.error(error);
+        }
       }
-
-      caret.queue(maskMeta.prefixLength);
-      caret.setImmediate(maskMeta.prefixLength);
+      caret.setCaret(maskMeta.prefixLength);
     },
     [activateOnFocus, caret, formatDigits, maskMeta.prefixLength],
   );
