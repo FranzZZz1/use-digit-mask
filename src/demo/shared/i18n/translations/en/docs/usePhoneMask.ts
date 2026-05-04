@@ -1,4 +1,4 @@
-import { PATHS, SECTION_IDS } from '@/shared/router';
+import { buildSectionLink, PATHS, SECTION_IDS } from '@/shared/router';
 
 export const usePhoneMask = {
   lead: `Wrapper around [|useMask|](${PATHS.useMask}) that auto-detects the mask from dial plans as the user types. Resolves ambiguous country prefixes (e.g. +7 → Russia vs Kazakhstan) and exposes |selectCandidate| / |selectPlan| for disambiguation UI.`,
@@ -15,8 +15,8 @@ export const usePhoneMask = {
     trimMaskTail: 'Hide placeholder characters beyond the last typed digit.',
   },
   returnValues: {
-    props: `Spread onto |<input>|. Same props as [useMask → props](${PATHS.useMask}#${SECTION_IDS.returnValue}).`,
-    api: `Programmatic access. See [useMask → Return value](${PATHS.useMask}#${SECTION_IDS.returnValue}).`,
+    props: `Spread onto |<input>|. Same props as [useMask → props](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
+    api: `Programmatic access. See [useMask → Return value](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     mask: 'Currently active mask string (switches as the user types).',
     cc: 'Country calling code digits (e.g. |"7"| for +7).',
     id: 'ISO 3166-1 alpha-2 id of the resolved plan (e.g. |"RU"|).',

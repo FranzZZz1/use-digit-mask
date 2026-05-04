@@ -25,7 +25,10 @@
 }
 
 .preview {
-  overflow-y: auto;
+  position: relative;
+  z-index: 2;
+
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

@@ -1,18 +1,18 @@
-import { PATHS, SECTION_IDS } from '@/shared/router';
+import { buildSectionLink, PATHS, SECTION_IDS } from '@/shared/router';
 
 export const useCountrySelect = {
   lead: `Headless-хук для выбора страны в связке с usePhoneMask. Обрабатывает открытие/закрытие выпадающего списка, клик вне, клавишу Escape и фокус на инпут после выбора формата.`,
   overview: [
-    `Хук возвращает данные и refs — рендеринг остаётся за вами. Демонстрация компонента [|CountrySelect|](${PATHS.home}#${SECTION_IDS.home.useCountrySelect}) может стать примером внедрения в проект, который вы можете скопировать и адаптировать под себя.`,
+    `Хук возвращает данные и refs — рендеринг остаётся за вами. Демонстрация компонента [|CountrySelect|](${buildSectionLink(PATHS.home, SECTION_IDS.home.useCountrySelect)}) может стать примером внедрения в проект, который вы можете скопировать и адаптировать под себя.`,
     '**Сортировка** — два режима через |stickyPins|:',
     '**Динамический (по умолчанию)**: пока поле пустое — |priorityIds| вверху. При вводе их вытесняют неоднозначные кандидаты.',
     '**Sticky**: |priorityIds| всегда вверху. Кандидаты, которых нет среди закреплённых, показываются под разделителем.',
   ],
   params: {
-    allPlans: `Список телефонных форматов. Передайте |allPlans| из [|usePhoneMask|](${PATHS.usePhoneMask})`,
-    onSelect: `Вызывается при выборе страны. Передайте |selectPlan| из [|usePhoneMask|](${PATHS.usePhoneMask}).`,
-    currentId: `Текущий ISO-код страны. Передайте |id| из [|usePhoneMask|](${PATHS.usePhoneMask})`,
-    candidates: `Текущие неоднозначные кандидаты из [|usePhoneMask|](${PATHS.usePhoneMask}). Используются для всплытия совпадающих стран в начало списка.`,
+    allPlans: `Список телефонных форматов. Передайте |allPlans| из [|usePhoneMask|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.returnValue)})`,
+    onSelect: `Вызывается при выборе страны. Передайте |selectPlan| из [|usePhoneMask|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.returnValue)}).`,
+    currentId: `Текущий ISO-код страны. Передайте |id| из [|usePhoneMask|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.returnValue)})`,
+    candidates: `Текущие неоднозначные кандидаты из [|usePhoneMask|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.returnValue)}). Используются для всплытия совпадающих стран в начало списка.`,
     priorityIds: 'Закреплённые ISO id стран на верху списка, когда поле ввода пустое, например (|["US", "GB", "RU"]|)',
     stickyPins: 'Позволяет закрепить |priorityIds| на верху списка независимо от того, что введено в поле ввода.',
     inputRef: 'Ref поля телефона. Когда передан - поле ввода фокусируется сразу после выбора страны.',
@@ -27,11 +27,13 @@ export const useCountrySelect = {
     close: 'Закрывает список и очищает поисковый запрос.',
     query: 'Текущая строка поиска.',
     setQuery: 'Обновляет поиск. Передайте в |onChange| поля поиска.',
-    currentPlan: `Текущий выбранный [|DialPlan|](${PATHS.usePhoneMask}#${SECTION_IDS.dialPlan}), или |undefined|, если страна ещё не определена.`,
-    items: 'Отсортированный и отфильтрованный список для рендеринга. Учитывает |stickyPins|, кандидатов и поисковый запрос.',
+    currentPlan: `Текущий выбранный [|DialPlan|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.dialPlan)}), или |undefined|, если страна ещё не определена.`,
+    items:
+      'Отсортированный и отфильтрованный список для рендеринга. Учитывает |stickyPins|, кандидатов и поисковый запрос.',
     dividerAfter: 'Вставить визуальный разделитель перед |items[dividerAfter]|. |-1| — разделитель не нужен.',
     containerRef: 'Прикрепите к корневому элементу контейнера — включает закрытие по клику вне.',
     searchRef: 'Прикрепите к полю поиска — фокусируется автоматически при открытии списка.',
-    select: 'Выбирает страну: вызывает |onSelect|, закрывает список и возвращает фокус в поле телефона (если передан |inputRef|).',
+    select:
+      'Выбирает страну: вызывает |onSelect|, закрывает список и возвращает фокус в поле телефона (если передан |inputRef|).',
   },
 };

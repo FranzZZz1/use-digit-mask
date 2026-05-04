@@ -1,4 +1,4 @@
-import { PATHS, SECTION_IDS } from '@/shared/router';
+import { buildSectionLink, PATHS, SECTION_IDS } from '@/shared/router';
 
 export const usePhoneMask = {
   lead: `Обёртка над [|useMask|](${PATHS.useMask}), которая автоматически подбирает маску по телефонному формату по мере ввода. Решает проблему неоднозначных префиксов стран (например, +7 → Россия и Казахстан) и предоставляет пользовательский интерфейс |selectCandidate| / |selectPlan| для устранения неоднозначности.`,
@@ -15,14 +15,14 @@ export const usePhoneMask = {
     trimMaskTail: 'Скрывать символы-заполнители маски после последней введенной цифры.',
   },
   returnValues: {
-    props: `Передайте в |<input>|. Те же props, что у [useMask → props](${PATHS.useMask}#${SECTION_IDS.returnValue}).`,
-    api: `Хелперы — см. [useMask → Возвращаемые значения](${PATHS.useMask}#${SECTION_IDS.returnValue}).`,
+    props: `Передайте в |<input>|. Те же props, что у [useMask → props](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
+    api: `Хелперы — см. [useMask → Возвращаемые значения](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     mask: 'Текущий шаблон маски. (Меняется по мере ввода кода страны)',
     cc: 'Код страны (например, |"7"| для +7).',
     id: 'ISO-код страны (например, |"RU"|).',
     prefix: 'Определённый код страны.',
     candidates: 'Неоднозначные варианты для текущего префикса.',
-    allPlans: 'Список телефонных форматов.',
+    allPlans: `Список телефонных форматов. Передайте в [|useCountrySelect|](${PATHS.useCountrySelect}).`,
     selectCandidate: 'Выбрать один из вариантов.',
     selectPlan: `Выбрать любой формат из |allPlans|. Используется в [|useCountrySelect|](${PATHS.useCountrySelect}).`,
   },
