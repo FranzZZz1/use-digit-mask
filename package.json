@@ -1,6 +1,6 @@
 {
   "name": "use-digit-mask",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Headless React hook for digit-only masked inputs — phone numbers, cards, dates, PINs and more",
   "license": "ISC",
   "author": "Vyacheslav Nesterenko (https://github.com/FranzZZz1)",

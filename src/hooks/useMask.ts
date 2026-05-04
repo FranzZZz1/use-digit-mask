@@ -277,8 +277,16 @@ export function useMask({
       caret.pendingDigitsRef.current = null;
     }
 
+    // Если внешнее value отличается от отформатированного результата (например, пришло с бэка
+    // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
+    // onChange намеренно не в deps — эффект стреляет только при смене value/маски,
+    // и к тому моменту onChange в замыкании уже актуален.
+    if (nextText !== external) {
+      onChange(nextText, getParsedValues(nextText));
+    }
+
     // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
-  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits]);
+  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues]);
 
   useEffect(
     () => () => {
