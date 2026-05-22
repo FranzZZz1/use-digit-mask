@@ -3,7 +3,7 @@ import { type ChangelogEntry } from '@/shared/config';
 export const changelogEntries: ChangelogEntry[] = [
   {
     version: '0.4.0',
-    date: '2026-05-15',
+    date: '2026-05-22',
     sections: [
       {
         type: 'added',

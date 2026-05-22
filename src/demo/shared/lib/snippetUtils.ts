@@ -70,7 +70,12 @@ export const GHOST_SCSS = dedent`
 `;
 
 export function ghostOverlayJsx(placeholder?: string, extraCondition?: string): string {
-  const placeholderAttr = placeholder ? `\n        placeholder="${placeholder}"` : '';
+  let placeholderAttr = '';
+  if (placeholder) {
+    placeholderAttr = extraCondition
+      ? `\n        placeholder={${extraCondition} ? undefined : "${placeholder}"}`
+      : `\n        placeholder="${placeholder}"`;
+  }
   const condition = extraCondition ? `${extraCondition} && ghostValue` : 'ghostValue';
   return dedent`
     <div className={styles.wrapper}>

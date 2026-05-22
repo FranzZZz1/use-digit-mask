@@ -125,10 +125,13 @@ const hookSetterTransformer: ShikiTransformer = {
     if (!child || child.type !== 'text') return;
     const text = (child as { type: 'text'; value: string }).value.trim();
     const { properties } = hast;
+    const props = properties as Record<string, string>;
     if (/^use[A-Z]/.test(text)) {
-      (properties as Record<string, string>).style = 'color: var(--code-attributes-foreground)';
-    } else if (/^set[A-Z]/.test(text)) {
-      (properties as Record<string, string>).style = 'color: var(--code-functions-foreground)';
+      props.style = 'color: var(--code-attributes-foreground)';
+    } else if (/^(?:set|on|handle)[A-Z]/.test(text)) {
+      if (!(props.style ?? '').includes('--code-attributes-foreground')) {
+        props.style = 'color: var(--code-functions-foreground)';
+      }
     }
   },
 };
