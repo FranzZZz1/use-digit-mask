@@ -48,6 +48,14 @@
     background: rgb(255 255 255 / 2%);
   }
 
+  &--clickable {
+    cursor: pointer;
+
+    @include hover {
+      background: rgb(99 102 241 / 5%);
+    }
+  }
+
   @include screen-size(tablet) {
     display: flex;
     flex-wrap: wrap;
@@ -94,6 +102,20 @@
     @include tg(sm, r, mono);
 
     color: var(--color-text);
+  }
+
+  &__play {
+    margin-left: var(--space-2);
+
+    @include tg(xs);
+
+    color: var(--color-accent);
+    opacity: 0.4;
+    transition: opacity var(--transition);
+
+    .tr--clickable:hover & {
+      opacity: 1;
+    }
   }
 
   &__type {

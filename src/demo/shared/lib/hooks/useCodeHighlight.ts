@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { highlightTsx } from '@/shared/lib';
+import { highlightCode } from '../helpers/highlight';
 
 export function useCopyToClipboard(): { copied: boolean; copy: (text: string) => void } {
   const [copied, setCopied] = useState(false);
@@ -29,7 +29,7 @@ export function useCopyToClipboard(): { copied: boolean; copy: (text: string) =>
   return { copied, copy };
 }
 
-export function useHighlighted(code: string): { html: string; isLoading: boolean } {
+export function useHighlighted(code: string, lang: string = 'tsx'): { html: string; isLoading: boolean } {
   const [html, setHtml] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,7 +37,7 @@ export function useHighlighted(code: string): { html: string; isLoading: boolean
     let mounted = true;
     setIsLoading(true);
 
-    highlightTsx(code)
+    highlightCode(code, lang)
       .then((result) => {
         if (mounted) {
           setHtml(result);
@@ -49,12 +49,15 @@ export function useHighlighted(code: string): { html: string; isLoading: boolean
     return () => {
       mounted = false;
     };
-  }, [code]);
+  }, [code, lang]);
 
   return { html, isLoading };
 }
 
-export function useHighlightedAll(codes: string[]): { htmls: string[]; isLoading: boolean } {
+export function useHighlightedAll(tabs: { code: string; lang?: string }[]): {
+  htmls: string[];
+  isLoading: boolean;
+} {
   const [htmls, setHtmls] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,7 +65,7 @@ export function useHighlightedAll(codes: string[]): { htmls: string[]; isLoading
     let mounted = true;
     setIsLoading(true);
 
-    Promise.all(codes.map(async (c) => highlightTsx(c)))
+    Promise.all(tabs.map(async ({ code, lang }) => highlightCode(code, lang ?? 'tsx')))
       .then((results) => {
         if (mounted) {
           setHtmls(results);
@@ -74,9 +77,9 @@ export function useHighlightedAll(codes: string[]): { htmls: string[]; isLoading
     return () => {
       mounted = false;
     };
-    // Serialised to avoid re-running when a new array with identical strings is passed
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(codes)]);
+  }, [JSON.stringify(tabs)]);
 
   return { htmls, isLoading };
 }

@@ -1,6 +1,8 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import cx from 'clsx';
 
+import MenuIcon from '@/shared/assets/icons/MenuIcon.svg?react';
+import XIcon from '@/shared/assets/icons/XIcon.svg?react';
 import { type TocEntry, useLang } from '@/shared/i18n';
 import { useOutsideClose } from '@/shared/lib';
 import { HOOKS } from '@/widgets/docs-layout/const/const';
@@ -13,11 +15,11 @@ import styles from './MobileNav.module.scss';
 type MobileNavProps = {
   currentPath: string | undefined;
   toc: TocEntry[];
-  activeId: string;
+  registerLink: (id: string, el: HTMLAnchorElement) => () => void;
   scrollToId: (id: string) => void;
 };
 
-export const MobileNav = memo(({ currentPath, toc, activeId, scrollToId }: MobileNavProps) => {
+export const MobileNav = memo(({ currentPath, toc, registerLink, scrollToId }: MobileNavProps) => {
   const { t } = useLang();
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -44,7 +46,7 @@ export const MobileNav = memo(({ currentPath, toc, activeId, scrollToId }: Mobil
     [close, scrollToId],
   );
 
-  const currentHookLabel = HOOKS.find((h) => h.path === currentPath)?.label ?? 'Docs';
+  const currentHookLabel = HOOKS.find((h) => h.path === currentPath || h.examplesPath === currentPath)?.label ?? 'Docs';
 
   return (
     <>
@@ -53,14 +55,10 @@ export const MobileNav = memo(({ currentPath, toc, activeId, scrollToId }: Mobil
         onClick={close}
       />
       <div className={styles['mobile-nav']}>
-        <div
-          ref={panelRef}
-          className={cx(styles['mobile-nav__panel'], isOpen && styles['mobile-nav__panel--open'])}
-        >
+        <div ref={panelRef} className={cx(styles['mobile-nav__panel'], isOpen && styles['mobile-nav__panel--open'])}>
           <div className={styles['mobile-nav__section']}>
             <p className={styles['mobile-nav__section-title']}>Hooks</p>
             <HookNavList
-              currentPath={currentPath}
               linkClass={styles['mobile-nav__link']}
               activeLinkClass={styles['mobile-nav__link--active']}
               onSamePath={close}
@@ -74,9 +72,8 @@ export const MobileNav = memo(({ currentPath, toc, activeId, scrollToId }: Mobil
                 <p className={styles['mobile-nav__section-title']}>{t.sections.onThisPage}</p>
                 <TocNavList
                   toc={toc}
-                  activeId={activeId}
                   linkClass={styles['mobile-nav__toc-link']}
-                  activeLinkClass={styles['mobile-nav__toc-link--active']}
+                  registerLink={registerLink}
                   onScrollTo={handleScrollTo}
                 />
               </div>
@@ -92,7 +89,9 @@ export const MobileNav = memo(({ currentPath, toc, activeId, scrollToId }: Mobil
           aria-label="Navigation"
           onClick={toggle}
         >
-          <span className={styles['mobile-nav__toggle-icon']}>{isOpen ? '✕' : '≡'}</span>
+          <span className={styles['mobile-nav__toggle-icon']}>
+            {isOpen ? <XIcon aria-hidden="true" /> : <MenuIcon aria-hidden="true" />}
+          </span>
           <span className={styles['mobile-nav__toggle-label']}>{currentHookLabel}</span>
           <span
             className={cx(styles['mobile-nav__toggle-chevron'], isOpen && styles['mobile-nav__toggle-chevron--up'])}

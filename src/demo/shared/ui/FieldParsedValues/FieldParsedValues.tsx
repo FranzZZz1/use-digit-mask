@@ -1,5 +1,7 @@
 import { type ParsedValues } from 'use-digit-mask';
 
+import { usePlaygroundParsedValues } from '@/shared/ui/Playground/model/PlaygroundParsedValuesContext';
+
 import styles from './FieldParsedValues.module.scss';
 
 type ParsedKey = keyof ParsedValues;
@@ -15,6 +17,9 @@ const CONFIG: Partial<Record<ConfigKey, { label: string }>> = {
   },
   prefix: {
     label: 'prefix',
+  },
+  parentPrefix: {
+    label: 'parentPrefix',
   },
   isMaskCompleted: {
     label: 'completed',
@@ -51,6 +56,9 @@ export function FieldParsedValues({
   mask?: string;
   id?: string | null;
 }) {
+  const { show } = usePlaygroundParsedValues();
+  if (!show) return null;
+
   return (
     <dl className={styles.parsed}>
       {showCase.map((item) => {

@@ -13,8 +13,10 @@ export const usePhoneMask = {
     placeholderChar: 'Character for empty digit slots.',
     dialPlans: 'Dial plans to match against. Override to restrict to a subset or inject custom plans.',
     trimMaskTail: 'Hide placeholder characters beyond the last typed digit.',
+    ghostChar: 'Character for empty ghost slots. Defaults to |placeholderChar|.',
   },
   returnValues: {
+    ghostValue: 'Full mask string with ghost chars for empty slots. Render behind the input for a ghost placeholder effect.',
     props: `Spread onto |<input>|. Same props as [useMask → props](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     api: `Programmatic access. See [useMask → Return value](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     mask: 'Currently active mask string (switches as the user types).',

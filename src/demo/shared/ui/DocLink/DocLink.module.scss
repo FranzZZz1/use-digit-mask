@@ -1,0 +1,30 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color var(--transition);
+
+  @include tg(sm);
+
+  @include hover {
+    color: var(--color-text);
+  }
+
+  &--forward {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  &--back {
+    display: inline-block;
+    flex-shrink: 0;
+    margin-bottom: var(--space-2);
+    white-space: nowrap;
+  }
+
+  &--more {
+    align-self: flex-start;
+  }
+}

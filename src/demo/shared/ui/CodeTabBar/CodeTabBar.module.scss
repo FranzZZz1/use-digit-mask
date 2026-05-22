@@ -1,0 +1,119 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+
+  &--actions-only {
+    justify-content: flex-end;
+  }
+
+  &--underline {
+    /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+    scrollbar-width: none;
+    overflow: auto hidden;
+    height: 35px;
+
+    /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &--pill {
+    gap: var(--space-1);
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+.tab {
+  &--underline {
+    cursor: pointer;
+
+    flex-shrink: 0;
+
+    padding: var(--space-2) var(--space-3);
+
+    color: var(--color-text-muted);
+    white-space: nowrap;
+
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+
+    transition: color var(--transition),
+    border-color var(--transition);
+
+    @include tg(xs, m);
+
+    &:not(.tab--active) {
+      @include hover {
+        color: var(--color-text-secondary);
+      }
+    }
+
+    &.tab--active {
+      color: var(--color-text);
+      border-bottom-color: var(--color-text);
+    }
+  }
+
+  &--pill {
+    cursor: pointer;
+
+    padding: var(--space-1) var(--space-2);
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-muted);
+
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+
+    transition:
+      color var(--transition),
+      border-color var(--transition);
+
+    &:not(.tab--active) {
+      @include hover {
+        color: var(--color-text);
+      }
+    }
+
+    &.tab--active {
+      color: var(--color-text);
+      border-color: var(--color-border);
+    }
+  }
+}
+
+.actions {
+  &--underline {
+    position: sticky;
+    right: 0;
+
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--space-1);
+    align-items: center;
+
+    margin-left: auto;
+    padding-right: var(--space-2);
+    padding-left: var(--space-2);
+
+    background: var(--code-background);
+  }
+
+  &--pill {
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--space-1);
+    align-items: center;
+  }
+}

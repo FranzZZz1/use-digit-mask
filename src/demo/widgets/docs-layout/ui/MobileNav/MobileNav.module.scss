@@ -3,7 +3,7 @@
 
 .mobile-nav {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-mobile-nav);
   right: 0;
   bottom: 0;
   left: 0;
@@ -16,7 +16,7 @@
 
   &__backdrop {
     position: fixed;
-    z-index: 99;
+    z-index: var(--z-mobile-nav-backdrop);
     inset: 0;
 
     visibility: hidden;
@@ -62,11 +62,10 @@
     }
 
     &-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 18px;
-
-      @include tg(base, r, mono);
-
-      text-align: center;
     }
 
     &-label {
@@ -125,13 +124,7 @@
     gap: var(--space-1);
 
     &-title {
-      margin-bottom: var(--space-2);
-
-      @include tg(xs, sb);
-
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      @include nav-section-title;
     }
   }
 
@@ -142,13 +135,7 @@
   }
 
   &__link {
-    padding: var(--space-1) var(--space-3);
-
-    @include tg(sm, r, mono);
-
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: color var(--transition), background var(--transition);
+    @include nav-link;
 
     &:not(&--active) {
       color: var(--color-text-secondary);
@@ -166,19 +153,9 @@
   }
 
   &__toc-link {
-    display: block;
+    @include toc-link;
 
-    padding: var(--space-1) var(--space-2);
-
-    @include tg(sm);
-
-    text-decoration: none;
-
-    border-left: 2px solid transparent;
-
-    transition: color var(--transition), border-color var(--transition);
-
-    &:not(&--active) {
+    &:not([data-toc-active]) {
       color: var(--color-text-muted);
 
       @include hover {
@@ -186,7 +163,7 @@
       }
     }
 
-    &--active {
+    &[data-toc-active] {
       color: var(--color-text);
       border-left-color: var(--color-accent);
     }

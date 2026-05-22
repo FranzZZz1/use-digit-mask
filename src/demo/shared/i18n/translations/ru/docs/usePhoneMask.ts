@@ -13,8 +13,10 @@ export const usePhoneMask = {
     placeholderChar: 'Символ-заполнитель.',
     dialPlans: 'Список телефонных форматов для автоопределения.',
     trimMaskTail: 'Скрывать символы-заполнители маски после последней введенной цифры.',
+    ghostChar: 'Символ для пустых ghost-слотов. По умолчанию совпадает с |placeholderChar|.',
   },
   returnValues: {
+    ghostValue: 'Полная строка маски с ghost-символами на пустых слотах. Разместите позади инпута для эффекта ghost-placeholder.',
     props: `Передайте в |<input>|. Те же props, что у [useMask → props](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     api: `Хелперы — см. [useMask → Возвращаемые значения](${buildSectionLink(PATHS.useMask, SECTION_IDS.returnValue)}).`,
     mask: 'Текущий шаблон маски. (Меняется по мере ввода кода страны)',

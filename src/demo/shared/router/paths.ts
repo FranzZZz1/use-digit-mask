@@ -22,14 +22,19 @@ export const SEGMENTS = {
   useMask: 'use-mask',
   usePhoneMask: 'use-phone-mask',
   useCountrySelect: 'use-country-select',
+  examples: 'examples',
 } as const;
 
 export const PATHS = {
   home: '/',
+  changelog: '/changelog',
   docs: '/docs',
   useMask: `/docs/${SEGMENTS.useMask}`,
+  useMaskExamples: `/docs/${SEGMENTS.useMask}/${SEGMENTS.examples}`,
   usePhoneMask: `/docs/${SEGMENTS.usePhoneMask}`,
+  usePhoneMaskExamples: `/docs/${SEGMENTS.usePhoneMask}/${SEGMENTS.examples}`,
   useCountrySelect: `/docs/${SEGMENTS.useCountrySelect}`,
+  useCountrySelectExamples: `/docs/${SEGMENTS.useCountrySelect}/${SEGMENTS.examples}`,
 } as const;
 
 export const TYPE_LINKS: Record<string, string> = {

@@ -1,3 +1,6 @@
+export { ConditionalWrap } from './conditional-wrap';
+export { DEFAULT_GHOST_CHAR, DEFAULT_MASK, DEFAULT_PLACEHOLDER_CHAR } from './const/mask';
+export { type Syntax, SyntaxProvider, useSyntax } from './context/SyntaxContext';
 export { highlightTsx } from './helpers/highlight';
 export { useAppLocation } from './hooks/useAppLocation';
 export { useCopyToClipboard, useHighlighted, useHighlightedAll } from './hooks/useCodeHighlight';
@@ -5,5 +8,5 @@ export { useDocsHistory } from './hooks/useDocsHistory';
 export { useDocsNavigate } from './hooks/useDocsNavigate';
 export { useDocsScrollRestoration } from './hooks/useDocsScrollRestoration';
 export { useDocsUI } from './hooks/useDocsUI';
-export { useHookNavHandlers } from './hooks/useHookNavHandlers';
 export { useOutsideClose } from './hooks/useOutsideClose';
+export { usePreviewCollapse } from './hooks/usePreviewCollapse';

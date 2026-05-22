@@ -1,0 +1,70 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.card {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--space-5);
+
+  padding: var(--space-6);
+
+  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+  background: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+
+  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  border-radius: var(--radius-lg);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.title {
+  flex-shrink: 0;
+  order: 1;
+  color: var(--color-text);
+
+  @include tg(base, sb);
+}
+
+.desc {
+  flex-basis: 100%;
+  order: 0;
+
+  @include tg(xs, r, mono);
+
+  color: var(--color-text-muted);
+}
+
+.cta {
+  cursor: pointer;
+
+  width: 100%;
+  margin-top: auto;
+  padding: var(--space-2) var(--space-4);
+
+  color: var(--color-accent);
+  text-align: center;
+
+  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+
+  transition:
+    color var(--transition),
+    background var(--transition);
+
+  @include tg(sm, sb);
+
+  @include hover {
+    /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+}

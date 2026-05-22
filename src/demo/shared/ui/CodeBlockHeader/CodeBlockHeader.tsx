@@ -3,6 +3,7 @@ import cx from 'clsx';
 
 import { useLang } from '@/shared/i18n';
 import { useCopyToClipboard } from '@/shared/lib';
+import { SyntaxSwitch } from '@/shared/ui/SyntaxSwitch';
 
 import styles from './CodeBlockHeader.module.scss';
 
@@ -11,9 +12,18 @@ type CodeBlockHeaderProps = {
   title?: ReactNode;
   onClose?: () => void;
   className?: string;
+  lang?: string;
+  hasJsVariant?: boolean;
 };
 
-export function CodeBlockHeader({ code, title = '', onClose = undefined, className = '' }: CodeBlockHeaderProps) {
+export function CodeBlockHeader({
+  code,
+  title = '',
+  onClose = undefined,
+  className = '',
+  lang = 'tsx',
+  hasJsVariant = false,
+}: CodeBlockHeaderProps) {
   const { t } = useLang();
   const { copied, copy } = useCopyToClipboard();
 
@@ -21,7 +31,7 @@ export function CodeBlockHeader({ code, title = '', onClose = undefined, classNa
     <div className={cx(styles.header, className)}>
       {title && <div className={styles.header__title}>{title}</div>}
       <div className={styles.header__actions}>
-        <span className={styles.header__badge}>tsx</span>
+        {hasJsVariant ? <SyntaxSwitch /> : <span className={styles.header__badge}>{lang}</span>}
         <button
           type="button"
           className={styles.header__copy}

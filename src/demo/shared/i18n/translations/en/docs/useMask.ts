@@ -11,15 +11,21 @@ export const useMask = {
     value: 'Controlled input value.',
     onChange: 'Called on every change with the formatted value and parsed breakdown.',
     allowedPrefixes:
-      'List of prefix strings (e.g. |["+7", "8"]|) that are stripped when pasting a full number and activate an empty mask when |activateOnFocus=true|.',
+      'List of prefix strings (e.g. |["+7", "8"]|) that are stripped when pasting a full number and activate an empty mask.',
     placeholderChar: 'Character shown in unfilled digit slots.',
     normalize:
       'Optional transform applied to extracted digits before applying the mask (e.g. to enforce a leading digit).',
     activateOnFocus: 'Show the mask prefix on focus, even when the field is empty.',
     deactivateOnEmptyBlur: 'Hide the mask on blur if no digits have been entered.',
     trimMaskTail: 'Hide placeholder characters beyond the last entered digit — the input shrinks as the user types.',
+    ghostChar:
+      'Character used in the ghost overlay for empty digit slots. Defaults to |placeholderChar|. Useful when you want a visually distinct ghost (e.g. |"·"|) without changing the real input\'s placeholder.',
+    alwaysActive:
+      'Always render the full mask template, even when the field is empty and unfocused. |onChange| still reports |""| when no digits have been entered.',
   },
   returnProps: {
+    ghostValue:
+      'Full mask string with typed digits filled in and |ghostChar| for empty slots. Always computed — render it in an absolutely-positioned overlay behind the input to create a ghost placeholder effect.',
     'props.value': 'Formatted value to pass to the input.',
     'props.ref': 'Ref — spread onto the input element.',
     'props.onChange': 'Handles character insertion and deletion.',

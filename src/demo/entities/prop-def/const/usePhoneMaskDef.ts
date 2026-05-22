@@ -1,15 +1,20 @@
-import  { type PropDef } from './useMaskDef';
+import { type PropDef } from './useMaskDef';
+
+const bool = { kind: 'boolean' as const };
+const str = (placeholder?: string, maxLength?: number) => ({ kind: 'string' as const, placeholder, maxLength });
 
 export const USE_PHONE_MASK_PARAMS: PropDef[] = [
   { name: 'value', type: 'string' },
   { name: 'defaultValue', type: 'string', default: '""' },
   { name: 'onChange', type: '(value: string, parsed: ParsedValues) => void' },
-  { name: 'placeholderChar', type: 'string', default: '"_"' },
+  { name: 'placeholderChar', type: 'string', default: '"_"', control: str('_', 1) },
   { name: 'dialPlans', type: 'DialPlan[]', default: 'DEFAULT_DIAL_PLANS' },
-  { name: 'trimMaskTail', type: 'boolean', default: 'false' },
+  { name: 'trimMaskTail', type: 'boolean', default: 'false', control: bool },
+  { name: 'ghostChar', type: 'string', default: 'placeholderChar', control: str('·', 1) },
 ];
 
 export const USE_PHONE_MASK_RETURN_VALUES: PropDef[] = [
+  { name: 'ghostValue', type: 'string' },
   { name: 'props', type: 'ComponentPropsWithRef<"input">' },
   { name: 'api', type: '{ formatDigits, getParsedValues }' },
   { name: 'mask', type: 'string' },

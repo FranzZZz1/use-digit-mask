@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import cx from 'clsx';
-import { type ParsedValues, usePhoneMask } from 'use-digit-mask';
+import { E164_MASK, type ParsedValues, usePhoneMask } from 'use-digit-mask';
 
 import { CountrySelect } from '@/entities/phone-input/ui/CountrySelect/CountrySelect';
 import { CountrySelectRadix } from '@/entities/phone-input/ui/CountrySelect/CountrySelectRadix';
+import { ConditionalWrap } from '@/shared/lib';
 import { FieldParsedValues } from '@/shared/ui/FieldParsedValues';
 import { Input } from '@/shared/ui/Input';
 
@@ -14,7 +15,13 @@ type PhoneFieldProps = {
   showCandidates?: boolean;
   priorityIds?: string[];
   stickyPins?: boolean;
+  disableSort?: boolean;
   radixSelect?: boolean;
+  trimMaskTail?: boolean;
+  placeholderChar?: string;
+  ghost?: boolean;
+  ghostChar?: string;
+  ghostOnlyWhenResolved?: boolean;
 };
 
 export function PhoneField({
@@ -22,19 +29,31 @@ export function PhoneField({
   showCandidates = false,
   priorityIds,
   stickyPins,
+  disableSort,
   radixSelect = false,
+  trimMaskTail = true,
+  placeholderChar,
+  ghost,
+  ghostChar,
+  ghostOnlyWhenResolved,
 }: PhoneFieldProps) {
   const [value, setValue] = useState('');
   const [parsed, setParsed] = useState<ParsedValues | null>(null);
 
-  const { props, mask, id, prefix, candidates, selectCandidate, selectPlan, allPlans } = usePhoneMask({
+  const { props, mask, id, prefix, candidates, selectCandidate, selectPlan, allPlans, ghostValue } = usePhoneMask({
     value,
     onChange: (next, p) => {
       setValue(next);
       setParsed(p);
     },
-    trimMaskTail: true,
+    trimMaskTail,
+    placeholderChar,
+    ghostChar,
   });
+
+  const showGhost = ghost && (!ghostOnlyWhenResolved || mask !== E164_MASK);
+  const ghostFilled = ghostValue.slice(0, value.length);
+  const ghostEmpty = ghostValue.slice(value.length);
 
   return (
     <div className={styles.root}>
@@ -46,6 +65,7 @@ export function PhoneField({
             candidates={candidates}
             priorityIds={priorityIds}
             stickyPins={stickyPins}
+            disableSort={disableSort}
             inputRef={props.ref}
             onSelect={selectPlan}
           />
@@ -61,13 +81,21 @@ export function PhoneField({
             onSelect={selectPlan}
           />
         )}
-        <Input
-          {...props}
-          className={cx(showCountrySelect && styles['input--attached'])}
-          type="text"
-          inputMode="numeric"
-          placeholder="Start typing a number..."
-        />
+        <ConditionalWrap condition={ghost} wrapIn={<div className={styles.ghost__wrapper} />}>
+          <Input
+            {...props}
+            className={cx(showCountrySelect && styles['input--attached'], ghost && styles['input--ghost'])}
+            type="text"
+            inputMode="numeric"
+            placeholder={showGhost ? undefined : 'Start typing a number...'}
+          />
+          {showGhost && (
+            <span className={styles.ghost__overlay} aria-hidden="true">
+              <span className={styles.ghost__filled}>{ghostFilled}</span>
+              <span className={styles.ghost__empty}>{ghostEmpty}</span>
+            </span>
+          )}
+        </ConditionalWrap>
       </div>
 
       {showCandidates && candidates.length > 1 && (
@@ -89,7 +117,7 @@ export function PhoneField({
 
       <FieldParsedValues
         parsed={parsed}
-        showCase={['mask', 'id', 'prefix', 'rawWithoutPrefix', 'isMaskCompleted']}
+        showCase={['mask', 'id', 'prefix', 'parentPrefix', 'rawWithoutPrefix', 'isMaskCompleted']}
         mask={mask}
         id={id}
       />

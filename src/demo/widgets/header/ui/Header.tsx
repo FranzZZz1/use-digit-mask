@@ -5,6 +5,7 @@ import cx from 'clsx';
 import { GITHUB_URL, NPM_URL } from '@/shared/config';
 import { type Lang, useLang } from '@/shared/i18n';
 import { useOutsideClose } from '@/shared/lib';
+import { PATHS } from '@/shared/router';
 
 import styles from './Header.module.scss';
 
@@ -20,12 +21,14 @@ export function Header() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  useOutsideClose(menuOpen, () => { setMenuOpen(false); }, [headerRef]);
+  useOutsideClose(menuOpen, () => {
+    setMenuOpen(false);
+  }, [headerRef]);
 
   return (
     <header ref={headerRef} className={styles.header}>
       <div className={styles.inner}>
-        <NavLink to="/" className={styles.logo}>
+        <NavLink to={PATHS.home} className={styles.logo}>
           use-digit-mask
         </NavLink>
 
@@ -43,8 +46,17 @@ export function Header() {
         </button>
 
         <nav className={cx(styles.nav, menuOpen && styles['nav--open'])}>
-          <NavLink to="/docs" className={({ isActive }) => cx(styles.link, isActive && styles['link--active'])}>
+          <NavLink
+            to={PATHS.useMask}
+            className={cx(styles.link, location.pathname.startsWith(PATHS.docs) && styles['link--active'])}
+          >
             {t.nav.docs}
+          </NavLink>
+          <NavLink
+            to={PATHS.changelog}
+            className={({ isActive }) => cx(styles.link, isActive && styles['link--active'])}
+          >
+            {t.nav.changelog}
           </NavLink>
           <a
             href={NPM_URL}

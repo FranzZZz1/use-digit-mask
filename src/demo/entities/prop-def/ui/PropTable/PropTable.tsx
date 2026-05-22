@@ -1,9 +1,15 @@
 import { type ReactNode } from 'react';
+import cx from 'clsx';
 
-import { rich } from '@/shared/i18n';
+import { rich, useLang } from '@/shared/i18n';
 import { DocScrollLink } from '@/shared/ui/doc/DocScrollLink';
 
 import styles from './PropTable.module.scss';
+
+export type PropControl =
+  | { kind: 'boolean' }
+  | { kind: 'string'; placeholder?: string; maxLength?: number }
+  | { kind: 'stringArray'; placeholder?: string };
 
 export type PropRow = {
   name: string;
@@ -11,11 +17,13 @@ export type PropRow = {
   description: string;
   default?: string;
   required?: boolean;
+  control?: PropControl;
 };
 
 type PropTableProps = {
   rows: PropRow[];
   typeLinks?: Record<string, string>;
+  onPropClick?: (name: string) => void;
 };
 
 function renderType(type: string, typeLinks: Record<string, string>): ReactNode {
@@ -41,7 +49,8 @@ function renderType(type: string, typeLinks: Record<string, string>): ReactNode 
   );
 }
 
-export function PropTable({ rows, typeLinks }: PropTableProps) {
+export function PropTable({ rows, typeLinks, onPropClick }: PropTableProps) {
+  const { t } = useLang();
   return (
     <div className={styles.wrapper}>
       <table className={styles.table}>
@@ -54,25 +63,44 @@ export function PropTable({ rows, typeLinks }: PropTableProps) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.name} className={styles.tr}>
-              <td className={styles.td}>
-                <code className={styles.prop__name}>{row.name}</code>
-                {row.required && <span className={styles.required}>*</span>}
-              </td>
-              <td className={styles.td}>
-                <code className={styles.prop__type}>{typeLinks ? renderType(row.type, typeLinks) : row.type}</code>
-              </td>
-              <td className={styles.td}>
-                {row.default ? (
-                  <code className={styles.prop__default}>{row.default}</code>
-                ) : (
-                  <span className={styles.dash}>—</span>
-                )}
-              </td>
-              <td className={styles.td__desc}>{rich(row.description, styles.desc__code, styles.desc__link)}</td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const clickable = !!row.control && !!onPropClick;
+            return (
+              <tr
+                key={row.name}
+                className={cx(styles.tr, clickable && styles['tr--clickable'])}
+                title={clickable ? t.sections.tryInPlayground : undefined}
+                onClick={
+                  clickable
+                    ? () => {
+                        onPropClick(row.name);
+                      }
+                    : undefined
+                }
+              >
+                <td className={styles.td}>
+                  <code className={styles.prop__name}>{row.name}</code>
+                  {row.required && <span className={styles.required}>*</span>}
+                  {clickable && (
+                    <span className={styles.prop__play} aria-hidden="true">
+                      ▶
+                    </span>
+                  )}
+                </td>
+                <td className={styles.td}>
+                  <code className={styles.prop__type}>{typeLinks ? renderType(row.type, typeLinks) : row.type}</code>
+                </td>
+                <td className={styles.td}>
+                  {row.default ? (
+                    <code className={styles.prop__default}>{row.default}</code>
+                  ) : (
+                    <span className={styles.dash}>—</span>
+                  )}
+                </td>
+                <td className={styles.td__desc}>{rich(row.description, styles.desc__code, styles.desc__link)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

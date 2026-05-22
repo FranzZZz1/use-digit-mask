@@ -1,0 +1,55 @@
+@use 'styles/mixins' as *;
+
+.switch {
+  cursor: pointer;
+
+  position: relative;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+
+  width: 28px;
+  height: 16px;
+
+  background: var(--color-border);
+  border-radius: 8px;
+
+  transition: background var(--transition);
+
+  &__input {
+    pointer-events: none;
+
+    position: absolute;
+
+    width: 0;
+    height: 0;
+
+    opacity: 0;
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+
+    width: 12px;
+    height: 12px;
+
+    background: var(--color-text-muted);
+    border-radius: 50%;
+
+    transition:
+      background var(--transition),
+      transform var(--transition);
+  }
+
+  &--on {
+    background: var(--color-accent);
+
+    .switch__thumb {
+      transform: translateX(12px);
+      background: #fff;
+    }
+  }
+}

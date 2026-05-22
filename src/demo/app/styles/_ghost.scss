@@ -1,0 +1,20 @@
+@use 'typography' as *;
+
+@mixin ghost-overlay {
+  pointer-events: none;
+  user-select: none;
+
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+
+  padding: var(--space-3) var(--space-4);
+
+  white-space: pre;
+
+  @include tg(base, r, mono);
+}

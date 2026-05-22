@@ -1,0 +1,36 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.switch {
+  overflow: hidden;
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  &__btn {
+    cursor: pointer;
+
+    padding: 2px var(--space-2);
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+
+    background: transparent;
+    border: none;
+
+    transition:
+      color var(--transition),
+      background var(--transition);
+
+    @include hover {
+      color: var(--color-text);
+    }
+
+    &--active {
+      color: var(--color-text);
+      background: rgb(255 255 255 / 8%);
+    }
+  }
+}

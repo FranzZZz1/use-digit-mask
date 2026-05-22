@@ -1,0 +1,104 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+.inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--color-border);
+
+  &__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+  }
+
+  &__toggle {
+    cursor: pointer;
+
+    padding: var(--space-2) var(--space-4);
+
+    color: var(--color-text-muted);
+    text-align: right;
+
+    background: transparent;
+    border-top: 1px solid var(--color-border);
+
+    transition: color var(--transition);
+
+    @include tg(xs);
+
+    &:hover {
+      color: var(--color-text);
+    }
+  }
+}
+
+.fields {
+  overflow: hidden auto;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  padding: var(--space-4);
+}
+
+.divider {
+  flex-shrink: 0;
+  height: 1px;
+  margin: var(--space-2) 0;
+  background: var(--color-border);
+}
+
+.field {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-1) 0;
+
+  &--sub {
+    padding-left: var(--space-5);
+  }
+
+  &--disabled {
+    opacity: 0.45;
+  }
+
+  &__name {
+    @include tg(sm, r, mono);
+
+    color: var(--color-text);
+  }
+
+  &__input {
+    flex: 1;
+
+    min-width: 0;
+    max-width: 160px;
+    margin-left: auto;
+    padding: 2px var(--space-2);
+
+    @include tg(xs, r, mono);
+
+    color: var(--color-text);
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+
+    transition: border-color var(--transition);
+
+    &:focus {
+      border-color: var(--color-border-focus);
+      outline: none;
+    }
+  }
+}

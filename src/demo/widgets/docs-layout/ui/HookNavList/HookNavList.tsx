@@ -1,31 +1,43 @@
+import { NavLink, useLocation } from 'react-router-dom';
 import cx from 'clsx';
 
-import { useHookNavHandlers } from '@/shared/lib';
+import { useDocsNavigate } from '@/shared/lib';
 
 import { HOOKS } from '../../const/const';
 
 type HookNavListProps = {
-  currentPath: string | undefined;
   linkClass: string;
   activeLinkClass: string;
   onSamePath?: () => void;
 };
 
-export function HookNavList({ currentPath, onSamePath, linkClass, activeLinkClass }: HookNavListProps) {
-  const handlers = useHookNavHandlers(currentPath, onSamePath);
+export function HookNavList({ onSamePath, linkClass, activeLinkClass }: HookNavListProps) {
+  const { pathname } = useLocation();
+  const navigate = useDocsNavigate();
 
   return (
     <>
-      {HOOKS.map(({ path, label }, i) => (
-        <a
-          key={path}
-          href={path}
-          className={cx(linkClass, path === currentPath && activeLinkClass)}
-          onClick={handlers[i]}
-        >
-          {label}
-        </a>
-      ))}
+      {HOOKS.map(({ path, label, examplesPath }) => {
+        const isOnThisHook = pathname === path || pathname === examplesPath;
+        return (
+          <NavLink
+            key={path}
+            to={path}
+            className={({ isActive }) => cx(linkClass, isActive && activeLinkClass)}
+            onClick={(e) => {
+              e.preventDefault();
+              if (isOnThisHook) {
+                onSamePath?.();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                navigate(path);
+              }
+            }}
+          >
+            {label}
+          </NavLink>
+        );
+      })}
     </>
   );
 }

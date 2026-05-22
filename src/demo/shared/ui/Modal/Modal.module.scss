@@ -1,6 +1,8 @@
+@use 'styles/mixins' as *;
+
 .backdrop {
   position: fixed;
-  z-index: 1000;
+  z-index: var(--z-modal);
   inset: 0;
 
   overflow-y: auto;
@@ -11,22 +13,25 @@
   backdrop-filter: blur(4px);
 
   animation: fade-in 120ms ease;
+
+  @include screen-size(mobile) {
+    padding: var(--space-2);
+  }
 }
 
 .dialog {
-  will-change: transform, opacity;
-
   position: relative;
-  transform: translateZ(0) translateY(0);
+  transform: translateZ(0) translateY(10px);
 
   overflow: hidden;
   display: flex;
   flex-direction: column;
 
-  width: min(calc(100vw - var(--space-4) * 2), 1020px);
+  width: 100%;
+  max-width: 1020px;
   height: 100%;
   max-height: calc(100% - 20px);
-  margin: 10px auto 0;
+  margin: 0 auto;
 
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -48,12 +53,12 @@
 
 @keyframes slide-up {
   from {
-    transform: translateY(12px);
+    transform: translateZ(0) translateY(22px);
     opacity: 0;
   }
 
   to {
-    transform: translateY(0);
+    transform: translateZ(0) translateY(10px);
     opacity: 1;
   }
 }

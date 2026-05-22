@@ -56,10 +56,8 @@
 }
 
 .dropdown {
-  position: absolute;
-  z-index: 100;
-  top: calc(100% + var(--space-2));
-  left: 0;
+  position: fixed;
+  z-index: var(--z-dropdown);
 
   overflow: hidden;
   display: flex;
@@ -74,7 +72,7 @@
 }
 
 .content {
-  z-index: 1100;
+  z-index: var(--z-dropdown);
 
   overflow: hidden;
   display: flex;

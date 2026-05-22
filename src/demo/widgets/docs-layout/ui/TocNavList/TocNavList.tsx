@@ -1,25 +1,26 @@
-import { memo, type MouseEvent, useCallback } from 'react';
-import cx from 'clsx';
+import { memo, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
 import { type TocEntry } from '@/shared/i18n';
 
 type TocNavListProps = {
   toc: TocEntry[];
-  activeId: string;
   onScrollTo: (id: string) => void;
   linkClass: string;
-  activeLinkClass: string;
+  registerLink: (id: string, el: HTMLAnchorElement) => () => void;
 };
 
-type TocNavItemProps = {
+type TocNavItemProps = Omit<TocNavListProps, 'toc'> & {
   item: TocEntry;
-  isActive: boolean;
-  onScrollTo: (id: string) => void;
-  linkClass: string;
-  activeLinkClass: string;
 };
 
-const TocNavItem = memo(({ item, isActive, onScrollTo, linkClass, activeLinkClass }: TocNavItemProps) => {
+const TocNavItem = memo(({ item, onScrollTo, linkClass, registerLink }: TocNavItemProps) => {
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return undefined;
+    return registerLink(item.id, ref.current);
+  }, [item.id, registerLink]);
+
   const handleClick = useCallback(
     (e: MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
@@ -29,22 +30,21 @@ const TocNavItem = memo(({ item, isActive, onScrollTo, linkClass, activeLinkClas
   );
 
   return (
-    <a href={`#${item.id}`} className={cx(linkClass, isActive && activeLinkClass)} onClick={handleClick}>
+    <a ref={ref} href={`#${item.id}`} className={linkClass} onClick={handleClick}>
       {item.label}
     </a>
   );
 });
 
-export function TocNavList({ toc, activeId, onScrollTo, linkClass, activeLinkClass }: TocNavListProps) {
+export function TocNavList({ toc, onScrollTo, linkClass, registerLink }: TocNavListProps) {
   return (
     <>
       {toc.map((item) => (
         <TocNavItem
           key={item.id}
           item={item}
-          isActive={activeId === item.id}
           linkClass={linkClass}
-          activeLinkClass={activeLinkClass}
+          registerLink={registerLink}
           onScrollTo={onScrollTo}
         />
       ))}

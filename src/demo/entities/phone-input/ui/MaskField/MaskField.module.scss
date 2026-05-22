@@ -1,9 +1,11 @@
 @use 'styles/typography' as *;
+@use 'styles/ghost' as *;
 
 .root {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
 }
 
 .input {
@@ -21,3 +23,20 @@
   letter-spacing: 0.05em;
 }
 
+.ghost {
+  &__wrapper {
+    position: relative;
+  }
+
+  &__overlay {
+    @include ghost-overlay;
+  }
+
+  &__filled {
+    color: transparent;
+  }
+
+  &__empty {
+    color: var(--color-text-muted);
+  }
+}

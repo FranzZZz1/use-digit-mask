@@ -1,14 +1,17 @@
-import  { type PropDef } from './useMaskDef';
+import { type PropDef } from './useMaskDef';
+
+const bool = { kind: 'boolean' as const };
+const arr = (placeholder?: string) => ({ kind: 'stringArray' as const, placeholder });
 
 export const USE_COUNTRY_SELECT_PARAMS: PropDef[] = [
   { name: 'allPlans', type: 'DialPlan[]', required: true },
   { name: 'onSelect', type: '(plan: DialPlan) => void', required: true },
   { name: 'currentId', type: 'string | null' },
   { name: 'candidates', type: 'PhoneMaskCandidate[]' },
-  { name: 'priorityIds', type: 'string[]' },
-  { name: 'stickyPins', type: 'boolean', default: 'false' },
+  { name: 'priorityIds', type: 'string[]', control: arr('US, GB, RU') },
+  { name: 'stickyPins', type: 'boolean', default: 'false', control: bool },
   { name: 'inputRef', type: 'RefObject<HTMLInputElement | null>' },
-  { name: 'disableSort', type: 'boolean', default: 'false' },
+  { name: 'disableSort', type: 'boolean', default: 'false', control: bool },
   { name: 'noInternalListeners', type: 'boolean', default: 'false' },
 ];
 

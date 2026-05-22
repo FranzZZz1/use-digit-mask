@@ -4,6 +4,7 @@ import cx from 'clsx';
 
 import { type TocEntry, useLang } from '@/shared/i18n';
 import { useDocsUI } from '@/shared/lib';
+import { SEGMENTS } from '@/shared/router';
 import { DocsNavContext } from '@/shared/ui/doc/docsNavContext';
 import { PageWithBanner } from '@/shared/ui/PageWithBanner';
 import { HOOKS, MobileNav, useTocHighlight } from '@/widgets/docs-layout';
@@ -13,33 +14,27 @@ import { TocNavList } from '../TocNavList/TocNavList';
 
 import styles from './DocsLayout.module.scss';
 
-const SidebarNav = memo(
-  ({ currentPath, isBannerActive }: { currentPath: string | undefined; isBannerActive: boolean }) => {
-    const { t } = useLang();
+const SidebarNav = memo(({ isBannerActive }: { isBannerActive: boolean }) => {
+  const { t } = useLang();
 
-    return (
-      <nav className={cx(styles.sidebar__nav, isBannerActive && styles['sidebar__nav--offset'])}>
-        <p className={styles.sidebar__group}>{t.sections.Hooks}</p>
-        <HookNavList
-          currentPath={currentPath}
-          linkClass={styles.sidebar__link}
-          activeLinkClass={styles['sidebar__link--active']}
-        />
-      </nav>
-    );
-  },
-);
+  return (
+    <nav className={cx(styles.sidebar__nav, isBannerActive && styles['sidebar__nav--offset'])}>
+      <p className={styles.sidebar__group}>{t.sections.Hooks}</p>
+      <HookNavList linkClass={styles.sidebar__link} activeLinkClass={styles['sidebar__link--active']} />
+    </nav>
+  );
+});
 
 const TocNav = memo(
   ({
     toc,
     isBannerActive,
-    activeId,
+    registerLink,
     scrollToId,
   }: {
     toc: TocEntry[];
     isBannerActive: boolean;
-    activeId: string;
+    registerLink: (id: string, el: HTMLAnchorElement) => () => void;
     scrollToId: (id: string) => void;
   }) => {
     const { t } = useLang();
@@ -49,13 +44,7 @@ const TocNav = memo(
     return (
       <nav className={cx(styles.toc__nav, isBannerActive && styles['toc__nav--offset'])}>
         <p className={styles.toc__title}>{t.sections.onThisPage}</p>
-        <TocNavList
-          toc={toc}
-          activeId={activeId}
-          linkClass={styles.toc__link}
-          activeLinkClass={styles['toc__link--active']}
-          onScrollTo={scrollToId}
-        />
+        <TocNavList toc={toc} linkClass={styles.toc__link} registerLink={registerLink} onScrollTo={scrollToId} />
       </nav>
     );
   },
@@ -64,18 +53,19 @@ const TocNav = memo(
 export function DocsLayout() {
   const { t } = useLang();
   const matches = useMatches();
-  const currentPath = matches[matches.length - 1]?.pathname;
-  const handle = matches[matches.length - 1]?.handle as { hook?: keyof typeof t.toc } | undefined;
+  const lastMatch = matches[matches.length - 1];
+  const currentPath = (lastMatch?.pathname ?? '').replace(/\/$/, '');
+  const handle = lastMatch?.handle as { hook?: keyof typeof t.toc } | undefined;
 
   const hookKey = handle?.hook;
   const toc = useMemo<TocEntry[]>(() => (hookKey ? (t.toc[hookKey] ?? []) : []), [hookKey, t]);
 
   const tocIds = useMemo(() => toc.map((item) => item.id), [toc]);
-  const { activeId, scrollToId } = useTocHighlight(tocIds);
+  const { scrollToId, registerLink } = useTocHighlight(tocIds);
 
   const backTo = useDocsUI((s) => s.backTo);
 
-  const hookLabel = HOOKS.find((h) => h.path === currentPath)?.label ?? '';
+  const hookLabel = HOOKS.find((h) => h.path === currentPath || h.examplesPath === currentPath)?.label ?? '';
   const docsNavValue = useMemo(() => ({ hookLabel }), [hookLabel]);
 
   return (
@@ -83,19 +73,24 @@ export function DocsLayout() {
       <PageWithBanner className={styles.page}>
         <div className={styles.layout}>
           <aside className={styles.sidebar}>
-            <SidebarNav currentPath={currentPath} isBannerActive={!!backTo} />
+            <SidebarNav isBannerActive={!!backTo} />
           </aside>
 
-          <main className={styles.content}>
+          <main
+            className={cx(
+              styles.content,
+              currentPath.endsWith(SEGMENTS.examples) ? styles['content--examples'] : styles['content--docs'],
+            )}
+          >
             <Outlet />
           </main>
 
           <aside className={styles.toc}>
-            <TocNav toc={toc} isBannerActive={!!backTo} activeId={activeId} scrollToId={scrollToId} />
+            <TocNav toc={toc} isBannerActive={!!backTo} registerLink={registerLink} scrollToId={scrollToId} />
           </aside>
         </div>
 
-        <MobileNav currentPath={currentPath} toc={toc} activeId={activeId} scrollToId={scrollToId} />
+        <MobileNav currentPath={currentPath} toc={toc} registerLink={registerLink} scrollToId={scrollToId} />
       </PageWithBanner>
     </DocsNavContext.Provider>
   );

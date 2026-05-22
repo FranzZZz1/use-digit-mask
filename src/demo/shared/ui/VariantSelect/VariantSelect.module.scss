@@ -40,6 +40,8 @@
 }
 
 .content {
+  z-index: var(--z-dropdown);
+
   overflow: hidden;
 
   background: var(--color-surface);
@@ -49,10 +51,6 @@
 
   &[data-state='open'] {
     animation: slide-down 160ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  &[data-state='closed'] {
-    animation: slide-up 100ms ease-in;
   }
 }
 
@@ -98,14 +96,3 @@
   }
 }
 
-@keyframes slide-up {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  to {
-    transform: translateY(-4px);
-    opacity: 0;
-  }
-}

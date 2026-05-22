@@ -17,6 +17,11 @@ export const demo = {
     },
   },
   cards: {
+    playground: {
+      title: 'Playground',
+      desc: 'Adjust the mask, toggle any prop and instantly copy the ready-to-use code.',
+      cta: 'Open Playground →',
+    },
     phoneRu: {
       title: 'Phone (Russia)',
       desc: 'mask: "+7 (###) ###-##-##"',
@@ -45,6 +50,43 @@ export const demo = {
       title: 'Country selector',
       desc: 'Pinned: US · GB · RU — type a prefix to sort by closest match',
     },
+    alwaysActive: {
+      title: 'Always active',
+      desc: 'Mask template is always visible — no focus or input required',
+    },
+    ghostMask: {
+      title: 'Ghost placeholder',
+      desc: 'Faded mask chars behind the typed digits — only the remaining empty slots are visible',
+    },
+    ghostPhone: {
+      title: 'Ghost placeholder',
+      desc: 'Ghost appears only after the country code resolves — silent while the format is still ambiguous',
+    },
+  },
+  examples: {
+    useMask: 'Live demos covering all |useMask| props — activation modes, normalization, ghost overlay and more.',
+    usePhoneMask: 'Live demos for |usePhoneMask| — auto-detection and ghost overlay.',
+    useCountrySelect: 'Live demos for |useCountrySelect| — custom and Radix UI country selector implementations.',
+  },
+  playground: {
+    parsedValues: {
+      hide: 'Hide values',
+      show: 'Show values',
+    },
+    tooltips: {
+      mask: 'Digit slot = #, everything else is a literal prefix character. Example: +7 (###) ###-##-##',
+      placeholderChar: 'Single character shown for empty digit slots',
+      trimMaskTail: 'Hides placeholder chars until the user reaches that slot',
+      alwaysActive: 'Mask template is always visible — no focus or input required',
+      activateOnFocus: 'Mask activates when the input is focused',
+      deactivateOnEmptyBlur: 'Mask hides when input loses focus with an empty value',
+      allowedPrefixes: 'Comma-separated prefixes accepted as the start of input',
+      ghostChar: 'Faded overlay character shown behind untyped digit slots',
+      ghostOnlyWhenResolved: 'Show ghost only after the country resolves — hidden while the mask is still ambiguous',
+      stickyPins: 'Pinned countries stay at the top even after a candidate is resolved',
+      disableSort: 'Disable dynamic sorting of matched candidates to the top of the list',
+      priorityIds: 'Comma-separated ISO 3166-1 alpha-2 codes pinned at the top when input is empty',
+    },
   },
   codeComments: {
     allowedPrefixes: "also accepts '8' as a prefix without the '+'",
@@ -61,5 +103,9 @@ export const demo = {
     overridePattern: "change Germany's pattern",
     removeCountry: "Remove Kazakhstan — it won't appear in the list or candidates",
     addPlan: 'Add a brand-new plan — cc must be unique',
+    alwaysActive: 'mask template is always shown — no focus or typing needed to reveal slots',
+    ghostChar: 'fill empty ghost slots with a custom char instead of placeholderChar',
+    hideGhostOnInput: 'hide ghost as soon as the user starts typing — with trimMaskTail, value is empty string until first digit',
+    ghostOnlyWhenResolved: 'show ghost only after a country is detected — check mask !== E164_MASK',
   },
 };

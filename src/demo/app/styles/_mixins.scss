@@ -1,6 +1,7 @@
 @use 'breakpoints' as *;
 @use 'sass:map';
 @use 'sass:meta';
+@use 'typography';
 
 @mixin flex($dir: row, $align: center, $justify: flex-start) {
   display: flex;
@@ -41,4 +42,41 @@
   @include screen-size(mobile) {
     padding-inline: var(--space-4);
   }
+}
+
+@mixin nav-link {
+  @include typography.tg(sm, r, mono);
+
+  padding: var(--space-1) var(--space-3);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition),
+    background var(--transition);
+}
+
+@mixin toc-link {
+  display: block;
+
+  @include typography.tg(sm);
+
+  padding: var(--space-1) var(--space-2);
+
+  text-decoration: none;
+
+  border-left: 2px solid transparent;
+
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+@mixin nav-section-title {
+  margin-bottom: var(--space-2);
+
+  @include typography.tg(xs, sb);
+
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }

@@ -27,7 +27,7 @@
 
 .banner {
   position: fixed;
-  z-index: 40;
+  z-index: var(--z-banner);
   top: calc(var(--header-height));
 
   overflow: hidden;

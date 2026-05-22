@@ -30,7 +30,7 @@ export const useCountrySelect = {
     setQuery: 'Update the search query. Attach to the search input |onChange|.',
     currentPlan: `The currently selected [|DialPlan|](${buildSectionLink(PATHS.usePhoneMask, SECTION_IDS.dialPlan)}) object, or |undefined| when nothing is resolved yet.`,
     items: 'Sorted and filtered list of plans to render. Respects |stickyPins|, candidates, and search query.',
-    dividerAfter: 'Insert a visual divider before |items[dividerAfter]|. |-1| means no divider.',
+    dividerAfter: 'The index of the element after which you want to insert a visual separator. |-1| means no divider.',
     containerRef: 'Attach to the root container element to enable close-on-outside-click.',
     searchRef: 'Attach to the search input — auto-focused when the dropdown opens.',
     select:

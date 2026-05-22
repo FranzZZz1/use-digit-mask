@@ -1,0 +1,45 @@
+@use 'styles/mixins' as *;
+@use 'styles/typography' as *;
+
+/* stylelint-disable-next-line selector-class-pattern */
+:global(.pg-tooltip) {
+  /* stylelint-disable-next-line custom-property-no-missing-var-function */
+  --rt-transition-closing-delay: 0s;
+
+  z-index: var(--z-tooltip);
+
+  max-width: 240px;
+  padding: 4px 10px;
+
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text) !important;
+  text-align: left;
+
+  opacity: 1;
+  background-color: var(--color-surface-raised, var(--color-surface)) !important;
+  border: 1px solid var(--color-border-focus) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 55%) !important;
+
+  transition: none !important;
+}
+
+.hint {
+  cursor: help;
+
+  flex-shrink: 0;
+
+  color: var(--color-text-muted);
+
+  opacity: 0.5;
+
+  transition: opacity var(--transition);
+
+  @include tg(xs, r);
+
+  &:hover {
+    opacity: 1;
+  }
+}

@@ -5,9 +5,16 @@
   max-width: var(--docs-max-width);
   margin-inline: auto;
 
-  &__title {
-    margin-bottom: var(--space-3);
+  &__title_row {
+    display: flex;
+    gap: var(--space-4);
+    align-items: baseline;
+    justify-content: space-between;
 
+    margin-bottom: var(--space-3);
+  }
+
+  &__title {
     @include tg(3xl, b, mono);
 
     color: var(--color-text);
@@ -15,6 +22,10 @@
 
     @include screen-size(mobile) {
       @include tg(2xl, b, mono);
+    }
+
+    &--offset {
+      margin-bottom: var(--space-3);
     }
   }
 

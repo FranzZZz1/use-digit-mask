@@ -1,5 +1,7 @@
 export const nav = {
   docs: 'Docs',
+  changelog: 'Changelog',
+  allExamples: 'All examples',
   openMenu: 'Open menu',
   closeMenu: 'Close menu',
 };
@@ -8,6 +10,19 @@ export const code = {
   copy: 'Copy',
   copied: '✓ Copied',
   close: 'Close',
+  expand: 'Expand to fullscreen',
+  collapse: 'Exit fullscreen',
+  ts: 'TS',
+  js: 'JS',
+};
+
+export const changelog = {
+  title: 'Changelog',
+  lead: 'Release history for |use-digit-mask|.',
+  added: 'Added',
+  changed: 'Changed',
+  fixed: 'Fixed',
+  breaking: 'Breaking',
 };
 
 export const sections = {
@@ -22,4 +37,6 @@ export const sections = {
   preview: 'Preview',
   backTo: 'Back to',
   backToDismiss: 'Dismiss',
+  examples: 'Examples',
+  tryInPlayground: 'Try in Playground',
 };

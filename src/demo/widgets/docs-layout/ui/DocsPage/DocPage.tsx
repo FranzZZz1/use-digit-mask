@@ -4,11 +4,13 @@ import { type PropRow, PropTable } from '@/entities/prop-def';
 import { rich, useLang } from '@/shared/i18n';
 import { SECTION_IDS } from '@/shared/router';
 import { DocCodeBlock } from '@/shared/ui/DocCodeBlock/DocCodeBlock';
+import { DocLink } from '@/shared/ui/DocLink';
 
 import docStyles from '@/shared/ui/doc/doc.module.scss';
 
 export type DocSnippet = {
   code: string;
+  codeJs?: string;
   label?: string;
 };
 
@@ -20,6 +22,7 @@ export type DocSection = {
   typeLinks?: Record<string, string>;
   snippets?: DocSnippet[];
   children?: ReactNode;
+  onPropClick?: (name: string) => void;
 };
 
 type Props = {
@@ -27,14 +30,18 @@ type Props = {
   lead: string;
   overview: string[];
   sections: DocSection[];
+  examplesPath?: string;
 };
 
-export function DocPage({ title, lead, overview, sections }: Props) {
+export function DocPage({ title, lead, overview, sections, examplesPath }: Props) {
   const { t } = useLang();
 
   return (
     <article className={docStyles.doc}>
-      <h1 className={docStyles.doc__title}>{title}</h1>
+      <div className={docStyles.doc__title_row}>
+        <h1 className={docStyles.doc__title}>{title}</h1>
+        {examplesPath && <DocLink to={examplesPath}>{t.sections.examples} →</DocLink>}
+      </div>
       <p className={docStyles.doc__lead}>{rich(lead, docStyles.doc__code, docStyles.doc__link)}</p>
 
       <section id={SECTION_IDS.overview} className={docStyles.doc__section}>
@@ -55,9 +62,11 @@ export function DocPage({ title, lead, overview, sections }: Props) {
           )}
           {section.snippets?.map((s, i) => (
             // eslint-disable-next-line react/no-array-index-key
-            <DocCodeBlock key={i} code={s.code} label={s.label} />
+            <DocCodeBlock key={i} code={s.code} codeJs={s.codeJs} label={s.label} />
           ))}
-          {section.rows && <PropTable rows={section.rows} typeLinks={section.typeLinks} />}
+          {section.rows && (
+            <PropTable rows={section.rows} typeLinks={section.typeLinks} onPropClick={section.onPropClick} />
+          )}
           {section.children}
         </section>
       ))}

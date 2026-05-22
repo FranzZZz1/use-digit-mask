@@ -18,17 +18,36 @@
   grid-template-columns: 2fr 3fr;
   flex: 1;
 
+  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+  transition: grid-template-columns 300ms ease;
+
   @include screen-size(tablet-small) {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
+    transition: none;
   }
+
+  &--fullscreen {
+    grid-template-columns: 0fr 1fr;
+
+    @include screen-size(tablet-small) {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+  }
+}
+
+.preview,
+.code__panel {
+  min-width: 0;
+  min-height: 0;
 }
 
 .preview {
   position: relative;
   z-index: 2;
 
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -37,9 +56,31 @@
 
   border-right: 1px solid var(--color-border);
 
+  transition:
+    opacity 200ms ease,
+    padding 300ms ease;
+
   @include screen-size(tablet-small) {
+    will-change: height;
+
+    height: var(--preview-h, auto);
+
     border-right: none;
     border-bottom: 1px solid var(--color-border);
+
+    transition:
+      opacity 200ms ease-out,
+      padding 250ms ease-out,
+      height 250ms ease-out;
+  }
+
+  &--fullscreen {
+    padding: 0;
+    opacity: 0;
+
+    @include screen-size(tablet-small) {
+      height: 0;
+    }
   }
 
   &__header {
@@ -100,52 +141,88 @@
 }
 
 .tabs {
-  display: flex;
-  flex-shrink: 0;
-  gap: 0;
-  border-bottom: 1px solid var(--color-border);
-}
+  &__variants {
+    pointer-events: none;
+    cursor: pointer;
 
-.tab {
-  cursor: pointer;
+    padding: var(--space-1) var(--space-2);
 
-  padding: var(--space-2) var(--space-3);
+    color: var(--color-text-muted);
 
-  @include tg(xs, m);
+    opacity: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
 
-  color: var(--color-text-muted);
+    transition:
+      opacity var(--transition),
+      color var(--transition),
+      border-color var(--transition),
+      background var(--transition);
 
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
+    @include tg(xs, r, mono);
 
-  transition:
-    color var(--transition),
-    border-color var(--transition);
+    &--visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
 
-  &:not(&--active) {
-    @include hover {
-      color: var(--color-text-secondary);
+    &:not(&--active) {
+      @include hover {
+        color: var(--color-text-secondary);
+        border-color: var(--color-text-muted);
+      }
+    }
+
+    &--active {
+      color: var(--color-accent);
+      background: rgb(99 102 241 / 8%);
+      border-color: var(--color-accent);
     }
   }
 
-  &--active {
-    color: var(--color-text);
-    border-bottom-color: var(--color-text);
+  &__expand {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+    margin-right: var(--space-2);
+    margin-left: auto;
+
+    color: var(--color-text-muted);
+
+
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+
+    transition: color var(--transition);
+
+    @include hover {
+      color: var(--color-text);
+    }
   }
 }
 
 .code {
   &__panel {
+    will-change: transform;
+
     overflow: hidden;
     display: flex;
     flex-direction: column;
+
     background: var(--code-background);
   }
 
   &__scroll {
     overflow: auto;
+    /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+    overscroll-behavior: contain;
     flex: 1;
   }
 }

@@ -13,15 +13,16 @@ type VariantSelectProps = {
   options: VariantSelectOption[];
   value: number;
   onChange: (value: number) => void;
+  triggerClassName?: string;
 };
 
-export function VariantSelect({ options, value, onChange }: VariantSelectProps) {
+export function VariantSelect({ options, value, onChange, triggerClassName = '' }: VariantSelectProps) {
   const [open, setOpen] = useState(false);
   const currentLabel = options.find((o) => o.value === value)?.label ?? '';
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger className={styles.trigger}>
+      <Popover.Trigger className={cx(styles.trigger, triggerClassName)}>
         {currentLabel}
         <span className={styles.trigger__icon}>▾</span>
       </Popover.Trigger>

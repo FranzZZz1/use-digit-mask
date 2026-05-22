@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 
 import { LangProvider } from '@/shared/i18n';
+import { SyntaxProvider } from '@/shared/lib';
 
 import { router } from './router';
 
@@ -14,7 +15,9 @@ export function App() {
 
   return (
     <LangProvider>
-      <RouterProvider router={router} />
+      <SyntaxProvider>
+        <RouterProvider router={router} />
+      </SyntaxProvider>
     </LangProvider>
   );
 }

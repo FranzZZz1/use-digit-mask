@@ -1,5 +1,7 @@
 export const nav = {
   docs: 'Документация',
+  changelog: 'Changelog',
+  allExamples: 'Все примеры',
   openMenu: 'Открыть меню',
   closeMenu: 'Закрыть меню',
 };
@@ -8,6 +10,19 @@ export const code = {
   copy: 'Копировать',
   copied: '✓ Скопировано',
   close: 'Закрыть',
+  expand: 'Развернуть на весь экран',
+  collapse: 'Свернуть',
+  ts: 'TS',
+  js: 'JS',
+};
+
+export const changelog = {
+  title: 'Changelog',
+  lead: 'История релизов |use-digit-mask|.',
+  added: 'Добавлено',
+  changed: 'Изменено',
+  fixed: 'Исправлено',
+  breaking: 'Обратно несовместимые',
 };
 
 export const sections = {
@@ -22,4 +37,6 @@ export const sections = {
   preview: 'Предпросмотр',
   backTo: 'Назад к',
   backToDismiss: 'Закрыть',
+  examples: 'Примеры',
+  tryInPlayground: 'Открыть в Playground',
 };

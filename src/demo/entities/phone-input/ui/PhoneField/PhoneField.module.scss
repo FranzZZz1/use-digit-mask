@@ -1,10 +1,12 @@
 @use 'styles/mixins' as *;
 @use 'styles/typography' as *;
+@use 'styles/ghost' as *;
 
 .root {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
 }
 
 .input {
@@ -74,4 +76,25 @@
   border-color: var(--color-accent);
 }
 
+.ghost {
+  &__wrapper {
+    position: relative;
+    flex: 1;
+  }
 
+  &__overlay {
+    @include ghost-overlay;
+  }
+
+  &__filled {
+    color: transparent;
+  }
+
+  &__empty {
+    color: var(--color-text-muted);
+  }
+}
+
+.input--ghost {
+  width: 100%;
+}

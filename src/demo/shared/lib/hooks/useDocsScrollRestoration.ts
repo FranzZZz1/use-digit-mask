@@ -35,5 +35,5 @@ export function useDocsScrollRestoration() {
     return () => {
       cancelAnimationFrame(raf);
     };
-  }, [location.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 }
