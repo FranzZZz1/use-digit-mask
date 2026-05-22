@@ -46,6 +46,13 @@ export type ParsedValues = {
   formattedWithoutPrefix: string;
   formattedWithoutPlaceholderChars: string;
   isMaskCompleted: boolean;
+  /**
+   * The canonical E.164-style prefix for the resolved plan when the user typed
+   * an alternative prefix (e.g. user typed `8` → `parenPrefix` is `+7`).
+   * `undefined` when no altPrefix is in use or no plan is resolved.
+   * Only populated by `usePhoneMask`; always `undefined` when using `useMask` directly.
+   */
+  parentPrefix?: string;
 };
 
 export type UseMaskProps = {
@@ -58,9 +65,28 @@ export type UseMaskProps = {
   activateOnFocus?: boolean;
   deactivateOnEmptyBlur?: boolean;
   trimMaskTail?: boolean;
+  // Character used to fill empty slots in `ghostValue`. Defaults to `placeholderChar`.
+  ghostChar?: string;
+  /**
+   * When `true`, the mask template is always rendered regardless of focus state.
+   * `onChange` still reports `''` when there are no digits entered.
+   */
+  alwaysActive?: boolean;
 };
 
 const clamp = (num: number, min: number, max: number) => Math.max(min, Math.min(max, num));
+
+function fillSlots(chars: readonly string[], digits: string, fillChar: string): string {
+  const output = [...chars];
+  let digitIndex = 0;
+  for (let i = 0; i < chars.length; i += 1) {
+    if (chars[i] === MASK_SLOT_DIGIT) {
+      output[i] = digits[digitIndex] ?? fillChar;
+      digitIndex += 1;
+    }
+  }
+  return output.join('');
+}
 
 const createCleanDigitsExtractor = (stripFn: (digits: string) => string) => (str: string) =>
   stripFn(extractDigits(str));
@@ -75,10 +101,13 @@ export function useMask({
   activateOnFocus = false,
   deactivateOnEmptyBlur = false,
   trimMaskTail = false,
+  ghostChar,
+  alwaysActive = false,
 }: UseMaskProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isComposingRef = useRef(false);
-  const isMaskActiveRef = useRef(false);
+  const isMaskActiveRef = useRef(alwaysActive);
+  const prevAlwaysActiveRef = useRef(alwaysActive);
   const digitsRawRef = useRef<string>('');
 
   const caret = useCaretManager(inputRef);
@@ -95,7 +124,10 @@ export function useMask({
 
   const maskMeta = useMaskMeta(mask);
 
-  const { allowedPrefixesDigits, stripAllowedPrefix, getVisiblePrefix } = usePrefixHandling(allowedPrefixes, maskMeta);
+  const { allowedPrefixesDigits, stripVisiblePrefix, stripAllowedPrefix, getVisiblePrefix } = usePrefixHandling(
+    allowedPrefixes,
+    maskMeta,
+  );
 
   const shouldActivate = useCallback(
     (digits: string) =>
@@ -106,23 +138,12 @@ export function useMask({
     [allowedPrefixes],
   );
 
-  const extractCleanDigits = useMemo(() => createCleanDigitsExtractor(stripAllowedPrefix), [stripAllowedPrefix]);
+  const extractCleanDigits = useMemo(() => createCleanDigitsExtractor(stripVisiblePrefix), [stripVisiblePrefix]);
 
   const renderSlots = useCallback(
     (cleanDigits: string) => {
       const digits = cleanDigits.slice(0, maskMeta.maxDigits);
-      const outputChars: string[] = [...maskMeta.chars];
-
-      let digitIndex = 0;
-      for (let i = 0; i < maskMeta.chars.length; i += 1) {
-        if (maskMeta.chars[i] === MASK_SLOT_DIGIT) {
-          const digit = digits[digitIndex];
-          outputChars[i] = digit ?? placeholderChar;
-          digitIndex += 1;
-        }
-      }
-
-      let text = outputChars.join('');
+      let text = fillSlots(maskMeta.chars, digits, placeholderChar);
 
       if (trimMaskTail) {
         if (digits.length === 0) {
@@ -145,6 +166,12 @@ export function useMask({
       placeholderChar,
       trimMaskTail,
     ],
+  );
+
+  const renderGhost = useCallback(
+    (digits: string): string =>
+      fillSlots(maskMeta.chars, digits.slice(0, maskMeta.maxDigits), ghostChar ?? placeholderChar),
+    [ghostChar, maskMeta.chars, maskMeta.maxDigits, placeholderChar],
   );
 
   const formatDigits = useCallback(
@@ -216,7 +243,7 @@ export function useMask({
 
       const digitsOnly = extractDigits(formattedWithPrefix);
 
-      const rawWithoutPrefix = stripAllowedPrefix(digitsOnly);
+      const rawWithoutPrefix = stripVisiblePrefix(digitsOnly);
       const rawWithPrefix = actualPrefix + rawWithoutPrefix;
 
       const formattedWithoutPlaceholderChars = (() => {
@@ -251,7 +278,7 @@ export function useMask({
       maskMeta.maxDigits,
       placeholderChar,
       rootValue,
-      stripAllowedPrefix,
+      stripVisiblePrefix,
       trimMaskTail,
     ],
   );
@@ -259,6 +286,14 @@ export function useMask({
   useIsomorphicLayoutEffect(() => {
     const external = value || '';
     const cleaned = extractCleanDigits(external);
+
+    const alwaysActiveChanged = prevAlwaysActiveRef.current !== alwaysActive;
+    if (alwaysActiveChanged) {
+      prevAlwaysActiveRef.current = alwaysActive;
+      if (cleaned.length === 0) {
+        isMaskActiveRef.current = alwaysActive;
+      }
+    }
 
     const nextText = renderText(cleaned);
 
@@ -268,7 +303,6 @@ export function useMask({
     setRootValue(nextText);
 
     if (cleaned.length === 0) {
-      isMaskActiveRef.current = false;
       caret.pendingDigitsRef.current = null;
     } else {
       const logicalPos = caret.pendingDigitsRef.current;
@@ -281,12 +315,14 @@ export function useMask({
     // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
     // onChange намеренно не в deps — эффект стреляет только при смене value/маски,
     // и к тому моменту onChange в замыкании уже актуален.
-    if (nextText !== external) {
+    // При alwaysActive с пустым value не уведомляем: маска отображает шаблон, но
+    // value родителя остаётся '' — расхождение намеренное, иначе будет бесконечный цикл.
+    if (nextText !== external && !(alwaysActive && cleaned.length === 0)) {
       onChange(nextText, getParsedValues(nextText));
     }
 
     // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
-  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues]);
+  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues, alwaysActive]);
 
   useEffect(
     () => () => {
@@ -300,7 +336,7 @@ export function useMask({
       const clampedDigits = nextDigits.slice(0, maskMeta.maxDigits);
 
       const willBeEmpty = clampedDigits.length === 0;
-      if (willBeEmpty) {
+      if (willBeEmpty && !alwaysActive) {
         isMaskActiveRef.current = false;
       }
 
@@ -314,16 +350,31 @@ export function useMask({
       }
 
       if (typeof caretDigitsOnLeft === 'number') {
-        const pos = willBeEmpty ? 0 : getCaretPosAfterDigits(caretDigitsOnLeft);
+        let pos: number;
+        if (!willBeEmpty) pos = getCaretPosAfterDigits(caretDigitsOnLeft);
+        else if (alwaysActive) pos = maskMeta.prefixLength;
+        else pos = 0;
         caret.setCaret(pos);
         caret.pendingDigitsRef.current = willBeEmpty ? null : caretDigitsOnLeft;
       }
 
       if (valueChanged) {
-        onChange(nextText, getParsedValues(nextText));
+        // При alwaysActive с пустым значением отправляем '' в onChange, а не шаблон маски.
+        const reportText = alwaysActive && willBeEmpty ? '' : nextText;
+        onChange(reportText, getParsedValues(reportText));
       }
     },
-    [caret, getCaretPosAfterDigits, getParsedValues, maskMeta.maxDigits, onChange, renderText, rootValue],
+    [
+      alwaysActive,
+      caret,
+      getCaretPosAfterDigits,
+      getParsedValues,
+      maskMeta.maxDigits,
+      maskMeta.prefixLength,
+      onChange,
+      renderText,
+      rootValue,
+    ],
   );
 
   const handleChange = useCallback(
@@ -343,6 +394,13 @@ export function useMask({
           caret.setCaret(maskMeta.prefixLength);
           return;
         }
+
+        if (rawDigits.length === 1) {
+          isMaskActiveRef.current = true;
+          const normalized = normalize ? normalize(rawDigits) : rawDigits;
+          applyDigits(normalized.slice(0, maskMeta.maxDigits), normalized.length);
+          return;
+        }
       }
 
       const cursor = e.target.selectionStart ?? input.length;
@@ -351,7 +409,16 @@ export function useMask({
       const normalized = normalize ? normalize(fullDigits) : fullDigits;
       applyDigits(normalized, digitsLeft);
     },
-    [applyDigits, caret, extractCleanDigits, formatDigits, maskMeta.prefixLength, normalize, shouldActivate],
+    [
+      applyDigits,
+      caret,
+      extractCleanDigits,
+      formatDigits,
+      maskMeta.maxDigits,
+      maskMeta.prefixLength,
+      normalize,
+      shouldActivate,
+    ],
   );
 
   const isPrefixOnlyPaste = useCallback(
@@ -474,7 +541,7 @@ export function useMask({
         }
 
         if (leftStart === 0) {
-          if (isMaskActiveRef.current) {
+          if (isMaskActiveRef.current && !alwaysActive) {
             isMaskActiveRef.current = false;
             applyDigits('');
             caret.setCaret(0);
@@ -496,7 +563,7 @@ export function useMask({
           applyDigits(next, leftStart);
         } else {
           if (leftStart >= prev.length) {
-            if (isMaskActiveRef.current && prev.length === 0) {
+            if (isMaskActiveRef.current && prev.length === 0 && !alwaysActive) {
               isMaskActiveRef.current = false;
               applyDigits('');
               caret.setCaret(0);
@@ -531,6 +598,7 @@ export function useMask({
       }
     },
     [
+      alwaysActive,
       applyDigits,
       caret,
       extractCleanDigits,
@@ -571,13 +639,13 @@ export function useMask({
   }, [activateOnFocus, caret, renderSlots, getCaretPosAfterDigits, maskMeta.prefixLength]);
 
   const onBlur = useCallback(() => {
-    if (!deactivateOnEmptyBlur) return;
+    if (!deactivateOnEmptyBlur || alwaysActive) return;
 
     if (digitsRawRef.current.length === 0) {
       isMaskActiveRef.current = false;
       setRootValue('');
     }
-  }, [deactivateOnEmptyBlur]);
+  }, [alwaysActive, deactivateOnEmptyBlur]);
 
   const onMouseDown = useCallback(
     (e: MouseEvent<HTMLInputElement>) => {
@@ -603,6 +671,11 @@ export function useMask({
     [activateOnFocus, caret, formatDigits, maskMeta.prefixLength],
   );
 
+  const ghostValue =
+    alwaysActive && digitsRawRef.current.length === 0 && !trimMaskTail
+      ? ''
+      : ' '.repeat(rootValue.length) + renderGhost(digitsRawRef.current).slice(rootValue.length);
+
   const props = {
     value: rootValue,
     ref: inputRef,
@@ -622,5 +695,5 @@ export function useMask({
     getParsedValues,
   };
 
-  return { props, api } as const;
+  return { props, api, ghostValue } as const;
 }

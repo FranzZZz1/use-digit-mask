@@ -4,6 +4,32 @@ import { describe, expect, it } from 'vitest';
 
 import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
 
+describe('Ввод при allowedPrefixes = []', () => {
+  const MASK = '+7 (###) ###-##-##';
+
+  it('ввод "7" (совпадает с цифрой маски) кладёт цифру в первый слот, не показывает пустой шаблон', () => {
+    render(<TestInput mask={MASK} />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    expect(input.value).toBe('+7 (7__) ___-__-__');
+  });
+
+  it('ввод "9" кладёт цифру в первый слот', () => {
+    render(<TestInput mask={MASK} />);
+    const input = getInput();
+    fireChangeAt(input, '9', 1);
+    expect(input.value).toBe('+7 (9__) ___-__-__');
+  });
+
+  it('продолжение ввода после первой цифры корректно заполняет следующие слоты', () => {
+    render(<TestInput mask={MASK} />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    fireChangeAt(input, '+7 (79_) ___-__-__', 6);
+    expect(input.value).toBe('+7 (79_) ___-__-__');
+  });
+});
+
 describe('Активация маски через allowedPrefixes', () => {
   const MASK = '+7 (###) ###-##-##';
   const PREFIXES = ['+7', '8'];

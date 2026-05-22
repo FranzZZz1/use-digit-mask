@@ -147,7 +147,7 @@ describe('useCountrySelect - stickyPins', () => {
 });
 
 describe('useCountrySelect - disableSort', () => {
-  it('disableSort=true -> всегда естественный порядок, dividerAfter=-1', () => {
+  it('disableSort=true -> отключает всплытие кандидатов, priorityIds по-прежнему работают', () => {
     const candidates = [makeCandidate('RU', '7'), makeCandidate('DE', '49')];
     const { result } = renderHook(() =>
       useCountrySelect({
@@ -159,8 +159,8 @@ describe('useCountrySelect - disableSort', () => {
         disableSort: true,
       }),
     );
-    expect(result.current.items.map((p) => p.id)).toEqual(['US', 'GB', 'RU', 'DE', 'FR']);
-    expect(result.current.dividerAfter).toBe(-1);
+    expect(result.current.items.map((p) => p.id)).toEqual(['GB', 'FR', 'US', 'RU', 'DE']);
+    expect(result.current.dividerAfter).toBe(2);
   });
 
   it('disableSort=true, но поиск всё равно фильтрует', () => {

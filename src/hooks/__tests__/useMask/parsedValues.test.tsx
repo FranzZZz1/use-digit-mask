@@ -30,6 +30,16 @@ describe('ParsedValues', () => {
     expect(parsed.prefix).toBe('+7');
   });
 
+  it('rawWithoutPrefix при allowedPrefixes = [] не включает цифры маски из видимого префикса', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask="+7 (###) ###-##-##" onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.rawWithoutPrefix).toBe('7');
+    expect(parsed.isMaskCompleted).toBe(false);
+  });
+
   it('rawWithoutPrefix содержит только цифры без префикса', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
     render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} onChangeSpy={spy} />);

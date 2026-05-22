@@ -26,6 +26,7 @@ type ResolvedPlan = {
   prefix: string;
   prefixDigits: string;
   candidates: PhoneMaskCandidate[];
+  parentPrefix?: string;
 };
 
 const EMPTY_PLAN: ResolvedPlan = {
@@ -63,6 +64,7 @@ function buildCandidateParsedValues(
   nextDigits: string,
   body: string,
   nextFormatted: string,
+  parentPrefix: string | undefined,
 ): ParsedValues {
   const totalSlots = (candidate.mask.match(/#/g) ?? []).length;
 
@@ -73,6 +75,7 @@ function buildCandidateParsedValues(
 
   return {
     prefix: candidate.prefix,
+    parentPrefix,
     rawWithPrefix: nextDigits,
     rawWithoutPrefix: body,
     formattedWithPrefix: nextFormatted,
@@ -103,7 +106,7 @@ export function usePhoneMask({
     [digits, dialPlans, forcedId],
   );
 
-  const { props, api } = useMask({
+  const { props, api, ghostValue } = useMask({
     ...rest,
     mask,
     value: sourceValue,
@@ -123,6 +126,7 @@ export function usePhoneMask({
       onChange?.(next, {
         ...parsed,
         prefix: fresh.prefix,
+        parentPrefix: fresh.parentPrefix,
         rawWithoutPrefix: body,
         isMaskCompleted: freshTotalSlots > 0 && rawDigits.length >= freshTotalSlots,
       });
@@ -148,7 +152,10 @@ export function usePhoneMask({
       const nextFormatted = formatDigitsWithMask(nextDigits, candidate.mask, placeholderChar);
 
       if (!isControlled) setLocalValue(nextFormatted);
-      onChange?.(nextFormatted, buildCandidateParsedValues(candidate, nextDigits, body, nextFormatted));
+      onChange?.(
+        nextFormatted,
+        buildCandidateParsedValues(candidate, nextDigits, body, nextFormatted, candidate.parentPrefix),
+      );
     },
     [isControlled, localValue, onChange, placeholderChar, prefixDigits, value],
   );
@@ -171,5 +178,17 @@ export function usePhoneMask({
     if (!stillValid) setForcedId(null);
   }, [digits, dialPlans, forcedId]);
 
-  return { props, api, mask, cc, id, prefix, candidates, allPlans: dialPlans, selectCandidate, selectPlan } as const;
+  return {
+    props,
+    api,
+    ghostValue,
+    mask,
+    cc,
+    id,
+    prefix,
+    candidates,
+    allPlans: dialPlans,
+    selectCandidate,
+    selectPlan,
+  } as const;
 }

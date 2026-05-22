@@ -24,6 +24,8 @@ export function selectPhoneMask(rawDigits: string, plans: DialPlan[] = DEFAULT_D
     const main: PhoneMaskCandidate[] =
       digits.startsWith(plan.cc) || plan.cc.startsWith(digits) ? [dialPlanToCandidate(plan)] : [];
 
+    const canonical = plan.hasPlus !== false ? `+${plan.cc}` : plan.cc;
+
     const alts: PhoneMaskCandidate[] = (plan.altPrefixes ?? [])
       .map((altPrefix) => {
         const sign = altPrefix.startsWith('+') ? '+' : '';
@@ -35,6 +37,7 @@ export function selectPhoneMask(rawDigits: string, plans: DialPlan[] = DEFAULT_D
           prefixDigits,
           mask: `${sign}${'#'.repeat(prefixDigits.length)} ${plan.pattern}`,
           label: plan.label,
+          parentPrefix: altPrefix !== canonical ? canonical : undefined,
         };
       })
       .filter((c) => digits.startsWith(c.prefixDigits) || c.prefixDigits.startsWith(digits));
@@ -57,6 +60,7 @@ export function selectPhoneMask(rawDigits: string, plans: DialPlan[] = DEFAULT_D
     cc: best.cc,
     id: best.id,
     prefix: best.prefix,
+    parentPrefix: best.parentPrefix,
     candidates: candidates.length > 1 ? candidates : [],
   };
 }

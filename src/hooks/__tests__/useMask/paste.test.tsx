@@ -111,6 +111,26 @@ describe('Вставка - с видимым префиксом', () => {
   });
 });
 
+describe('Вставка при allowedPrefixes = []', () => {
+  const MASK = '+7 (###) ###-##-##';
+
+  it('вставка "79991234567" — "7" идёт в первый слот, не стрипается как префикс', () => {
+    render(<TestInput mask={MASK} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '79991234567');
+    expect(input.value).toBe('+7 (799) 912-34-56');
+  });
+
+  it('вставка "+7 (9991234567)" — цифры маски не стрипаются, "7" идёт в слот', () => {
+    render(<TestInput mask={MASK} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '+7 (9991234567)');
+    expect(input.value).toBe('+7 (799) 912-34-56');
+  });
+});
+
 describe('Вставка - маска без префикса', () => {
   it('вставка цифр соответствует ожидаемому формату даты', () => {
     render(<TestInput mask="##/##/####" />);

@@ -36,6 +36,12 @@ export type PhoneMaskCandidate = {
   prefix: string;
   prefixDigits: string;
   label?: string;
+  /**
+   * Canonical E.164-style prefix for this candidate when it was matched via an `altPrefixes` entry.
+   * For example, Russia's `altPrefix: '8'` produces `parentPrefix: '+7'`.
+   * `undefined` for main (canonical) candidates.
+   */
+  parentPrefix?: string;
 };
 
 export type PhoneMaskResult = {
@@ -51,4 +57,6 @@ export type PhoneMaskResult = {
    * Use `candidates.length > 0` to check for ambiguity — safe.
    */
   candidates: PhoneMaskCandidate[];
+  /** See `PhoneMaskCandidate.parentPrefix`. Propagated from the best-matched candidate. */
+  parentPrefix?: string;
 };

@@ -40,10 +40,11 @@ export type UseCountrySelectOptions = {
    */
   inputRef?: RefObject<HTMLInputElement | null>;
   /**
-   * When `true`, items are returned in the natural order of `allPlans` —
-   * no floating of candidates or `priorityIds`. Search-based filtering still applies.
+   * When `true`, candidate-based floating is disabled — plans no longer bubble to the
+   * top based on the typed prefix. `priorityIds` / `stickyPins` still apply.
+   * Search-based filtering still applies.
    *
-   * Useful when you manage ordering externally (server-side sort, custom comparator, etc.).
+   * Useful when you manage candidate ordering externally (server-side sort, custom comparator, etc.).
    *
    * @default false
    */
@@ -128,52 +129,38 @@ function buildIdleItems(
   plansById: Map<string, DialPlan>,
   stickyPins: boolean,
 ): { items: DialPlan[]; dividerAfter: number } {
-  // IDs of unambiguous candidates from selectPhoneMask (empty when single match).
-  const candidateIds = candidates?.length ? candidates.map((c) => c.id).filter((id) => plansById.has(id)) : [];
+  const activeIds = candidates?.filter((c) => plansById.has(c.id)).map((c) => c.id) ?? [];
+  const hasActive = activeIds.length > 1;
 
-  // Only float when there is genuine ambiguity (multiple candidates).
-  const activeIds = candidateIds.length > 1 ? candidateIds : [];
+  let topIds: string[];
+  let divider = -1;
 
   if (stickyPins) {
-    const pinnedIds = priorityIds?.filter((id) => plansById.has(id)) ?? [];
-
-    if (pinnedIds.length) {
-      const pinnedSet = new Set(pinnedIds);
-      const pinned = pinnedIds.map((id) => plansById.get(id)!);
-
-      // Active plans not already pinned float just below the divider.
-      const floatingIds = activeIds.filter((id) => !pinnedSet.has(id));
-      const floatingSet = new Set(floatingIds);
-      const floating = floatingIds.map((id) => plansById.get(id)!);
-
-      const rest = allPlans.filter((p) => {
-        const pid = p.id ?? p.cc;
-        return !pinnedSet.has(pid) && !floatingSet.has(pid);
-      });
-
-      return { items: [...pinned, ...floating, ...rest], dividerAfter: pinned.length };
+    const pinned = (priorityIds ?? []).filter((id) => plansById.has(id));
+    if (pinned.length) {
+      const pinnedSet = new Set(pinned);
+      const floating = hasActive ? activeIds.filter((id) => !pinnedSet.has(id)) : [];
+      topIds = floating.length ? [...pinned, ...floating] : pinned;
+      divider = pinned.length;
+    } else {
+      // No priorityIds to pin — fall back to dynamic-mode behaviour.
+      topIds = currentId != null && hasActive ? activeIds : [];
     }
+  } else if (currentId == null) {
+    // Empty input: float priorityIds.
+    topIds = (priorityIds ?? []).filter((id) => plansById.has(id));
+  } else {
+    // Input present: float ambiguous candidates.
+    topIds = hasActive ? activeIds : [];
   }
 
-  // Empty input: show priorityIds at top.
-  // Any input: ignore priorityIds — surface active plans instead.
-  if (currentId == null) {
-    const pinnedIds = priorityIds?.filter((id) => plansById.has(id)) ?? [];
-    if (!pinnedIds.length) return { items: allPlans, dividerAfter: -1 };
+  if (!topIds.length) return { items: allPlans, dividerAfter: -1 };
 
-    const pinnedSet = new Set(pinnedIds);
-    const pinned = pinnedIds.map((id) => plansById.get(id)!);
-    const rest = allPlans.filter((p) => !pinnedSet.has(p.id ?? p.cc));
-    return { items: [...pinned, ...rest], dividerAfter: pinned.length };
-  }
+  const excludedSet = new Set(topIds);
+  const top = topIds.map((id) => plansById.get(id)!);
+  const rest = allPlans.filter((p) => !excludedSet.has(p.id ?? p.cc));
 
-  if (!activeIds.length) return { items: allPlans, dividerAfter: -1 };
-
-  const activeSet = new Set(activeIds);
-  const top = activeIds.map((id) => plansById.get(id)!);
-  const rest = allPlans.filter((p) => !activeSet.has(p.id ?? p.cc));
-
-  return { items: [...top, ...rest], dividerAfter: top.length };
+  return { items: [...top, ...rest], dividerAfter: divider === -1 ? top.length : divider };
 }
 
 /**
@@ -227,12 +214,15 @@ export function useCountrySelect({
       return { items: allPlans.filter((p) => matchesQuery(p, q)), dividerAfter: -1 };
     }
 
-    // Natural order: skip all sorting / floating logic.
-    if (disableSort) {
-      return { items: allPlans, dividerAfter: -1 };
-    }
-
-    return buildIdleItems(allPlans, candidates, currentId, priorityIds, plansById, stickyPins);
+    // disableSort disables candidate-based floating only; stickyPins / priorityIds still apply.
+    return buildIdleItems(
+      allPlans,
+      disableSort ? undefined : candidates,
+      currentId,
+      priorityIds,
+      plansById,
+      stickyPins,
+    );
   }, [allPlans, candidates, currentId, disableSort, plansById, priorityIds, query, stickyPins]);
 
   const close = useCallback(() => {
