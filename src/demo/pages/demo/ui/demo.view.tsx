@@ -7,6 +7,7 @@ import { PATHS, SECTION_IDS } from '@/shared/router';
 import { DemoCard } from '@/shared/ui/DemoCard';
 import { PageWithBanner } from '@/shared/ui/PageWithBanner';
 import { PlaygroundCard } from '@/shared/ui/PlaygroundCard';
+import { Toast } from '@/shared/ui/Toast';
 import { useCountrySelectCards, useMaskCards, usePhoneMaskCards } from '@/widgets/demo-cards';
 import { Footer } from '@/widgets/footer';
 import { Header } from '@/widgets/header';
@@ -26,6 +27,7 @@ export function DemoView() {
   const countrySelectCards = useCountrySelectCards();
 
   const { copy } = useCopyToClipboard();
+  const [showCopiedToast, setShowCopiedToast] = useState(false);
 
   const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
 
@@ -42,6 +44,9 @@ export function DemoView() {
             className={styles.install}
             onClick={() => {
               copy(INSTALL_CMD);
+              if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+                setShowCopiedToast(true);
+              }
             }}
           >
             {INSTALL_CMD}
@@ -104,6 +109,10 @@ export function DemoView() {
             setIsPlaygroundOpen(false);
           }}
         />
+      )}
+
+      {showCopiedToast && (
+        <Toast message={t.code.copied} onDone={() => { setShowCopiedToast(false); }} />
       )}
 
       <Footer />
