@@ -11,15 +11,13 @@ export function PlaygroundCard({ onOpen }: Props) {
   const c = t.demo.cards.playground;
 
   return (
-    <div className={styles.card}>
+    <button type="button" className={styles.card} onClick={onOpen}>
       <div className={styles.header}>
         <h3 className={styles.title}>{c.title}</h3>
         <p className={styles.desc}>{c.desc}</p>
       </div>
 
-      <button type="button" className={styles.cta} onClick={onOpen}>
-        {c.cta}
-      </button>
-    </div>
+      <span className={styles.cta}>{c.cta}</span>
+    </button>
   );
 }

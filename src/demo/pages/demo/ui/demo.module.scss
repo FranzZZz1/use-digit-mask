@@ -45,20 +45,30 @@
 }
 
 .install {
-  user-select: all;
+  cursor: pointer;
 
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 
   margin-top: var(--space-2);
   padding: var(--space-3) var(--space-5);
+
+  font: inherit;
 
   @include tg(sm, r, mono);
 
   color: var(--color-text-secondary);
 
+  appearance: none;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+
+  transition: border-color var(--transition);
+
+  @include hover {
+    border-color: var(--color-accent);
+  }
 }
 
 .section {

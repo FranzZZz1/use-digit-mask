@@ -3,10 +3,12 @@ export { DEFAULT_GHOST_CHAR, DEFAULT_MASK, DEFAULT_PLACEHOLDER_CHAR } from './co
 export { type Syntax, SyntaxProvider, useSyntax } from './context/SyntaxContext';
 export { highlightTsx } from './helpers/highlight';
 export { useAppLocation } from './hooks/useAppLocation';
-export { useCopyToClipboard, useHighlighted, useHighlightedAll } from './hooks/useCodeHighlight';
+export { useHighlighted, useHighlightedAll } from './hooks/useCodeHighlight';
+export { useCopyToClipboard } from './hooks/useCopyToClipboard';
 export { useDocsHistory } from './hooks/useDocsHistory';
 export { useDocsNavigate } from './hooks/useDocsNavigate';
 export { useDocsScrollRestoration } from './hooks/useDocsScrollRestoration';
 export { useDocsUI } from './hooks/useDocsUI';
 export { useOutsideClose } from './hooks/useOutsideClose';
 export { usePreviewCollapse } from './hooks/usePreviewCollapse';
+export { getTabCode } from './snippet/primitives';

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import { useLang } from '@/shared/i18n';
-import { useSyntax } from '@/shared/lib';
 import { PlaygroundControls, PlaygroundModal, type PlaygroundSlot } from '@/shared/ui/Playground';
 import { VariantSelect } from '@/shared/ui/VariantSelect';
 
@@ -20,13 +19,12 @@ type Props = {
 
 export function PlaygroundSwitchModal({ initialHook, initialProp, onClose }: Props) {
   const { t } = useLang();
-  const { isAlternative } = useSyntax();
   const { tooltips } = t.demo.playground;
 
   const [selectedHook, setSelectedHook] = useState<PlaygroundId>(initialHook);
 
-  const mask = useMaskPlaygroundSlot(initialHook === 'useMask' ? initialProp : '', isAlternative, tooltips);
-  const phone = usePhoneMaskPlaygroundSlot(initialHook === 'usePhoneMask' ? initialProp : '', isAlternative, tooltips);
+  const mask = useMaskPlaygroundSlot(initialHook === 'useMask' ? initialProp : '', tooltips);
+  const phone = usePhoneMaskPlaygroundSlot(initialHook === 'usePhoneMask' ? initialProp : '', tooltips);
   const country = useCountrySelectPlaygroundSlot(initialHook === 'useCountrySelect' ? initialProp : '');
 
   const slots: Record<PlaygroundId, PlaygroundSlot> = { useMask: mask, usePhoneMask: phone, useCountrySelect: country };

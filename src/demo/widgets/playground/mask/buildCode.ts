@@ -1,54 +1,64 @@
 import { DEFAULT_GHOST_CHAR, DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
-import { basicMaskTab, ghostOverlayJsx, numericInput } from '@/shared/lib/snippetUtils';
+import {
+  buildMaskCodeTab,
+  ghostOverlayJsx,
+  type HookArg,
+  type ImportSpec,
+  type MaskTabOpts,
+  numericInput,
+} from '@/shared/lib/snippetUtils';
 import { type OptionsState, type StrOptionState } from '@/shared/ui/Playground';
 
-export { GHOST_SCSS } from '@/shared/lib/snippetUtils';
-
-function parseAllowedPrefixesLocal(str: string): string[] {
+function parseAllowedPrefixes(str: string): string[] {
   return str
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 }
 
-function buildHookOptions(mask: string, placeholderChar: string, state: OptionsState, withGhost: boolean): string[] {
-  const lines: string[] = [`mask: '${mask}',`];
+function collectUseMaskArgs(mask: string, placeholderChar: string, state: OptionsState, withGhost: boolean): HookArg[] {
+  const args: HookArg[] = [{ key: 'mask', value: mask }];
 
   const allowedPrefixes = state.allowedPrefixes as StrOptionState | undefined;
   if (allowedPrefixes?.enabled) {
-    const prefixes = parseAllowedPrefixesLocal(allowedPrefixes.value);
+    const prefixes = parseAllowedPrefixes(allowedPrefixes.value);
     if (prefixes.length > 0) {
-      lines.push(`allowedPrefixes: [${prefixes.map((p) => `'${p}'`).join(', ')}],`);
+      args.push({ key: 'allowedPrefixes', value: prefixes });
     }
   }
-  if (placeholderChar && placeholderChar !== DEFAULT_PLACEHOLDER_CHAR) {
-    lines.push(`placeholderChar: '${placeholderChar}',`);
-  }
-  if (state.activateOnFocus?.enabled) lines.push('activateOnFocus: true,');
-  if (state.deactivateOnEmptyBlur?.enabled) lines.push('deactivateOnEmptyBlur: true,');
-  if (state.trimMaskTail?.enabled) lines.push('trimMaskTail: true,');
-  const ghostChar = state.ghostChar as StrOptionState | undefined;
-  if (withGhost) lines.push(`ghostChar: '${ghostChar?.value || DEFAULT_GHOST_CHAR}',`);
-  if (state.alwaysActive?.enabled) lines.push('alwaysActive: true,');
 
-  return lines;
+  if (placeholderChar && placeholderChar !== DEFAULT_PLACEHOLDER_CHAR) {
+    args.push({ key: 'placeholderChar', value: placeholderChar });
+  }
+
+  if (state.activateOnFocus?.enabled) args.push({ key: 'activateOnFocus', value: true });
+  if (state.deactivateOnEmptyBlur?.enabled) args.push({ key: 'deactivateOnEmptyBlur', value: true });
+  if (state.trimMaskTail?.enabled) args.push({ key: 'trimMaskTail', value: true });
+
+  if (withGhost) {
+    const ghostChar = (state.ghostChar as StrOptionState | undefined)?.value || DEFAULT_GHOST_CHAR;
+    args.push({ key: 'ghostChar', value: ghostChar });
+  }
+
+  if (state.alwaysActive?.enabled) args.push({ key: 'alwaysActive', value: true });
+
+  return args;
 }
 
-export function buildUseMaskCode(
-  mask: string,
-  placeholderChar: string,
-  state: OptionsState,
-  isAlternative: boolean,
-): string {
+export function buildUseMaskTab(mask: string, placeholderChar: string, state: OptionsState) {
   const withGhost = state.ghostChar?.enabled ?? false;
 
-  const codeTab = basicMaskTab('tsx', {
+  const extraImports: ImportSpec[] = withGhost
+    ? [{ from: './CustomInput.module.scss', default: 'styles', isStyle: true }]
+    : [];
+
+  const tabOpts: MaskTabOpts = {
     componentName: 'CustomInput',
-    hookOptions: buildHookOptions(mask, placeholderChar, state, withGhost),
+    hookOptions: collectUseMaskArgs(mask, placeholderChar, state, withGhost),
     jsx: withGhost ? ghostOverlayJsx() : numericInput(),
     destructure: withGhost ? '{ props, ghostValue }' : '{ props }',
-    extraImports: withGhost ? "import styles from './CustomInput.module.scss';" : undefined,
-  });
+    extraImports,
+  };
 
-  return !isAlternative ? codeTab.code : (codeTab.codeJs ?? codeTab.code);
+  return buildMaskCodeTab('tsx', tabOpts);
 }

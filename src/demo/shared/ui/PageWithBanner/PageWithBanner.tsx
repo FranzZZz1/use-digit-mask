@@ -12,9 +12,10 @@ type Props = {
 export function PageWithBanner({ className, style, children }: Props) {
   useDocsScrollRestoration();
 
+  const [isClosing, setIsClosing] = useState(false);
+
   const backTo = useDocsUI((s) => s.backTo);
   const setBackTo = useDocsUI((s) => s.setBackTo);
-  const [isClosing, setIsClosing] = useState(false);
 
   const handleClosed = () => {
     setBackTo(null);

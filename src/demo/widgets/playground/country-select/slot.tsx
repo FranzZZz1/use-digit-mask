@@ -16,10 +16,7 @@ export function useCountrySelectPlaygroundSlot(initialProp: string): PlaygroundS
   return {
     pg,
     schema: USECOUNTRYSELECT_SCHEMA,
-    tabs: withGhostScssTab(
-      [{ label: 'tsx', code: buildUseCountrySelectCode(pg.state), lang: 'tsx', hasJsVariant: false }],
-      !!options.ghost,
-    ),
+    tabs: withGhostScssTab([{ label: 'tsx', code: buildUseCountrySelectCode(pg.state), lang: 'tsx' }], !!options.ghost),
     preview: <UseCountrySelectPreview options={options} />,
     primaryFields: undefined,
   };

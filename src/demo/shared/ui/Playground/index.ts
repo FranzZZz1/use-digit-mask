@@ -1,6 +1,6 @@
 export { PlaygroundLayoutProvider, usePlaygroundLayout } from './model/PlaygroundLayoutContext';
 export { usePlaygroundParsedValues } from './model/PlaygroundParsedValuesContext';
-export type { PlaygroundSlot, PlaygroundTab } from './model/PlaygroundSlot';
+export type { PlaygroundSlot } from './model/PlaygroundSlot';
 export { serializeSchemaState } from './model/serializeSchemaState';
 export type {
   BoolOptionDef,

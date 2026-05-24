@@ -1,3 +1,8 @@
+// Compile-time SCSS color variables (used for color.mix / rgba in component styles)
+$color-accent: #6366f1;
+$color-surface: #141414;
+$color-border: #242424;
+
 :root {
   // Colors
   --color-bg: #090909;

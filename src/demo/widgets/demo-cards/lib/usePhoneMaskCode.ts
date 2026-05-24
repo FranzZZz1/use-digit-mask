@@ -1,41 +1,16 @@
-import { type CodeComments, type CodeTab, dedent, rhfMaskTab, tab } from '@/shared/lib/snippetUtils';
-
-const GHOST_PHONE_SCSS = dedent`
-  .wrapper {
-    position: relative;
-  }
-
-  .overlay {
-    pointer-events: none;
-    user-select: none;
-
-    position: absolute;
-    z-index: 2;
-    inset: 0;
-
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-
-    padding: 8px 12px;
-
-    white-space: pre;
-
-    font-family: monospace;
-  }
-
-  .overlay__filled {
-    color: transparent;
-  }
-
-  .overlay__empty {
-    color: rgba(128, 128, 128, 0.5);
-  }
-`;
+import {
+  type CodeComments,
+  type CodeTab,
+  createCodeTab,
+  dedent,
+  GHOST_PHONE_SCSS,
+  rhfMaskTab,
+  withGhostScssTab,
+} from '@/shared/lib/snippetUtils';
 
 export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
-  return [
-    tab(
+  return withGhostScssTab([
+    createCodeTab(
       'TSX',
       dedent`
       import { useState } from 'react';
@@ -79,13 +54,12 @@ export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
       }
     `,
     ),
-    tab('SCSS', GHOST_PHONE_SCSS, 'scss'),
-  ];
+  ], true, GHOST_PHONE_SCSS);
 }
 
 export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
   return [
-    tab(
+    createCodeTab(
       'Basic',
       dedent`
       import { useState } from 'react';
@@ -123,7 +97,7 @@ export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
       }
     `,
     ),
-    tab(
+    createCodeTab(
       'Uncontrolled',
       dedent`
       import { usePhoneMask } from 'use-digit-mask';

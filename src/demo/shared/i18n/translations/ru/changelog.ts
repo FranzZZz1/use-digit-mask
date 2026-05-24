@@ -2,6 +2,24 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.0',
+    date: '2026-05-24',
+    sections: [
+      {
+        type: 'added',
+        items: [
+          '|useMask|: механизм undo/redo — |Ctrl+Z| / |Meta+Z| отменяет последнее изменение, |Ctrl+Y| / |Ctrl+Shift+Z| повторяет. Новый проп |historyLimit| (по умолчанию |100|) ограничивает глубину стека. Новые поля |api|: |undo()|, |redo()|, |canUndo|, |canRedo|.',
+        ],
+      },
+      {
+        type: 'fixed',
+        items: [
+          "|useMask|: при курсоре внутри зоны префикса (перед буквальной цифрой, например |'7'| в маске |'+7 (###)...'|) введённая цифра теперь корректно попадает в первый слот, не захватывая буквальную цифру префикса.",
+        ],
+      },
+    ],
+  },
+  {
     version: '0.4.0',
     date: '2026-05-22',
     sections: [

@@ -1,17 +1,17 @@
 import {
-  basicMaskTab,
+  buildMaskCodeTab,
   type CodeComments,
   type CodeTab,
+  createCodeTab,
   dedent,
-  GHOST_SCSS,
   numericInput,
   rhfMaskTab,
-  tab,
+  withGhostScssTab,
 } from '@/shared/lib/snippetUtils';
 
 export function buildCodePhoneRu(c: CodeComments): CodeTab[] {
   return [
-    basicMaskTab('Basic', {
+    buildMaskCodeTab('Basic', {
       componentName: 'PhoneRU',
       hookOptions: [
         `mask: '+7 (###) ###-##-##',`,
@@ -37,7 +37,7 @@ export function buildCodePhoneRu(c: CodeComments): CodeTab[] {
 }
 
 export const CODE_CREDIT_CARD: CodeTab[] = [
-  basicMaskTab('Basic', {
+  buildMaskCodeTab('Basic', {
     componentName: 'CreditCard',
     hookOptions: [`mask: '#### #### #### ####',`],
     jsx: numericInput('#### #### #### ####'),
@@ -51,7 +51,7 @@ export const CODE_CREDIT_CARD: CodeTab[] = [
 ];
 
 export const CODE_DATE: CodeTab[] = [
-  basicMaskTab('Basic', {
+  buildMaskCodeTab('Basic', {
     componentName: 'DateField',
     hookOptions: [`mask: '##/##/####',`],
     jsx: numericInput('MM/DD/YYYY'),
@@ -149,12 +149,12 @@ export function buildCodeNormalize(c: CodeComments): CodeTab[] {
     }
   `;
 
-  return [{ label: 'Basic', code: tsCode, codeJs: jsCode }];
+  return [{ label: 'Basic', code: tsCode, jsVariant: jsCode }];
 }
 
 export function buildCodeGhostMask(c: CodeComments): [CodeTab[], CodeTab[]] {
-  const alwaysVisible: CodeTab[] = [
-    tab(
+  const alwaysVisible = withGhostScssTab([
+    createCodeTab(
       'TSX',
       dedent`
         import { useState } from 'react';
@@ -193,11 +193,10 @@ export function buildCodeGhostMask(c: CodeComments): [CodeTab[], CodeTab[]] {
         }
       `,
     ),
-    tab('SCSS', GHOST_SCSS, 'scss'),
-  ];
+  ], true);
 
-  const hideOnInput: CodeTab[] = [
-    tab(
+  const hideOnInput = withGhostScssTab([
+    createCodeTab(
       'TSX',
       dedent`
         import { useState } from 'react';
@@ -236,15 +235,14 @@ export function buildCodeGhostMask(c: CodeComments): [CodeTab[], CodeTab[]] {
         }
       `,
     ),
-    tab('SCSS', GHOST_SCSS, 'scss'),
-  ];
+  ], true);
 
   return [alwaysVisible, hideOnInput];
 }
 
 export function buildCodeAlwaysActive(c: CodeComments): CodeTab[] {
   return [
-    basicMaskTab('Basic', {
+    buildMaskCodeTab('Basic', {
       componentName: 'PhoneField',
       hookOptions: [`mask: '+7 (###) ###-##-##',`, `// ${c.alwaysActive}`, `alwaysActive: true,`],
       jsx: numericInput('+7 (___) ___-__-__'),
@@ -252,9 +250,55 @@ export function buildCodeAlwaysActive(c: CodeComments): CodeTab[] {
   ];
 }
 
+function buildDynamicMaskSource(ts: boolean): string {
+  const sig = ts ? '(digits: string): string' : '(digits)';
+  const generic = ts ? '<string>' : '';
+
+  return dedent`
+    import { useState } from 'react';
+    import { useMask } from 'use-digit-mask';
+
+    const MASK_DEFAULT = '#### #### #### ####'; // Visa / MC
+    const MASK_AMEX    = '#### ###### #####';   // American Express
+
+    function getCardMask${sig} {
+      return digits.startsWith('34') || digits.startsWith('37')
+        ? MASK_AMEX
+        : MASK_DEFAULT;
+    }
+
+    function CardField() {
+      const [value, setValue] = useState${generic}('');
+      const [mask, setMask] = useState(MASK_DEFAULT);
+
+      const { props } = useMask({
+        mask,
+        value,
+        onChange: (next, parsed) => {
+          setValue(next);
+          setMask(getCardMask(parsed.rawWithoutPrefix));
+        },
+      });
+
+      return (
+        <input
+          {...props}
+          type="text"
+          inputMode="numeric"
+          placeholder="Card number"
+        />
+      );
+    }
+  `;
+}
+
+export function buildCodeDynamicMask(): CodeTab[] {
+  return [{ label: 'Basic', code: buildDynamicMaskSource(true), jsVariant: buildDynamicMaskSource(false) }];
+}
+
 export function buildCodePin(c: CodeComments): CodeTab[] {
   return [
-    basicMaskTab('Basic', {
+    buildMaskCodeTab('Basic', {
       componentName: 'PinField',
       hookOptions: [`mask: '####',`, `// ${c.trimMaskTail}`, `trimMaskTail: true,`],
       jsx: numericInput('PIN'),

@@ -2,7 +2,8 @@ import { memo, type ReactNode, useEffect, useMemo, useRef, useState } from 'reac
 import cx from 'clsx';
 
 import { useLang } from '@/shared/i18n';
-import { useHighlightedAll, usePreviewCollapse, useSyntax } from '@/shared/lib';
+import { getTabCode, useHighlightedAll, usePreviewCollapse, useSyntax } from '@/shared/lib';
+import { type CodeTab } from '@/shared/lib/snippetUtils';
 import { VariantSelect } from '@/shared/ui/VariantSelect';
 
 import { CodeBlockHeader } from '../CodeBlockHeader';
@@ -12,13 +13,6 @@ import { ExpandButton } from '../ExpandButton/ExpandButton';
 import { Modal } from '../Modal';
 
 import styles from './CodeModal.module.scss';
-
-export type CodeTab = {
-  label: string;
-  code: string;
-  codeJs?: string;
-  lang?: string;
-};
 
 export type CodeModalVariant = {
   label: string;
@@ -48,9 +42,9 @@ function CodeModalComponent({
 }: CodeModalProps) {
   const { t } = useLang();
   const { syntax } = useSyntax();
+  const { previewRef, isFullscreen, handleFullscreen } = usePreviewCollapse();
 
   const [activeTabLabel, setActiveTabLabel] = useState(() => tabs[0]?.label ?? '');
-  const { previewRef, isFullscreen, handleFullscreen } = usePreviewCollapse();
 
   const tabsRef = useRef(tabs);
   tabsRef.current = tabs;
@@ -62,28 +56,22 @@ function CodeModalComponent({
     });
   }, [activeVariantIdx]);
 
-  const activeTab = Math.max(
+  const activeTabIndex = Math.max(
     0,
     tabs.findIndex((tab) => tab.label === activeTabLabel),
   );
 
   const tabsForHighlight = useMemo(
-    () =>
-      tabs.map((tab) => ({
-        code: syntax === 'js' && tab.codeJs !== undefined ? tab.codeJs : tab.code,
-        lang: tab.lang,
-      })),
+    () => tabs.map((tab) => ({ code: getTabCode(tab, syntax), lang: tab.lang })),
     [tabs, syntax],
   );
 
   const { htmls: allHighlighted, isLoading } = useHighlightedAll(tabsForHighlight);
 
-  const currentTab = tabs[activeTab];
-  const hasJsVariant = currentTab?.codeJs !== undefined;
-  const isJs = syntax === 'js' && hasJsVariant;
-  const currentCode = isJs ? (currentTab?.codeJs ?? '') : (currentTab?.code ?? '');
+  const currentTab = tabs[activeTabIndex];
+  const currentCode = currentTab ? getTabCode(currentTab, syntax) : '';
   const currentLang = currentTab?.lang ?? 'tsx';
-  const currentHighlighted = allHighlighted[activeTab] ?? '';
+  const currentHighlighted = allHighlighted[activeTabIndex] ?? '';
   const lineCount = currentCode.split('\n').length;
 
   const hasVariants = (variants?.length ?? 0) > 1;
@@ -94,7 +82,7 @@ function CodeModalComponent({
         title={<span className={styles.title}>{title}</span>}
         code={currentCode}
         lang={currentLang}
-        hasJsVariant={hasJsVariant}
+        jsVariant={currentTab?.jsVariant}
         className={styles.header}
         onClose={onClose}
       />
@@ -121,7 +109,7 @@ function CodeModalComponent({
         <div className={styles.code__panel}>
           <CodeTabBar
             tabs={tabs.length > 1 ? tabs.map((tab) => tab.label) : []}
-            activeTab={activeTab}
+            activeTab={activeTabIndex}
             actions={
               <>
                 {hasVariants && (

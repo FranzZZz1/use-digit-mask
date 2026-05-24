@@ -2,6 +2,24 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.0',
+    date: '2026-05-24',
+    sections: [
+      {
+        type: 'added',
+        items: [
+          '|useMask|: undo/redo history — |Ctrl+Z| / |Meta+Z| undoes the last change, |Ctrl+Y| / |Ctrl+Shift+Z| redoes it. New |historyLimit| prop (default |100|) caps the stack depth. New |api| fields: |undo()|, |redo()|, |canUndo|, |canRedo|.',
+        ],
+      },
+      {
+        type: 'fixed',
+        items: [
+          "|useMask|: when the cursor is inside the prefix area (before a literal digit such as |'7'| in mask |'+7 (###)...'|), typing a digit now correctly fills the first slot without capturing the literal prefix digit.",
+        ],
+      },
+    ],
+  },
+  {
     version: '0.4.0',
     date: '2026-05-15',
     sections: [

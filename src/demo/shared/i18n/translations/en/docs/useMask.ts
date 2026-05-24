@@ -22,6 +22,7 @@ export const useMask = {
       'Character used in the ghost overlay for empty digit slots. Defaults to |placeholderChar|. Useful when you want a visually distinct ghost (e.g. |"·"|) without changing the real input\'s placeholder.',
     alwaysActive:
       'Always render the full mask template, even when the field is empty and unfocused. |onChange| still reports |""| when no digits have been entered.',
+    historyLimit: 'Maximum number of undo/redo steps kept in memory. Each distinct digit-sequence change counts as one step.',
   },
   returnProps: {
     ghostValue:
@@ -34,6 +35,10 @@ export const useMask = {
     'props.onClick / onFocus / onBlur / onMouseDown': 'Caret positioning and activation/deactivation helpers.',
     'api.formatDigits': 'Pure formatter — converts raw digits into the masked string.',
     'api.getParsedValues': 'Returns a breakdown of the current (or given) formatted value.',
+    'api.undo': 'Reverts the last change. Triggered internally by |Ctrl+Z| / |Meta+Z|.',
+    'api.redo': 'Re-applies a reverted change. Triggered internally by |Ctrl+Y| / |Ctrl+Shift+Z|.',
+    'api.canUndo': '|true| when the undo stack has steps to revert.',
+    'api.canRedo': '|true| when the redo stack has steps to re-apply.',
   },
   parsedValues: {
     p: 'The second argument of |onChange| and the return value of |api.getParsedValues()|.',

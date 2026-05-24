@@ -2,8 +2,9 @@ import { type ReactNode, useState } from 'react';
 import cx from 'clsx';
 
 import CodeIcon from '@/shared/assets/icons/code.svg?react';
+import { type CodeTab } from '@/shared/lib/snippetUtils';
 
-import { CodeModal, type CodeTab } from '../CodeModal';
+import { CodeModal } from '../CodeModal';
 import { VariantSelect } from '../VariantSelect';
 
 import styles from './DemoCard.module.scss';

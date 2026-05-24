@@ -13,7 +13,7 @@ type CodeBlockHeaderProps = {
   onClose?: () => void;
   className?: string;
   lang?: string;
-  hasJsVariant?: boolean;
+  jsVariant?: string;
 };
 
 export function CodeBlockHeader({
@@ -22,7 +22,7 @@ export function CodeBlockHeader({
   onClose = undefined,
   className = '',
   lang = 'tsx',
-  hasJsVariant = false,
+  jsVariant,
 }: CodeBlockHeaderProps) {
   const { t } = useLang();
   const { copied, copy } = useCopyToClipboard();
@@ -31,7 +31,7 @@ export function CodeBlockHeader({
     <div className={cx(styles.header, className)}>
       {title && <div className={styles.header__title}>{title}</div>}
       <div className={styles.header__actions}>
-        {hasJsVariant ? <SyntaxSwitch /> : <span className={styles.header__badge}>{lang}</span>}
+        {jsVariant !== undefined ? <SyntaxSwitch /> : <span className={styles.header__badge}>{lang}</span>}
         <button
           type="button"
           className={styles.header__copy}

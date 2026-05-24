@@ -1,21 +1,36 @@
 @use 'styles/mixins' as *;
 @use 'styles/typography' as *;
+@use 'styles/variables' as vars;
+@use 'sass:color';
 
 .card {
+  cursor: pointer;
+
   container-type: inline-size;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  gap: var(--space-5);
+  gap: var(--space-10);
 
   padding: var(--space-6);
 
-  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
-  background: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
+  font: inherit;
+  text-align: left;
 
-  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  appearance: none;
+  background: color.mix(vars.$color-accent, vars.$color-surface, 4%);
+  border: 1px solid color.mix(vars.$color-accent, vars.$color-border, 35%);
   border-radius: var(--radius-lg);
+
+  transition: border-color var(--transition);
+
+  @include hover {
+    border-color: color.mix(vars.$color-accent, vars.$color-border, 60%);
+
+    .cta {
+      background: rgba(vars.$color-accent, 0.18);
+    }
+  }
 }
 
 .header {
@@ -43,7 +58,7 @@
 }
 
 .cta {
-  cursor: pointer;
+  display: block;
 
   width: 100%;
   margin-top: auto;
@@ -52,19 +67,11 @@
   color: var(--color-accent);
   text-align: center;
 
-  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  background: rgba(vars.$color-accent, 0.1);
   border: 1px solid var(--color-accent);
   border-radius: var(--radius-md);
 
-  transition:
-    color var(--transition),
-    background var(--transition);
+  transition: background var(--transition);
 
   @include tg(sm, sb);
-
-  @include hover {
-    /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
-    background: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  }
 }

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { type ParsedValues, useMask } from 'use-digit-mask';
+import { useMask } from 'use-digit-mask';
 
 import { ConditionalWrap } from '@/shared/lib';
-import { FieldParsedValues } from '@/shared/ui/FieldParsedValues';
+import { FieldInputWrapper, FieldLayout, MaskHint } from '@/shared/ui/FieldLayout';
 import { Input } from '@/shared/ui/Input';
 
 import styles from './MaskField.module.scss';
@@ -35,13 +35,11 @@ export function MaskField({
   alwaysActive,
 }: MaskFieldProps) {
   const [value, setValue] = useState('');
-  const [parsed, setParsed] = useState<ParsedValues | null>(null);
 
-  const { props, ghostValue } = useMask({
+  const { props, ghostValue, api } = useMask({
     value,
-    onChange: (next, p) => {
+    onChange: (next) => {
       setValue(next);
-      setParsed(p);
     },
     mask,
     allowedPrefixes,
@@ -58,9 +56,11 @@ export function MaskField({
   const ghostFilled = ghostValue.slice(0, props.value.length);
   const ghostEmpty = ghostValue.slice(props.value.length);
 
+  const parsed = api.getParsedValues();
+
   return (
-    <div className={styles.root}>
-      <div className={styles.input__wrapper}>
+    <FieldLayout parsed={parsed} showCase={['formattedWithPrefix', 'rawWithoutPrefix', 'prefix', 'isMaskCompleted']}>
+      <FieldInputWrapper>
         <ConditionalWrap condition={ghost} wrapIn={<div className={styles.ghost__wrapper} />}>
           <Input {...props} type="text" inputMode="numeric" />
           {showGhost && (
@@ -70,13 +70,8 @@ export function MaskField({
             </span>
           )}
         </ConditionalWrap>
-        <span className={styles.mask__hint}>{mask}</span>
-      </div>
-
-      <FieldParsedValues
-        parsed={parsed}
-        showCase={['formattedWithPrefix', 'rawWithoutPrefix', 'prefix', 'isMaskCompleted']}
-      />
-    </div>
+        <MaskHint>{mask}</MaskHint>
+      </FieldInputWrapper>
+    </FieldLayout>
   );
 }

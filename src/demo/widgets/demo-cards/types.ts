@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 
-import { type CodeTab } from '@/shared/ui/CodeModal';
+import { type CodeTab } from '@/shared/lib/snippetUtils';
 import { type DemoCardVariant } from '@/shared/ui/DemoCard';
 
 export type DemoCardConfig = {

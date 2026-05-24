@@ -1,26 +1,26 @@
 import { type ReactNode, useState } from 'react';
 import cx from 'clsx';
 
-import { useHighlighted, usePreviewCollapse } from '@/shared/lib';
+import { getTabCode, useHighlighted, usePreviewCollapse, useSyntax } from '@/shared/lib';
+import { type CodeTab } from '@/shared/lib/snippetUtils';
 import { CodeBlockHeader } from '@/shared/ui/CodeBlockHeader';
 import { CodePane } from '@/shared/ui/CodePane';
 import { CodeTabBar } from '@/shared/ui/CodeTabBar';
 import { ExpandButton } from '@/shared/ui/ExpandButton/ExpandButton';
 import { Modal } from '@/shared/ui/Modal';
-import { PlaygroundLayoutProvider, type PlaygroundTab } from '@/shared/ui/Playground';
+import { PlaygroundLayoutProvider } from '@/shared/ui/Playground';
 
 import styles from './PlaygroundModal.module.scss';
 
-export type { PlaygroundTab };
-
 type Props = {
   title: ReactNode;
-  tabs: PlaygroundTab[];
+  tabs: CodeTab[];
   onClose: () => void;
   children: ReactNode;
 };
 
 export function PlaygroundModal({ title, tabs, onClose, children }: Props) {
+  const { syntax } = useSyntax();
   const { previewRef, isFullscreen, isAnimating, handleFullscreen } = usePreviewCollapse({
     minCodeFraction: 1 / 3,
   });
@@ -29,17 +29,18 @@ export function PlaygroundModal({ title, tabs, onClose, children }: Props) {
 
   const safeIndex = activeTabIndex < tabs.length ? activeTabIndex : 0;
   const activeTab = tabs[safeIndex];
+  const currentCode = getTabCode(activeTab, syntax);
 
-  const { html, isLoading } = useHighlighted(activeTab.code, activeTab.lang);
-  const lineCount = activeTab.code.split('\n').length;
+  const { html, isLoading } = useHighlighted(currentCode, activeTab.lang);
+  const lineCount = currentCode.split('\n').length;
 
   return (
     <Modal onClose={onClose}>
       <CodeBlockHeader
         title={<span className={styles.title}>{title}</span>}
-        code={activeTab.code}
+        code={currentCode}
         lang={activeTab.lang}
-        hasJsVariant={activeTab.hasJsVariant}
+        jsVariant={activeTab.jsVariant}
         className={styles.header}
         onClose={onClose}
       />

@@ -5,16 +5,12 @@ import { DEFAULT_MASK, DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
 import { withGhostScssTab } from '@/shared/lib/snippetUtils';
 import { PlaygroundField, type PlaygroundSlot, serializeSchemaState, usePlaygroundState } from '@/shared/ui/Playground';
 
-import { buildUseMaskCode } from './buildCode';
+import { buildUseMaskTab } from './buildCode';
 import { USEMASK_SCHEMA, type UseMaskOptions } from './schema';
 
 import controlStyles from '@/shared/ui/Playground/PlaygroundControls/PlaygroundControls.module.scss';
 
-export function useMaskPlaygroundSlot(
-  initialProp: string,
-  isAlternative: boolean,
-  tooltips: Record<string, string>,
-): PlaygroundSlot {
+export function useMaskPlaygroundSlot(initialProp: string, tooltips: Record<string, string>): PlaygroundSlot {
   const [mask, setMask] = useState(DEFAULT_MASK);
   const [placeholderChar, setPlaceholderChar] = useState(DEFAULT_PLACEHOLDER_CHAR);
   const pg = usePlaygroundState(USEMASK_SCHEMA, initialProp);
@@ -27,17 +23,7 @@ export function useMaskPlaygroundSlot(
   return {
     pg,
     schema: USEMASK_SCHEMA,
-    tabs: withGhostScssTab(
-      [
-        {
-          label: 'tsx',
-          code: buildUseMaskCode(mask, placeholderChar, pg.state, isAlternative),
-          lang: 'tsx',
-          hasJsVariant: true,
-        },
-      ],
-      !!options.ghostChar,
-    ),
+    tabs: withGhostScssTab([buildUseMaskTab(mask, placeholderChar, pg.state)], !!options.ghostChar),
     preview: <MaskField mask={mask} {...options} ghost={!!options.ghostChar} />,
     primaryFields: (
       <>

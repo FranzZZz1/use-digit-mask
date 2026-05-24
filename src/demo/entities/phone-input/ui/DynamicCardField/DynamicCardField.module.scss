@@ -1,0 +1,18 @@
+@use 'styles/typography' as *;
+
+.hint__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badge {
+  @include tg(xs, r, mono);
+
+  color: var(--color-text-muted);
+  transition: color var(--transition);
+
+  &--amex {
+    color: var(--color-accent);
+  }
+}

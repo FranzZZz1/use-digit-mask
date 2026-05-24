@@ -9,6 +9,7 @@ import {
 } from '@/entities/prop-def';
 import { buildSnippetAdd, buildSnippetOverride, buildSnippetRemove } from '@/pages/use-phone-mask-doc';
 import { useLang } from '@/shared/i18n';
+import { createCodeTab } from '@/shared/lib/snippetUtils';
 import { PATHS, SECTION_IDS, TYPE_LINKS } from '@/shared/router';
 import { DocPage } from '@/widgets/docs-layout';
 import { PlaygroundSwitchModal } from '@/widgets/playground';
@@ -57,9 +58,9 @@ export function UsePhoneMaskDocView() {
             heading: d.customization.heading,
             intro: d.customization.intro,
             snippets: [
-              { label: d.customization.snippetOverride, code: buildSnippetOverride(c) },
-              { label: d.customization.snippetRemove, code: buildSnippetRemove(c) },
-              { label: d.customization.snippetAdd, code: buildSnippetAdd(c) },
+              { ...createCodeTab('', buildSnippetOverride(c)), label: d.customization.snippetOverride },
+              { ...createCodeTab('', buildSnippetRemove(c)), label: d.customization.snippetRemove },
+              { ...createCodeTab('', buildSnippetAdd(c)), label: d.customization.snippetAdd },
             ],
           },
         ]}

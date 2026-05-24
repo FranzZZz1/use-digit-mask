@@ -1,19 +1,14 @@
 import { type ReactNode } from 'react';
 
+import { type CodeTab } from '@/shared/lib/snippetUtils';
+
 import { type OptionSchema } from './types';
 import { type UsePlaygroundStateReturn } from './usePlaygroundState';
-
-export type PlaygroundTab = {
-  label: string;
-  code: string;
-  lang: string;
-  hasJsVariant: boolean;
-};
 
 export type PlaygroundSlot = {
   pg: UsePlaygroundStateReturn;
   schema: OptionSchema;
-  tabs: PlaygroundTab[];
+  tabs: CodeTab[];
   preview: ReactNode;
   primaryFields?: ReactNode;
 };

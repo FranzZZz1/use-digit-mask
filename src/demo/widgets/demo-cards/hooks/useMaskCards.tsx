@@ -1,8 +1,9 @@
-import { MaskField } from '@/entities/phone-input';
+import { DynamicCardField, MaskField } from '@/entities/phone-input';
 import { useLang } from '@/shared/i18n';
 
 import {
   buildCodeAlwaysActive,
+  buildCodeDynamicMask,
   buildCodeGhostMask,
   buildCodeNormalize,
   buildCodePhoneRu,
@@ -43,6 +44,13 @@ export function useMaskCards(): DemoCardConfig[] {
       component: (
         <MaskField activateOnFocus deactivateOnEmptyBlur mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} />
       ),
+    },
+    {
+      id: 'dynamic-mask',
+      title: c.dynamicMask.title,
+      description: c.dynamicMask.desc,
+      code: buildCodeDynamicMask(),
+      component: <DynamicCardField />,
     },
     {
       id: 'credit-card',

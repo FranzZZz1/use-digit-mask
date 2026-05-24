@@ -20,6 +20,7 @@ export const USE_MASK_PARAMS: PropDef[] = [
   { name: 'trimMaskTail', type: 'boolean', default: 'false', control: bool },
   { name: 'ghostChar', type: 'string', default: 'placeholderChar', control: str('·', 1) },
   { name: 'alwaysActive', type: 'boolean', default: 'false', control: bool },
+  { name: 'historyLimit', type: 'number', default: '100' },
 ];
 
 export const USE_MASK_RETURN_PROPS: PropDef[] = [
@@ -32,6 +33,10 @@ export const USE_MASK_RETURN_PROPS: PropDef[] = [
   { name: 'props.onClick / onFocus / onBlur / onMouseDown', type: 'EventHandler' },
   { name: 'api.formatDigits', type: '(digits: string) => { text: string; digits: string }' },
   { name: 'api.getParsedValues', type: '(formatted?: string) => ParsedValues' },
+  { name: 'api.undo', type: '() => void' },
+  { name: 'api.redo', type: '() => void' },
+  { name: 'api.canUndo', type: 'boolean' },
+  { name: 'api.canRedo', type: 'boolean' },
 ];
 
 export const USE_MASK_PARSED_VALUES: PropDef[] = [

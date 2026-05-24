@@ -1,33 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { highlightCode } from '../helpers/highlight';
-
-export function useCopyToClipboard(): { copied: boolean; copy: (text: string) => void } {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  const copy = useCallback((text: string) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setCopied(true);
-        clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-          setCopied(false);
-        }, 1800);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(
-    () => () => {
-      clearTimeout(timerRef.current);
-    },
-    [],
-  );
-
-  return { copied, copy };
-}
 
 export function useHighlighted(code: string, lang: string = 'tsx'): { html: string; isLoading: boolean } {
   const [html, setHtml] = useState('');

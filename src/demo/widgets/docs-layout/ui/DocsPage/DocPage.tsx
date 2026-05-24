@@ -2,17 +2,14 @@ import { type ReactNode } from 'react';
 
 import { type PropRow, PropTable } from '@/entities/prop-def';
 import { rich, useLang } from '@/shared/i18n';
+import { type CodeTab } from '@/shared/lib/snippetUtils';
 import { SECTION_IDS } from '@/shared/router';
 import { DocCodeBlock } from '@/shared/ui/DocCodeBlock/DocCodeBlock';
 import { DocLink } from '@/shared/ui/DocLink';
 
 import docStyles from '@/shared/ui/doc/doc.module.scss';
 
-export type DocSnippet = {
-  code: string;
-  codeJs?: string;
-  label?: string;
-};
+export type DocSnippet = CodeTab & { label?: string };
 
 export type DocSection = {
   id: string;
@@ -62,7 +59,7 @@ export function DocPage({ title, lead, overview, sections, examplesPath }: Props
           )}
           {section.snippets?.map((s, i) => (
             // eslint-disable-next-line react/no-array-index-key
-            <DocCodeBlock key={i} code={s.code} codeJs={s.codeJs} label={s.label} />
+            <DocCodeBlock key={i} tab={s} label={s.label} />
           ))}
           {section.rows && (
             <PropTable rows={section.rows} typeLinks={section.typeLinks} onPropClick={section.onPropClick} />

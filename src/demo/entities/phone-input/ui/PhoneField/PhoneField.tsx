@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import cx from 'clsx';
-import { E164_MASK, type ParsedValues, usePhoneMask } from 'use-digit-mask';
+import { E164_MASK, usePhoneMask } from 'use-digit-mask';
 
 import { CountrySelect } from '@/entities/phone-input/ui/CountrySelect/CountrySelect';
 import { CountrySelectRadix } from '@/entities/phone-input/ui/CountrySelect/CountrySelectRadix';
 import { ConditionalWrap } from '@/shared/lib';
-import { FieldParsedValues } from '@/shared/ui/FieldParsedValues';
+import { FieldLayout } from '@/shared/ui/FieldLayout';
 import { Input } from '@/shared/ui/Input';
 
 import styles from './PhoneField.module.scss';
@@ -38,13 +38,11 @@ export function PhoneField({
   ghostOnlyWhenResolved,
 }: PhoneFieldProps) {
   const [value, setValue] = useState('');
-  const [parsed, setParsed] = useState<ParsedValues | null>(null);
 
-  const { props, mask, id, prefix, candidates, selectCandidate, selectPlan, allPlans, ghostValue } = usePhoneMask({
+  const { props, mask, id, prefix, candidates, selectCandidate, selectPlan, allPlans, ghostValue, api } = usePhoneMask({
     value,
-    onChange: (next, p) => {
+    onChange: (next) => {
       setValue(next);
-      setParsed(p);
     },
     trimMaskTail,
     placeholderChar,
@@ -55,8 +53,15 @@ export function PhoneField({
   const ghostFilled = ghostValue.slice(0, value.length);
   const ghostEmpty = ghostValue.slice(value.length);
 
+  const parsed = api.getParsedValues();
+
   return (
-    <div className={styles.root}>
+    <FieldLayout
+      parsed={parsed}
+      showCase={['mask', 'id', 'prefix', 'parentPrefix', 'rawWithoutPrefix', 'isMaskCompleted']}
+      mask={mask}
+      id={id}
+    >
       <div className={cx(styles.input__row, showCountrySelect && styles['input__row--select'])}>
         {showCountrySelect && !radixSelect && (
           <CountrySelect
@@ -114,13 +119,6 @@ export function PhoneField({
           ))}
         </div>
       )}
-
-      <FieldParsedValues
-        parsed={parsed}
-        showCase={['mask', 'id', 'prefix', 'parentPrefix', 'rawWithoutPrefix', 'isMaskCompleted']}
-        mask={mask}
-        id={id}
-      />
-    </div>
+    </FieldLayout>
   );
 }

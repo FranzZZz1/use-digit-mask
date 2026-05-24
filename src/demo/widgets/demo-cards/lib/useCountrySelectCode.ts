@@ -1,8 +1,8 @@
-import { type CodeComments, type CodeTab, dedent, tab } from '@/shared/lib/snippetUtils';
+import { type CodeComments, type CodeTab, createCodeTab, dedent } from '@/shared/lib/snippetUtils';
 
 export function buildCodeCountrySelectRadix(c: CodeComments): CodeTab[] {
   return [
-    tab(
+    createCodeTab(
       'Basic',
       dedent`
       import { useRef, useState } from 'react';
@@ -79,7 +79,7 @@ export function buildCodeCountrySelectRadix(c: CodeComments): CodeTab[] {
 
 export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
   return [
-    tab(
+    createCodeTab(
       'Basic',
       dedent`
       import { useState } from 'react';
@@ -115,29 +115,28 @@ export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
 
             {/* ${c.countryTrigger} */}
             <div ref={containerRef} style={{ position: 'relative' }}>
-              <button onClick={toggle}>
+              <button type="button" onClick={toggle}>
                 {currentPlan ? \`+\${currentPlan.cc}\` : '+'}
               </button>
 
               {isOpen && (
-                <div role="listbox">
-                  <input
-                    ref={searchRef}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search…"
-                  />
-
+                <ul role="listbox">
+                  <li role="presentation">
+                    <input
+                      ref={searchRef}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search…"
+                    />
+                  </li>
                   {items.map((plan, i) => (
-                    <div key={plan.id}>
+                    <li key={plan.id} role="option" onClick={() => select(plan)}>
                       {/* ${c.divider} */}
                       {i === dividerAfter && <hr />}
-                      <div role="option" onClick={() => select(plan)}>
-                        {plan.label} +{plan.cc}
-                      </div>
-                    </div>
+                      {plan.label} +{plan.cc}
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
 
@@ -148,7 +147,7 @@ export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
       }
     `,
     ),
-    tab(
+    createCodeTab(
       'React Hook Form',
       dedent`
       import { useController, useForm } from 'react-hook-form';
@@ -184,27 +183,27 @@ export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
         return (
           <div style={{ display: 'flex' }}>
             <div ref={containerRef} style={{ position: 'relative' }}>
-              <button onClick={toggle}>
+              <button type="button" onClick={toggle}>
                 {currentPlan ? \`+\${currentPlan.cc}\` : '+'}
               </button>
 
               {isOpen && (
-                <div role="listbox">
-                  <input
-                    ref={searchRef}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search…"
-                  />
+                <ul role="listbox">
+                  <li role="presentation">
+                    <input
+                      ref={searchRef}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search…"
+                    />
+                  </li>
                   {items.map((plan, i) => (
-                    <div key={plan.id}>
+                    <li key={plan.id} role="option" onClick={() => select(plan)}>
                       {i === dividerAfter && <hr />}
-                      <div role="option" onClick={() => select(plan)}>
-                        {plan.label} +{plan.cc}
-                      </div>
-                    </div>
+                      {plan.label} +{plan.cc}
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </div>
 

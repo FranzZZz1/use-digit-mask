@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { DemoSection } from '@/pages/demo';
 import { useLang } from '@/shared/i18n';
+import { useCopyToClipboard } from '@/shared/lib';
 import { PATHS, SECTION_IDS } from '@/shared/router';
 import { DemoCard } from '@/shared/ui/DemoCard';
 import { PageWithBanner } from '@/shared/ui/PageWithBanner';
@@ -14,6 +15,7 @@ import { PlaygroundSwitchModal } from '@/widgets/playground';
 import styles from './demo.module.scss';
 
 const PREVIEW_COUNT = 3;
+const INSTALL_CMD = 'npm install use-digit-mask';
 
 export function DemoView() {
   const { t } = useLang();
@@ -22,6 +24,8 @@ export function DemoView() {
   const maskCards = useMaskCards();
   const phoneMaskCards = usePhoneMaskCards();
   const countrySelectCards = useCountrySelectCards();
+
+  const { copy } = useCopyToClipboard();
 
   const [isPlaygroundOpen, setIsPlaygroundOpen] = useState(false);
 
@@ -33,7 +37,15 @@ export function DemoView() {
         <section className={styles.hero}>
           <h1 className={styles.hero__title}>use-digit-mask</h1>
           <p className={styles.hero__desc}>{t.demo.hero.desc}</p>
-          <code className={styles.install}>npm install use-digit-mask</code>
+          <button
+            type="button"
+            className={styles.install}
+            onClick={() => {
+              copy(INSTALL_CMD);
+            }}
+          >
+            {INSTALL_CMD}
+          </button>
         </section>
 
         <DemoSection

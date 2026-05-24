@@ -30,6 +30,10 @@ export const demo = {
       title: 'Банковская карта',
       desc: 'mask: "#### #### #### ####"',
     },
+    dynamicMask: {
+      title: 'Динамическая маска',
+      desc: '34 / 37 → Amex (4-6-5 · 15 цифр), иначе Visa / MC (4-4-4-4 · 16 цифр)',
+    },
     date: {
       title: 'Дата',
       desc: 'mask: "##/##/####"',
