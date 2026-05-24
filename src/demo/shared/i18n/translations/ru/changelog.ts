@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.1',
+    date: '2026-05-25',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: нажатие Backspace при курсоре в начале поля (позиция 0) и непустых цифрах больше не сбрасывает всё значение — курсор остаётся на месте.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-05-24',
     sections: [

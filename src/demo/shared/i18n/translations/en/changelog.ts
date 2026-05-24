@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.1',
+    date: '2026-05-25',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: pressing Backspace with the cursor at position 0 (beginning of the field) no longer clears the entire value when digits are present — the caret simply stays in place.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-05-24',
     sections: [
