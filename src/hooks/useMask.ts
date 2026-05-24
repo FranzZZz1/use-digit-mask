@@ -14,6 +14,7 @@ import {
 import { extractDigits } from '../utils/extractDigits';
 
 import { useCaretManager } from './internal/useCaretManager';
+import { useHistory } from './internal/useHistory';
 import { useMaskMeta } from './internal/useMaskMeta';
 import { usePrefixHandling } from './internal/usePrefixHandling';
 
@@ -72,6 +73,11 @@ export type UseMaskProps = {
    * `onChange` still reports `''` when there are no digits entered.
    */
   alwaysActive?: boolean;
+  /**
+   * Maximum number of undo/redo steps to keep in memory. Defaults to `100`.
+   * Each distinct digit-sequence change counts as one step.
+   */
+  historyLimit?: number;
 };
 
 const clamp = (num: number, min: number, max: number) => Math.max(min, Math.min(max, num));
@@ -103,6 +109,7 @@ export function useMask({
   trimMaskTail = false,
   ghostChar,
   alwaysActive = false,
+  historyLimit = 100,
 }: UseMaskProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const isComposingRef = useRef(false);
@@ -283,55 +290,7 @@ export function useMask({
     ],
   );
 
-  useIsomorphicLayoutEffect(() => {
-    const external = value || '';
-    const cleaned = extractCleanDigits(external);
-
-    const alwaysActiveChanged = prevAlwaysActiveRef.current !== alwaysActive;
-    if (alwaysActiveChanged) {
-      prevAlwaysActiveRef.current = alwaysActive;
-      if (cleaned.length === 0) {
-        isMaskActiveRef.current = alwaysActive;
-      }
-    }
-
-    const nextText = renderText(cleaned);
-
-    if (nextText === rootValue) return;
-
-    digitsRawRef.current = cleaned;
-    setRootValue(nextText);
-
-    if (cleaned.length === 0) {
-      caret.pendingDigitsRef.current = null;
-    } else {
-      const logicalPos = caret.pendingDigitsRef.current;
-      const caretDigits = logicalPos != null ? Math.min(logicalPos, cleaned.length) : cleaned.length;
-      caret.setCaret(getCaretPosAfterDigits(caretDigits));
-      caret.pendingDigitsRef.current = null;
-    }
-
-    // Если внешнее value отличается от отформатированного результата (например, пришло с бэка
-    // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
-    // onChange намеренно не в deps — эффект стреляет только при смене value/маски,
-    // и к тому моменту onChange в замыкании уже актуален.
-    // При alwaysActive с пустым value не уведомляем: маска отображает шаблон, но
-    // value родителя остаётся '' — расхождение намеренное, иначе будет бесконечный цикл.
-    if (nextText !== external && !(alwaysActive && cleaned.length === 0)) {
-      onChange(nextText, getParsedValues(nextText));
-    }
-
-    // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
-  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues, alwaysActive]);
-
-  useEffect(
-    () => () => {
-      caret.cleanup();
-    },
-    [caret],
-  );
-
-  const applyDigits = useCallback(
+  const applyDigitsCore = useCallback(
     (nextDigits: string, caretDigitsOnLeft?: number) => {
       const clampedDigits = nextDigits.slice(0, maskMeta.maxDigits);
 
@@ -377,6 +336,75 @@ export function useMask({
     ],
   );
 
+  const { push: historyPush, clear: historyClear, undo, redo, canUndo, canRedo } = useHistory({
+    digitsRawRef,
+    maxDigits: maskMeta.maxDigits,
+    historyLimit,
+    applyCore: applyDigitsCore,
+  });
+
+  const applyDigits = useCallback(
+    (nextDigits: string, caretDigitsOnLeft?: number) => {
+      historyPush(nextDigits);
+      applyDigitsCore(nextDigits, caretDigitsOnLeft);
+    },
+    [historyPush, applyDigitsCore],
+  );
+
+  useIsomorphicLayoutEffect(() => {
+    const external = value || '';
+    const cleaned = extractCleanDigits(external);
+
+    const alwaysActiveChanged = prevAlwaysActiveRef.current !== alwaysActive;
+    if (alwaysActiveChanged) {
+      prevAlwaysActiveRef.current = alwaysActive;
+      if (cleaned.length === 0) {
+        isMaskActiveRef.current = alwaysActive;
+      }
+    }
+
+    const nextText = renderText(cleaned);
+
+    if (nextText === rootValue) return;
+
+    // External value change (programmatic reset, mask change, data load from server) —
+    // clear history so Ctrl+Z doesn't take the user back to a stale state.
+    if (cleaned !== digitsRawRef.current) {
+      historyClear();
+    }
+
+    digitsRawRef.current = cleaned;
+    setRootValue(nextText);
+
+    if (cleaned.length === 0) {
+      caret.pendingDigitsRef.current = null;
+    } else {
+      const logicalPos = caret.pendingDigitsRef.current;
+      const caretDigits = logicalPos != null ? Math.min(logicalPos, cleaned.length) : cleaned.length;
+      caret.setCaret(getCaretPosAfterDigits(caretDigits));
+      caret.pendingDigitsRef.current = null;
+    }
+
+    // Если внешнее value отличается от отформатированного результата (например, пришло с бэка
+    // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
+    // onChange намеренно не в deps — эффект стреляет только при смене value/маски,
+    // и к тому моменту onChange в замыкании уже актуален.
+    // При alwaysActive с пустым value не уведомляем: маска отображает шаблон, но
+    // value родителя остаётся '' — расхождение намеренное, иначе будет бесконечный цикл.
+    if (nextText !== external && !(alwaysActive && cleaned.length === 0)) {
+      onChange(nextText, getParsedValues(nextText));
+    }
+
+    // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
+  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues, alwaysActive, historyClear]);
+
+  useEffect(
+    () => () => {
+      caret.cleanup();
+    },
+    [caret],
+  );
+
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (isComposingRef.current) return;
@@ -404,6 +432,21 @@ export function useMask({
       }
 
       const cursor = e.target.selectionStart ?? input.length;
+
+      // When the cursor landed inside the prefix area (e.g. user clicked before a literal
+      // digit like the '7' in '+7 (###)' and typed before the async caret correction fired),
+      // the typed char is mixed into the prefix. Reconstruct body digits from after the
+      // prefix+inserted-char position and prepend the typed digit.
+      if (maskMeta.prefixLength > 0 && cursor <= maskMeta.prefixLength) {
+        const typedChar = cursor > 0 ? (input[cursor - 1] ?? '') : '';
+        const typedDigit = /^\d$/.test(typedChar) ? typedChar : '';
+        const bodyDigits = extractDigits(input.slice(maskMeta.prefixLength + 1));
+        const combined = (typedDigit + bodyDigits).slice(0, maskMeta.maxDigits);
+        const normalizedCombined = normalize ? normalize(combined) : combined;
+        applyDigits(normalizedCombined, typedDigit.length);
+        return;
+      }
+
       const digitsLeft = extractCleanDigits(input.slice(0, cursor)).length;
 
       const normalized = normalize ? normalize(fullDigits) : fullDigits;
@@ -531,6 +574,22 @@ export function useMask({
       const leftStart = extractCleanDigits(rootValue.slice(0, selectionStart)).length;
       const leftEnd = extractCleanDigits(rootValue.slice(0, selectionEnd)).length;
 
+      if (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'y' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
       if (key === 'Backspace') {
         e.preventDefault();
 
@@ -607,7 +666,9 @@ export function useMask({
       getPrevCaretPos,
       maskMeta.maskLength,
       maskMeta.prefixLength,
+      redo,
       rootValue,
+      undo,
     ],
   );
 
@@ -693,6 +754,10 @@ export function useMask({
   const api = {
     formatDigits,
     getParsedValues,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   };
 
   return { props, api, ghostValue } as const;

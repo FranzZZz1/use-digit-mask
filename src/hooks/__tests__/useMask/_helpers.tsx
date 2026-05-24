@@ -46,8 +46,12 @@ export function firePaste(input: HTMLInputElement, text: string): void {
   fireEvent.paste(input, { clipboardData: { getData: () => text } });
 }
 
-export function fireKey(input: HTMLInputElement, key: string): void {
-  fireEvent.keyDown(input, { key });
+export function fireKey(
+  input: HTMLInputElement,
+  key: string,
+  modifiers: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean } = {},
+): void {
+  fireEvent.keyDown(input, { key, ...modifiers });
 }
 
 export function placeCaret(input: HTMLInputElement, start: number, end: number = start): void {

@@ -1,5 +1,11 @@
 # use-digit-mask
 
+[![npm version](https://img.shields.io/npm/v/use-digit-mask)](https://www.npmjs.com/package/use-digit-mask)
+[![npm downloads](https://img.shields.io/npm/dm/use-digit-mask)](https://www.npmjs.com/package/use-digit-mask)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/use-digit-mask)](https://bundlephobia.com/package/use-digit-mask)
+[![license](https://img.shields.io/npm/l/use-digit-mask)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-ready-blue)](https://www.typescriptlang.org/)
+
 Headless React hooks for digit-only masked inputs — phone numbers, cards, dates, PINs and more.
 
 Unlike traditional masking libraries, it gives you full control over UI while handling all the hard parts: formatting, caret positioning, and parsing.
@@ -10,6 +16,7 @@ Unlike traditional masking libraries, it gives you full control over UI while ha
 - **Form-friendly** — works with react-hook-form, Formik, etc.
 - **Smart caret** — never jumps into invalid positions
 - **Dynamic masks** — switch masks on the fly
+- **Undo / redo history** — Ctrl+Z / Ctrl+Y out of the box, configurable depth
 - **Phone masking built-in** — auto-detect country, E.164 fallback
 - **Country selector hook** — headless `useCountrySelect` for building country dropdowns
 
@@ -111,6 +118,36 @@ function PhoneWithCountry() {
         )}
       </div>
       <input {...props} />
+    </div>
+  );
+}
+```
+
+### Undo / redo
+
+`useMask` keeps an edit history. `Ctrl+Z` / `Ctrl+Y` (and `Cmd+Z` / `Cmd+Shift+Z` on Mac) work
+out of the box. You can also call `api.undo()` / `api.redo()` programmatically and check
+`api.canUndo` / `api.canRedo` to enable/disable custom buttons.
+
+```tsx
+import { useState } from 'react';
+import { useMask } from 'use-digit-mask';
+
+function CardInput() {
+  const [value, setValue] = useState('');
+
+  const { props, api } = useMask({
+    mask: '#### #### #### ####',
+    value,
+    onChange: (next) => setValue(next),
+    historyLimit: 50, // default: 100
+  });
+
+  return (
+    <div>
+      <input {...props} />
+      <button onClick={api.undo} disabled={!api.canUndo}>Undo</button>
+      <button onClick={api.redo} disabled={!api.canRedo}>Redo</button>
     </div>
   );
 }
