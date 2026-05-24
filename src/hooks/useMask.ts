@@ -600,7 +600,7 @@ export function useMask({
         }
 
         if (leftStart === 0) {
-          if (isMaskActiveRef.current && !alwaysActive) {
+          if (prev.length === 0 && isMaskActiveRef.current && !alwaysActive) {
             isMaskActiveRef.current = false;
             applyDigits('');
             caret.setCaret(0);
