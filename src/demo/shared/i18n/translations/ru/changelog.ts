@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.2',
+    date: '2026-05-26',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: исправлена работа |Ctrl+Z| / |Ctrl+Y| — undo/redo теперь работает стабильно в контролируемых компонентах.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.1',
     date: '2026-05-25',
     sections: [
