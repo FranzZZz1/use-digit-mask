@@ -51,9 +51,27 @@ export function fireKey(
   key: string,
   modifiers: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean } = {},
 ): void {
-  fireEvent.keyDown(input, { key, ...modifiers });
+  const code = key.length === 1 ? `Key${key.toUpperCase()}` : key;
+  fireEvent.keyDown(input, { key, code, ...modifiers });
 }
 
 export function placeCaret(input: HTMLInputElement, start: number, end: number = start): void {
   input.setSelectionRange(start, end);
+}
+
+export function AsyncControlledInput({ initialValue = '', onChangeSpy = undefined, ...maskProps }: TestInputProps) {
+  const [value, setValue] = useState(initialValue);
+
+  const { props } = useMask({
+    ...maskProps,
+    value,
+    onChange(next: string, parsed: ParsedValues) {
+      setTimeout(() => {
+        setValue(next);
+        onChangeSpy?.(next, parsed);
+      }, 0);
+    },
+  });
+
+  return <input {...props} data-testid="input" />;
 }

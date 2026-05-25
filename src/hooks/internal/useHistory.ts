@@ -30,12 +30,7 @@ export type UseHistoryResult = {
   canRedo: boolean;
 };
 
-export function useHistory({
-  digitsRawRef,
-  maxDigits,
-  historyLimit,
-  applyCore,
-}: UseHistoryOptions): UseHistoryResult {
+export function useHistory({ digitsRawRef, maxDigits, historyLimit, applyCore }: UseHistoryOptions): UseHistoryResult {
   const undoStackRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
   const [canUndo, setCanUndo] = useState(false);

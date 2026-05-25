@@ -33,7 +33,7 @@ const isMobile = () => typeof window !== 'undefined' && /iPhone|iPad|iPod|Androi
  * Parsed representation of the current mask input value.
  *
  * @remarks
- * When used via `useMask` directly, `prefix` is the literal mask prefix —
+ * When used via `useMask` directly, `prefix` is the literal mask prefix -
  * everything before the first `#` slot (e.g. `'+7 ('` for mask `'+7 (###)...'`).
  *
  * When used via `usePhoneMask`, `prefix` is overridden with the resolved
@@ -116,6 +116,7 @@ export function useMask({
   const isMaskActiveRef = useRef(alwaysActive);
   const prevAlwaysActiveRef = useRef(alwaysActive);
   const digitsRawRef = useRef<string>('');
+  const isApplyingCoreRef = useRef(false);
 
   const caret = useCaretManager(inputRef);
 
@@ -320,6 +321,9 @@ export function useMask({
       if (valueChanged) {
         // При alwaysActive с пустым значением отправляем '' в onChange, а не шаблон маски.
         const reportText = alwaysActive && willBeEmpty ? '' : nextText;
+        // Следующий вызов layoutEffect - ответ на наш собственный onChange,
+        // а не внешнее изменение value. Это предотвращает ложный historyClear().
+        isApplyingCoreRef.current = true;
         onChange(reportText, getParsedValues(reportText));
       }
     },
@@ -336,7 +340,14 @@ export function useMask({
     ],
   );
 
-  const { push: historyPush, clear: historyClear, undo, redo, canUndo, canRedo } = useHistory({
+  const {
+    push: historyPush,
+    clear: historyClear,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistory({
     digitsRawRef,
     maxDigits: maskMeta.maxDigits,
     historyLimit,
@@ -352,6 +363,9 @@ export function useMask({
   );
 
   useIsomorphicLayoutEffect(() => {
+    const wasApplyingCore = isApplyingCoreRef.current;
+    isApplyingCoreRef.current = false;
+
     const external = value || '';
     const cleaned = extractCleanDigits(external);
 
@@ -367,9 +381,18 @@ export function useMask({
 
     if (nextText === rootValue) return;
 
-    // External value change (programmatic reset, mask change, data load from server) —
+    if (wasApplyingCore && cleaned !== digitsRawRef.current) {
+      // applyDigitsCore уже обновил digitsRawRef, но parent ещё не закоммитил
+      // новый value prop - cleaned вычислен по старому значению.
+      // Пропускаем, чтобы не испортить состояние и не сбросить историю.
+      // Корректный layoutEffect придёт, когда parent закоммитит обновление.
+      return;
+    }
+
+    // External value change (programmatic reset, mask change, data load from server) -
     // clear history so Ctrl+Z doesn't take the user back to a stale state.
-    if (cleaned !== digitsRawRef.current) {
+    // Если wasApplyingCore - это наш собственный onChange, историю не трогаем.
+    if (!wasApplyingCore && cleaned !== digitsRawRef.current) {
       historyClear();
     }
 
@@ -387,16 +410,25 @@ export function useMask({
 
     // Если внешнее value отличается от отформатированного результата (например, пришло с бэка
     // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
-    // onChange намеренно не в deps — эффект стреляет только при смене value/маски,
+    // onChange намеренно не в deps - эффект стреляет только при смене value/маски,
     // и к тому моменту onChange в замыкании уже актуален.
     // При alwaysActive с пустым value не уведомляем: маска отображает шаблон, но
-    // value родителя остаётся '' — расхождение намеренное, иначе будет бесконечный цикл.
+    // value родителя остаётся '' - расхождение намеренное, иначе будет бесконечный цикл.
     if (nextText !== external && !(alwaysActive && cleaned.length === 0)) {
       onChange(nextText, getParsedValues(nextText));
     }
 
     // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
-  }, [value, extractCleanDigits, renderText, caret, getCaretPosAfterDigits, getParsedValues, alwaysActive, historyClear]);
+  }, [
+    value,
+    extractCleanDigits,
+    renderText,
+    caret,
+    getCaretPosAfterDigits,
+    getParsedValues,
+    alwaysActive,
+    historyClear,
+  ]);
 
   useEffect(
     () => () => {
@@ -574,7 +606,7 @@ export function useMask({
       const leftStart = extractCleanDigits(rootValue.slice(0, selectionStart)).length;
       const leftEnd = extractCleanDigits(rootValue.slice(0, selectionEnd)).length;
 
-      if (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey)) {
+      if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         if (e.shiftKey) {
           redo();
@@ -584,7 +616,7 @@ export function useMask({
         return;
       }
 
-      if (e.key.toLowerCase() === 'y' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      if (e.code === 'KeyY' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         redo();
         return;

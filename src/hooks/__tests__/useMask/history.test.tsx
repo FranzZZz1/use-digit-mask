@@ -1,10 +1,10 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../useMask';
 
-import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
+import { AsyncControlledInput, fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
 
 describe('Undo (Ctrl+Z)', () => {
   it('отменяет последний введённый символ', () => {
@@ -223,4 +223,49 @@ describe('Сброс истории при внешнем value', () => {
     fireKey(input, 'z', { ctrlKey: true });
     expect(input.value).toBe('12__'); // возврат к состоянию до пользовательского ввода
   });
+});
+
+it('undo не должен очищать history при async controlled updates', async () => {
+  vi.useFakeTimers();
+
+  render(<AsyncControlledInput mask="####" />);
+
+  const input = getInput();
+
+  fireChangeAt(input, '1', 1);
+
+  await act(async () => {
+    await vi.runAllTimersAsync();
+  });
+
+  fireChangeAt(input, '12__', 2);
+
+  await act(async () => {
+    await vi.runAllTimersAsync();
+  });
+
+  fireKey(input, 'z', { ctrlKey: true });
+
+  expect(input.value).toBe('1___');
+});
+
+it('undo не должен создавать новую history entry', () => {
+  render(<TestInput mask="####" />);
+  const input = getInput();
+
+  fireChangeAt(input, '1', 1);
+  fireChangeAt(input, '12__', 2);
+  fireChangeAt(input, '123_', 3);
+
+  fireKey(input, 'z', { ctrlKey: true });
+  expect(input.value).toBe('12__');
+
+  fireKey(input, 'z', { ctrlKey: true });
+  expect(input.value).toBe('1___');
+
+  fireKey(input, 'y', { ctrlKey: true });
+  expect(input.value).toBe('12__');
+
+  fireKey(input, 'y', { ctrlKey: true });
+  expect(input.value).toBe('123_');
 });
