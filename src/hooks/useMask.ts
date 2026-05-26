@@ -724,10 +724,13 @@ export function useMask({
       setRootValue(renderSlots(digitsRawRef.current).text);
     }
 
-    const digitsLen = digitsRawRef.current.length;
-    const pos = digitsLen > 0 ? getCaretPosAfterDigits(digitsLen) : maskMeta.prefixLength;
-    caret.setCaret(pos);
-  }, [activateOnFocus, caret, renderSlots, getCaretPosAfterDigits, maskMeta.prefixLength]);
+    // For empty fields place the caret after the prefix so the user doesn't
+    // land inside the literal prefix characters. For non-empty fields let
+    // the browser keep the caret where the user clicked.
+    if (digitsRawRef.current.length === 0) {
+      caret.setCaret(maskMeta.prefixLength);
+    }
+  }, [activateOnFocus, caret, renderSlots, maskMeta.prefixLength]);
 
   const onBlur = useCallback(() => {
     if (!deactivateOnEmptyBlur || alwaysActive) return;
