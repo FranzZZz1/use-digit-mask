@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.4',
+    date: '2026-05-26',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: фокус на непустом поле больше не перебрасывает каретку в конец цифр — браузер сохраняет позицию клика. При пустом поле каретка по-прежнему встаёт после префикса.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.3',
     date: '2026-05-26',
     sections: [

@@ -41,6 +41,8 @@ export function DemoView() {
           <p className={styles.hero__desc}>{t.demo.hero.desc}</p>
           <button
             type="button"
+            title="Скопировать"
+            aria-label={`Скопировать в буфер: ${INSTALL_CMD}`}
             className={styles.install}
             onClick={() => {
               copy(INSTALL_CMD);
@@ -112,7 +114,12 @@ export function DemoView() {
       )}
 
       {showCopiedToast && (
-        <Toast message={t.code.copied} onDone={() => { setShowCopiedToast(false); }} />
+        <Toast
+          message={t.code.copied}
+          onDone={() => {
+            setShowCopiedToast(false);
+          }}
+        />
       )}
 
       <Footer />

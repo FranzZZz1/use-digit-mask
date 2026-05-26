@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.4',
+    date: '2026-05-26',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: focusing a non-empty field no longer forces the caret to the end of the digits — the browser now keeps the caret at the click position. The caret is still placed after the prefix when the field is empty.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.3',
     date: '2026-05-26',
     sections: [
