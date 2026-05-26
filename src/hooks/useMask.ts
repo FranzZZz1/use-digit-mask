@@ -439,8 +439,6 @@ export function useMask({
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      if (isComposingRef.current) return;
-
       const input = e.target.value;
       const fullDigits = extractCleanDigits(input);
 
