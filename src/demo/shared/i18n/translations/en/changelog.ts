@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.3',
+    date: '2026-05-26',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: removed early |isComposing| guard from |handleChange| — input was silently dropped on some mobile IME keyboards when the composition flag was set unexpectedly.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.2',
     date: '2026-05-26',
     sections: [

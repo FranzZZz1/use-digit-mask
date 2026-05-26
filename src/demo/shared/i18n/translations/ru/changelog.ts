@@ -2,6 +2,18 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.3',
+    date: '2026-05-26',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: убрана ранняя проверка |isComposing| из |handleChange| — на некоторых мобильных IME-клавиатурах флаг выставлялся неожиданно, из-за чего ввод игнорировался.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.2',
     date: '2026-05-26',
     sections: [
