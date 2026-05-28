@@ -2,6 +2,20 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.5',
+    date: '2026-05-28',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: вставка через Android IME (приходит как |onChange|, а не |onPaste|) теперь корректно срезает телефонный префикс — вставка полного номера вроде |79991234567| больше не съедает первую цифру.',
+          '|usePhoneMask|: |api.getParsedValues()| теперь возвращает телефонные значения (корректные |prefix|, |parentPrefix|, |rawWithoutPrefix|, |isMaskCompleted|) вместо значений из |useMask|.',
+          '|useMask|: |onCompositionStart| / |onCompositionEnd| удалены из возвращаемых |props| — обработчик composition был убран ещё в v0.5.3.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.4',
     date: '2026-05-26',
     sections: [

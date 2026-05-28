@@ -2,6 +2,20 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.5.5',
+    date: '2026-05-28',
+    sections: [
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: Android IME paste (arriving as an |onChange| event instead of |onPaste|) now correctly strips the phone prefix — pasting a full number like |79991234567| no longer eats the leading digit.',
+          '|usePhoneMask|: |api.getParsedValues()| now returns phone-aware values (correct |prefix|, |parentPrefix|, |rawWithoutPrefix|, |isMaskCompleted|) instead of the raw |useMask| values.',
+          '|useMask|: |onCompositionStart| / |onCompositionEnd| removed from returned |props| — the composition guard was already removed in v0.5.3 so these handlers were no-ops.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.4',
     date: '2026-05-26',
     sections: [
