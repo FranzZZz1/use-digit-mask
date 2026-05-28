@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { fireEvent, screen } from '@testing-library/react';
 
-import { type ParsedValues, useMask, type UseMaskProps } from '../../useMask';
+import { type ParsedValues, type UseMaskProps } from '../../types';
+import { useMask } from '../../useMask';
 
 export type TestInputProps = Omit<UseMaskProps, 'value' | 'onChange'> & {
   initialValue?: string;

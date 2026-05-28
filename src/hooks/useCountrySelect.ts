@@ -143,14 +143,14 @@ function buildIdleItems(
       topIds = floating.length ? [...pinned, ...floating] : pinned;
       divider = pinned.length;
     } else {
-      // No priorityIds to pin — fall back to dynamic-mode behaviour.
+      // priorityIds не заданы — переходим к динамическому режиму.
       topIds = currentId != null && hasActive ? activeIds : [];
     }
   } else if (currentId == null) {
-    // Empty input: float priorityIds.
+    // Ввод пустой: поднимаем priorityIds наверх.
     topIds = (priorityIds ?? []).filter((id) => plansById.has(id));
   } else {
-    // Input present: float ambiguous candidates.
+    // Есть ввод: поднимаем неоднозначные кандидаты.
     topIds = hasActive ? activeIds : [];
   }
 
@@ -209,12 +209,12 @@ export function useCountrySelect({
   const { items, dividerAfter } = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    // Search mode: filter in natural order, no reordering.
+    // Режим поиска: фильтруем в естественном порядке, без переупорядочивания.
     if (q) {
       return { items: allPlans.filter((p) => matchesQuery(p, q)), dividerAfter: -1 };
     }
 
-    // disableSort disables candidate-based floating only; stickyPins / priorityIds still apply.
+    // disableSort отключает только всплытие кандидатов; stickyPins / priorityIds по-прежнему работают.
     return buildIdleItems(
       allPlans,
       disableSort ? undefined : candidates,
@@ -258,9 +258,9 @@ export function useCountrySelect({
     (plan: DialPlan) => {
       onSelectRef.current(plan);
 
-      // flushSync forces React to flush the setState from close() synchronously
-      // so the dropdown is removed from the DOM before focus() is called —
-      // otherwise the browser moves focus to body and the input never receives it.
+      // flushSync заставляет React синхронно применить setState из close(),
+      // чтобы дропдаун исчез из DOM до вызова focus() —
+      // иначе браузер переносит фокус на body и инпут его не получает.
       flushSync(() => {
         close();
       });

@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { type ParsedValues } from '../../useMask';
+import { type ParsedValues } from '../../types';
 
 import { ControlledInput, fireChangeAt, getInput, TestInput } from './_helpers';
 

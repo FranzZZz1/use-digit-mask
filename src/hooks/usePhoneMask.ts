@@ -11,7 +11,8 @@ import {
 import { extractDigits } from '../utils/extractDigits';
 import { formatDigitsWithMask } from '../utils/formatDigitsWithMask';
 
-import { type ParsedValues, useMask, type UseMaskProps } from './useMask';
+import { type ParsedValues, type UseMaskProps } from './types';
+import { useMask } from './useMask';
 
 export type UsePhoneMaskProps = Omit<UseMaskProps, 'value' | 'mask'> & {
   value?: string;
@@ -53,6 +54,21 @@ function resolvePlan(digits: string, plans: DialPlan[], forcedId: string | null)
   }
 
   return { ...result, prefixDigits: extractDigits(result.prefix) };
+}
+
+function patchParsedValues(parsed: ParsedValues, dialPlans: DialPlan[], forcedId: string | null): ParsedValues {
+  const rawDigits = extractDigits(parsed.rawWithPrefix);
+  const fresh = resolvePlan(rawDigits, dialPlans, forcedId);
+  const body = rawDigits.startsWith(fresh.prefixDigits) ? rawDigits.slice(fresh.prefixDigits.length) : rawDigits;
+  const freshTotalSlots = (fresh.mask.match(/#/g) ?? []).length;
+
+  return {
+    ...parsed,
+    prefix: fresh.prefix,
+    parentPrefix: fresh.parentPrefix,
+    rawWithoutPrefix: body,
+    isMaskCompleted: freshTotalSlots > 0 && rawDigits.length >= freshTotalSlots,
+  };
 }
 
 /**
@@ -113,25 +129,18 @@ export function usePhoneMask({
     placeholderChar,
     trimMaskTail,
     onChange: (next, parsed) => {
-      // `prefix`/`prefixDigits` from the closure reflect the *previous* render.
-      // Re-resolve from the new digits so ParsedValues are always current.
-      const rawDigits = extractDigits(parsed.rawWithPrefix);
-      const fresh = resolvePlan(rawDigits, dialPlans, forcedId);
-
-      const body = rawDigits.startsWith(fresh.prefixDigits) ? rawDigits.slice(fresh.prefixDigits.length) : rawDigits;
-
-      const freshTotalSlots = (fresh.mask.match(/#/g) ?? []).length;
-
+      // `prefix`/`prefixDigits` из замыкания отражают *предыдущий* рендер.
+      // Резолвим заново по новым цифрам, чтобы ParsedValues были актуальны.
       if (!isControlled) setLocalValue(next);
-      onChange?.(next, {
-        ...parsed,
-        prefix: fresh.prefix,
-        parentPrefix: fresh.parentPrefix,
-        rawWithoutPrefix: body,
-        isMaskCompleted: freshTotalSlots > 0 && rawDigits.length >= freshTotalSlots,
-      });
+      onChange?.(next, patchParsedValues(parsed, dialPlans, forcedId));
     },
   });
+
+  const getParsedValues = useCallback(
+    (formattedParam?: string): ParsedValues =>
+      patchParsedValues(api.getParsedValues(formattedParam), dialPlans, forcedId),
+    [api, dialPlans, forcedId],
+  );
 
   const selectCandidate = useCallback(
     (candidate: PhoneMaskCandidate) => {
@@ -180,7 +189,7 @@ export function usePhoneMask({
 
   return {
     props,
-    api,
+    api: { ...api, getParsedValues },
     ghostValue,
     mask,
     cc,

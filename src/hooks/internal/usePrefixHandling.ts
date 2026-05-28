@@ -19,6 +19,11 @@ export function usePrefixHandling(allowedPrefixes: string[], maskMeta: MaskMeta)
     [maskMeta.visiblePrefix],
   );
 
+  const startsWithAllowedPrefix = useCallback(
+    (digits: string) => allowedPrefixesDigits.some((pd) => pd && digits.startsWith(pd)),
+    [allowedPrefixesDigits],
+  );
+
   const stripAllowedPrefix = useCallback(
     (digits: string) => {
       if (allowedPrefixesDigits.length === 0) return digits;
@@ -37,5 +42,5 @@ export function usePrefixHandling(allowedPrefixes: string[], maskMeta: MaskMeta)
     [allowedPrefixes, maskMeta.visiblePrefix],
   );
 
-  return { allowedPrefixesDigits, stripVisiblePrefix, stripAllowedPrefix, getVisiblePrefix };
+  return { allowedPrefixesDigits, stripVisiblePrefix, startsWithAllowedPrefix, stripAllowedPrefix, getVisiblePrefix };
 }

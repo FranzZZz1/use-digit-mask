@@ -1,6 +1,6 @@
+export type { ParsedValues, UseMaskProps } from './hooks/types';
 export type { UseCountrySelectOptions, UseCountrySelectResult } from './hooks/useCountrySelect';
 export { useCountrySelect } from './hooks/useCountrySelect';
-export type { ParsedValues, UseMaskProps } from './hooks/useMask';
 export { useMask } from './hooks/useMask';
 export type { UsePhoneMaskProps } from './hooks/usePhoneMask';
 export { usePhoneMask } from './hooks/usePhoneMask';

@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { type ParsedValues } from '../../useMask';
+import { type ParsedValues } from '../../types';
 
 import { ControlledInput, fireChangeAt, firePaste, getInput, TestInput } from './_helpers';
 
@@ -62,12 +62,14 @@ describe('Edge cases', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('composition (IME) - handleChange игнорируется во время набора', () => {
+  it('composition-события не мешают вводу (обработчики не нужны)', () => {
+    // На Samsung Galaxy нажатие на символы вроде "-" оборачивается в composition-события.
+    // Хук не перехватывает onCompositionStart/End — ввод работает корректно в любом случае.
     render(<TestInput mask="####" />);
     const input = getInput();
     fireEvent.compositionStart(input);
     fireChangeAt(input, '1234', 4);
-    expect(input.value).toBe('');
+    expect(input.value).toBe('1234');
     fireEvent.compositionEnd(input);
   });
 

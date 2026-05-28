@@ -38,7 +38,7 @@ export function useHistory({ digitsRawRef, maxDigits, historyLimit, applyCore }:
 
   const push = useCallback(
     (nextDigits: string) => {
-      // Skip if the value won't actually change after clamping
+      // Пропускаем, если после обрезки до maxDigits значение не изменится
       if (nextDigits.slice(0, maxDigits) === digitsRawRef.current) return;
       const nextStack = [...undoStackRef.current, { digits: digitsRawRef.current }];
       undoStackRef.current = nextStack.length > historyLimit ? nextStack.slice(-historyLimit) : nextStack;

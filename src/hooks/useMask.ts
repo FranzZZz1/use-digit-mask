@@ -14,71 +14,18 @@ import {
 import { extractDigits } from '../utils/extractDigits';
 
 import { useCaretManager } from './internal/useCaretManager';
+import { useCaretPositions } from './internal/useCaretPositions';
 import { useHistory } from './internal/useHistory';
 import { useMaskMeta } from './internal/useMaskMeta';
 import { usePrefixHandling } from './internal/usePrefixHandling';
+import { type ParsedValues, type UseMaskProps } from './types';
 
 const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
 
-const MASK_CONFIG = {
-  MASK_SLOT_DIGIT: '#',
-  MASK_PLACEHOLDER_CHAR: '_',
-} as const;
-
-const { MASK_SLOT_DIGIT, MASK_PLACEHOLDER_CHAR } = MASK_CONFIG;
+const MASK_SLOT_DIGIT = '#';
+const MASK_PLACEHOLDER_CHAR = '_';
 
 const isMobile = () => typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-/**
- * Parsed representation of the current mask input value.
- *
- * @remarks
- * When used via `useMask` directly, `prefix` is the literal mask prefix -
- * everything before the first `#` slot (e.g. `'+7 ('` for mask `'+7 (###)...'`).
- *
- * When used via `usePhoneMask`, `prefix` is overridden with the resolved
- * phone-plan prefix (e.g. `'+7'`, `'+44'`, `'8'`) and may differ from the mask literal.
- */
-export type ParsedValues = {
-  prefix: string;
-  rawWithPrefix: string;
-  rawWithoutPrefix: string;
-  formattedWithPrefix: string;
-  formattedWithoutPrefix: string;
-  formattedWithoutPlaceholderChars: string;
-  isMaskCompleted: boolean;
-  /**
-   * The canonical E.164-style prefix for the resolved plan when the user typed
-   * an alternative prefix (e.g. user typed `8` → `parenPrefix` is `+7`).
-   * `undefined` when no altPrefix is in use or no plan is resolved.
-   * Only populated by `usePhoneMask`; always `undefined` when using `useMask` directly.
-   */
-  parentPrefix?: string;
-};
-
-export type UseMaskProps = {
-  value: string;
-  onChange: (value: string, parsed: ParsedValues) => void;
-  mask: string;
-  allowedPrefixes?: string[];
-  placeholderChar?: string;
-  normalize?: (digits: string) => string;
-  activateOnFocus?: boolean;
-  deactivateOnEmptyBlur?: boolean;
-  trimMaskTail?: boolean;
-  // Character used to fill empty slots in `ghostValue`. Defaults to `placeholderChar`.
-  ghostChar?: string;
-  /**
-   * When `true`, the mask template is always rendered regardless of focus state.
-   * `onChange` still reports `''` when there are no digits entered.
-   */
-  alwaysActive?: boolean;
-  /**
-   * Maximum number of undo/redo steps to keep in memory. Defaults to `100`.
-   * Each distinct digit-sequence change counts as one step.
-   */
-  historyLimit?: number;
-};
 
 const clamp = (num: number, min: number, max: number) => Math.max(min, Math.min(max, num));
 
@@ -112,7 +59,6 @@ export function useMask({
   historyLimit = 100,
 }: UseMaskProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const isComposingRef = useRef(false);
   const isMaskActiveRef = useRef(alwaysActive);
   const prevAlwaysActiveRef = useRef(alwaysActive);
   const digitsRawRef = useRef<string>('');
@@ -122,29 +68,12 @@ export function useMask({
 
   const [rootValue, setRootValue] = useState<string>('');
 
-  const onCompositionStart = () => {
-    isComposingRef.current = true;
-  };
-
-  const onCompositionEnd = () => {
-    isComposingRef.current = false;
-  };
-
   const maskMeta = useMaskMeta(mask);
 
-  const { allowedPrefixesDigits, stripVisiblePrefix, stripAllowedPrefix, getVisiblePrefix } = usePrefixHandling(
-    allowedPrefixes,
-    maskMeta,
-  );
+  const { allowedPrefixesDigits, stripVisiblePrefix, startsWithAllowedPrefix, stripAllowedPrefix, getVisiblePrefix } =
+    usePrefixHandling(allowedPrefixes, maskMeta);
 
-  const shouldActivate = useCallback(
-    (digits: string) =>
-      allowedPrefixes.some((prefix) => {
-        const prefixDigits = extractDigits(prefix);
-        return digits.startsWith(prefixDigits);
-      }),
-    [allowedPrefixes],
-  );
+  const { getCaretPosAfterDigits, getPrevCaretPos, getNextCaretPos } = useCaretPositions(maskMeta);
 
   const extractCleanDigits = useMemo(() => createCleanDigitsExtractor(stripVisiblePrefix), [stripVisiblePrefix]);
 
@@ -199,45 +128,6 @@ export function useMask({
       return renderSlots(digits).text;
     },
     [renderSlots],
-  );
-
-  const getCaretPosAfterDigits = useCallback(
-    (count: number) => {
-      if (count <= 0) return maskMeta.prefixLength;
-      const clampedDigitIndex = clamp(count - 1, 0, Math.max(0, maskMeta.maxDigits - 1));
-      const slotPosition = maskMeta.digitSlotIndexes[clampedDigitIndex];
-      return slotPosition != null
-        ? clamp(slotPosition + 1, maskMeta.prefixLength, maskMeta.maskLength)
-        : maskMeta.prefixLength;
-    },
-    [maskMeta],
-  );
-
-  const allowedCaretPositions = useMemo(() => {
-    const positionsList = [maskMeta.prefixLength, ...maskMeta.digitSlotIndexes.map((idx) => idx + 1)];
-    return Array.from(new Set(positionsList)).sort((a, b) => a - b);
-  }, [maskMeta.prefixLength, maskMeta.digitSlotIndexes]);
-
-  const getPrevCaretPos = useCallback(
-    (pos: number): number => {
-      for (let i = allowedCaretPositions.length - 1; i >= 0; i -= 1) {
-        const candidatePosition = allowedCaretPositions[i];
-        if (candidatePosition !== undefined && candidatePosition < pos) return candidatePosition;
-      }
-      return allowedCaretPositions[0] ?? maskMeta.prefixLength;
-    },
-    [allowedCaretPositions, maskMeta.prefixLength],
-  );
-
-  const getNextCaretPos = useCallback(
-    (pos: number): number => {
-      for (let i = 0; i < allowedCaretPositions.length; i += 1) {
-        const candidatePosition = allowedCaretPositions[i];
-        if (candidatePosition !== undefined && candidatePosition > pos) return candidatePosition;
-      }
-      return allowedCaretPositions[allowedCaretPositions.length - 1] ?? maskMeta.maskLength;
-    },
-    [allowedCaretPositions, maskMeta.maskLength],
   );
 
   const getParsedValues = useCallback(
@@ -389,9 +279,9 @@ export function useMask({
       return;
     }
 
-    // External value change (programmatic reset, mask change, data load from server) -
-    // clear history so Ctrl+Z doesn't take the user back to a stale state.
-    // Если wasApplyingCore - это наш собственный onChange, историю не трогаем.
+    // Внешнее изменение value (программный сброс, смена маски, данные с сервера) —
+    // очищаем историю, чтобы Ctrl+Z не откатывал к устаревшему состоянию.
+    // Если wasApplyingCore — это наш собственный onChange, историю не трогаем.
     if (!wasApplyingCore && cleaned !== digitsRawRef.current) {
       historyClear();
     }
@@ -446,7 +336,7 @@ export function useMask({
         const rawDigits = extractDigits(input);
         const firstChar = rawDigits.charAt(0);
 
-        if (rawDigits.length === 1 && shouldActivate(firstChar)) {
+        if (rawDigits.length === 1 && startsWithAllowedPrefix(firstChar)) {
           isMaskActiveRef.current = true;
           setRootValue(formatDigits('').text);
           caret.setCaret(maskMeta.prefixLength);
@@ -463,10 +353,10 @@ export function useMask({
 
       const cursor = e.target.selectionStart ?? input.length;
 
-      // When the cursor landed inside the prefix area (e.g. user clicked before a literal
-      // digit like the '7' in '+7 (###)' and typed before the async caret correction fired),
-      // the typed char is mixed into the prefix. Reconstruct body digits from after the
-      // prefix+inserted-char position and prepend the typed digit.
+      // Курсор оказался внутри области префикса (например, пользователь кликнул перед
+      // литеральной цифрой '7' в '+7 (###)' и нажал клавишу до асинхронной коррекции каретки).
+      // Введённый символ смешался с префиксом — восстанавливаем тело цифр из позиции
+      // после префикса+символа и добавляем введённую цифру в начало.
       if (maskMeta.prefixLength > 0 && cursor <= maskMeta.prefixLength) {
         const typedChar = cursor > 0 ? (input[cursor - 1] ?? '') : '';
         const typedDigit = /^\d$/.test(typedChar) ? typedChar : '';
@@ -479,7 +369,20 @@ export function useMask({
 
       const digitsLeft = extractCleanDigits(input.slice(0, cursor)).length;
 
-      const normalized = normalize ? normalize(fullDigits) : fullDigits;
+      // Android IME вставка приходит как обычный onChange (событие paste не срабатывает).
+      // Срезаем allowed-префикс только когда курсор вышел за пределы stripped-диапазона —
+      // это признак полной вставки (курсор в конце вставленного текста).
+      // При обычном вводе курсор всегда стоит внутри тела цифр
+      // (digitsLeft ≤ stripped.length), поэтому такой ввод эта ветка не затрагивает.
+      const strippedCandidate = stripAllowedPrefix(fullDigits);
+      const shouldStripPrefix =
+        strippedCandidate !== fullDigits &&
+        fullDigits.length > maskMeta.maxDigits &&
+        digitsLeft > strippedCandidate.length;
+
+      const strippedDigits = shouldStripPrefix ? strippedCandidate : fullDigits;
+
+      const normalized = normalize ? normalize(strippedDigits) : strippedDigits;
       applyDigits(normalized, digitsLeft);
     },
     [
@@ -490,7 +393,8 @@ export function useMask({
       maskMeta.maxDigits,
       maskMeta.prefixLength,
       normalize,
-      shouldActivate,
+      startsWithAllowedPrefix,
+      stripAllowedPrefix,
     ],
   );
 
@@ -516,7 +420,7 @@ export function useMask({
       const startsWithVisibleOrDigitsPrefix =
         allowedPrefixes.some((prefix) => pasted.startsWith(prefix)) ||
         (maskMeta.visiblePrefix ? pasted.startsWith(maskMeta.visiblePrefix) : false) ||
-        allowedPrefixesDigits.some((digits) => digits && pastedDigitsRaw.startsWith(digits));
+        startsWithAllowedPrefix(pastedDigitsRaw);
 
       const skipPrefixStripOnce = isMaskActiveRef.current && isPrefixOnly;
 
@@ -527,7 +431,7 @@ export function useMask({
         (startsWithVisibleOrDigitsPrefix || pastedDigitsRaw.length > maskMeta.maxDigits)
       );
     },
-    [allowedPrefixes, allowedPrefixesDigits, maskMeta.maxDigits, maskMeta.visiblePrefix],
+    [allowedPrefixes, maskMeta.maxDigits, maskMeta.visiblePrefix, startsWithAllowedPrefix],
   );
 
   const handlePaste = useCallback(
@@ -724,9 +628,9 @@ export function useMask({
       setRootValue(renderSlots(digitsRawRef.current).text);
     }
 
-    // For empty fields place the caret after the prefix so the user doesn't
-    // land inside the literal prefix characters. For non-empty fields let
-    // the browser keep the caret where the user clicked.
+    // В пустом поле ставим каретку после префикса, чтобы пользователь не попал
+    // внутрь литеральных символов. В заполненном поле браузер сам сохраняет
+    // позицию клика.
     if (digitsRawRef.current.length === 0) {
       caret.setCaret(maskMeta.prefixLength);
     }
@@ -780,8 +684,6 @@ export function useMask({
     onFocus,
     onBlur,
     onMouseDown,
-    onCompositionStart,
-    onCompositionEnd,
   };
 
   const api = {
