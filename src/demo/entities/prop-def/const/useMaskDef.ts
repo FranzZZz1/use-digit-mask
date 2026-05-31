@@ -12,7 +12,7 @@ export const USE_MASK_PARAMS: PropDef[] = [
   { name: 'mask', type: 'string', required: true, control: str(DEFAULT_MASK) },
   { name: 'value', type: 'string', required: true },
   { name: 'onChange', type: '(value: string, parsed: ParsedValues) => void', required: true },
-  { name: 'allowedPrefixes', type: 'string[]', default: '[]', control: arr('+7, 8') },
+  { name: 'prefixAliases', type: 'string[]', default: '[]', control: arr('+7, 8') },
   { name: 'placeholderChar', type: 'string', default: '"_"', control: str('_', 1) },
   { name: 'normalize', type: '(digits: string) => string', default: 'undefined' },
   { name: 'activateOnFocus', type: 'boolean', default: 'false', control: bool },
@@ -21,6 +21,7 @@ export const USE_MASK_PARAMS: PropDef[] = [
   { name: 'ghostChar', type: 'string', default: 'placeholderChar', control: str('·', 1) },
   { name: 'alwaysActive', type: 'boolean', default: 'false', control: bool },
   { name: 'historyLimit', type: 'number', default: '100' },
+  { name: 'pasteStripPrefix', type: '"overflow" | "always"', default: '"overflow"' },
 ];
 
 export const USE_MASK_RETURN_PROPS: PropDef[] = [

@@ -27,6 +27,7 @@ export function ChangelogView() {
     changed: cl.changed,
     fixed: cl.fixed,
     breaking: cl.breaking,
+    tradeoff: cl.tradeoff,
   };
 
   return (

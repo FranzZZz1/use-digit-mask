@@ -42,7 +42,9 @@
 .content {
   z-index: var(--z-dropdown);
 
-  overflow: hidden;
+  overflow-y: auto;
+
+  max-height: min(240px, 60vh);
 
   background: var(--color-surface);
   border: 1px solid var(--color-border);

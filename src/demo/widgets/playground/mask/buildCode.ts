@@ -9,7 +9,7 @@ import {
 } from '@/shared/lib/snippetUtils';
 import { type OptionsState, type StrOptionState } from '@/shared/ui/Playground';
 
-function parseAllowedPrefixes(str: string): string[] {
+function parsePrefixAliases(str: string): string[] {
   return str
     .split(',')
     .map((s) => s.trim())
@@ -19,11 +19,11 @@ function parseAllowedPrefixes(str: string): string[] {
 function collectUseMaskArgs(mask: string, placeholderChar: string, state: OptionsState, withGhost: boolean): HookArg[] {
   const args: HookArg[] = [{ key: 'mask', value: mask }];
 
-  const allowedPrefixes = state.allowedPrefixes as StrOptionState | undefined;
-  if (allowedPrefixes?.enabled) {
-    const prefixes = parseAllowedPrefixes(allowedPrefixes.value);
+  const prefixAliases = state.prefixAliases as StrOptionState | undefined;
+  if (prefixAliases?.enabled) {
+    const prefixes = parsePrefixAliases(prefixAliases.value);
     if (prefixes.length > 0) {
-      args.push({ key: 'allowedPrefixes', value: prefixes });
+      args.push({ key: 'prefixAliases', value: prefixes });
     }
   }
 

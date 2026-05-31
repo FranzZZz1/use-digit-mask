@@ -10,8 +10,8 @@ export const useMask = {
     mask: 'Mask pattern. |#| = digit slot, everything else is a literal. Example: |+7 (###) ###-##-##|.',
     value: 'Controlled input value.',
     onChange: 'Called on every change with the formatted value and parsed breakdown.',
-    allowedPrefixes:
-      'List of prefix strings (e.g. |["+7", "8"]|) that are stripped when pasting a full number and activate an empty mask.',
+    prefixAliases:
+      'Prefix strings recognised as equivalent to the mask\'s own prefix (e.g. |["+7", "8"]|). Stripped on paste and activate an empty mask when typed alone.',
     placeholderChar: 'Character shown in unfilled digit slots.',
     normalize:
       'Optional transform applied to extracted digits before applying the mask (e.g. to enforce a leading digit).',
@@ -22,7 +22,9 @@ export const useMask = {
       'Character used in the ghost overlay for empty digit slots. Defaults to |placeholderChar|. Useful when you want a visually distinct ghost (e.g. |"·"|) without changing the real input\'s placeholder.',
     alwaysActive:
       'Always render the full mask template, even when the field is empty and unfocused. |onChange| still reports |""| when no digits have been entered.',
-    historyLimit: 'Maximum number of undo/redo steps kept in memory. Each distinct digit-sequence change counts as one step.',
+    historyLimit: 'Maximum number of undo/redo steps kept in memory.',
+    pasteStripPrefix:
+      'Controls when |prefixAliases| are stripped from pasted text. |"overflow"| (default) — strip only when the digit count exceeds |maxDigits|; never discards the leading digit of a number that exactly fills the mask, and matches Android IME behaviour. |"always"| — strip whenever the pasted string starts with a known alias, regardless of digit count (pre-v0.6 behaviour).',
   },
   returnProps: {
     ghostValue:
@@ -44,7 +46,7 @@ export const useMask = {
     p: 'The second argument of |onChange| and the return value of |api.getParsedValues()|.',
   },
   parsedValuesProps: {
-    prefix: 'Literal characters before the first |#| slot (e.g. |+7 (|).',
+    prefix: 'The visible prefix — e.g. |+7|: a matched |prefixAlias|, or the mask literal with trailing separators trimmed.',
     rawWithPrefix: 'Digits only, including prefix digits.',
     rawWithoutPrefix: 'Subscriber digits only — prefix stripped.',
     formattedWithPrefix: 'Full formatted string.',

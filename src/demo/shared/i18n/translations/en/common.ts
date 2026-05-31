@@ -23,6 +23,7 @@ export const changelog = {
   changed: 'Changed',
   fixed: 'Fixed',
   breaking: 'Breaking',
+  tradeoff: 'Trade-off',
 };
 
 export const sections = {

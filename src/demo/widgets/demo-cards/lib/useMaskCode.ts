@@ -15,8 +15,8 @@ export function buildCodePhoneRu(c: CodeComments): CodeTab[] {
       componentName: 'PhoneRU',
       hookOptions: [
         `mask: '+7 (###) ###-##-##',`,
-        `// ${c.allowedPrefixes}`,
-        `allowedPrefixes: ['+7', '8'],`,
+        `// ${c.prefixAliases}`,
+        `prefixAliases: ['+7', '8'],`,
         `activateOnFocus: true,`,
         `deactivateOnEmptyBlur: true,`,
       ],
@@ -27,7 +27,7 @@ export function buildCodePhoneRu(c: CodeComments): CodeTab[] {
       fieldName: 'phone',
       hookOptions: [
         `mask: '+7 (###) ###-##-##',`,
-        `allowedPrefixes: ['+7', '8'],`,
+        `prefixAliases: ['+7', '8'],`,
         `activateOnFocus: true,`,
         `deactivateOnEmptyBlur: true,`,
       ],

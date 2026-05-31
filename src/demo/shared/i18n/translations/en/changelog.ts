@@ -2,6 +2,47 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.6.0',
+    date: '2026-05-30',
+    sections: [
+      {
+        type: 'added',
+        items: [
+          '|useMask|: new |pasteStripPrefix| option — |"overflow"| (default) strips |prefixAliases| from pasted text only when the digit count exceeds |maxDigits|; |"always"| restores the pre-v0.6 behaviour.',
+          '|useMask|: SSR-friendly first render — the field now shows the formatted |value| immediately on mount (lazy init), avoiding an empty-then-formatted flash and hydration mismatches.',
+          '|useCountrySelect|: dev-only warning when dial plans share a duplicate |id|/|cc| key — such plans silently overwrote each other and dropped from the list.',
+        ],
+      },
+      {
+        type: 'changed',
+        items: [
+          '|useMask|: returned |props| and handlers are now memoized.',
+          '|useMask|: |allowedPrefixes| renamed to |prefixAliases| — the old name is kept as a deprecated alias and will continue to work.',
+        ],
+      },
+      {
+        type: 'fixed',
+        items: [
+          '|useMask|: pasting a number with a two-digit country code (e.g. |+77 (123) 456-78-90|) into a single-prefix mask (|+7 (###) ###-##-##|) via Android IME no longer double-strips the leading digit — the second |7| now correctly lands in the body.',
+          '|useMask|: cutting content from a mask with a multi-digit literal prefix (e.g. |+77 (###)|) no longer places a stray prefix digit into the body.',
+          '|useMask|, |pasteStripPrefix|: now applied to Android IME paste (which arrives as an |onChange| event), not only desktop |onPaste| — |"always"| previously had no effect on Android.',
+          '|useMask|: pasting a prefix (e.g. |+7|) over a full selection is now undoable with Ctrl+Z.',
+          '|useMask|: with a prefix-less mask (e.g. |##########|) plus |prefixAliases|, typing or pasting a leading prefix digit now enters the body instead of being swallowed; |prefix| is |""| and |rawWithPrefix| no longer double-counts the digit.',
+          '|ParsedValues|: |formattedWithoutPrefix| no longer leaks a literal separator (e.g. the |(| from |+7 (|); |formattedWithoutPlaceholderChars| for an empty body is now the visible literal prefix.',
+          '|useMask|: |normalize| is now applied to external/programmatic |value| too, not only to typed or pasted input.',
+          '|usePhoneMask|: |isMaskCompleted| no longer reports completion one digit early for literal-prefix plans.',
+        ],
+      },
+      {
+        type: 'breaking',
+        items: [
+          '|useMask|, |pasteStripPrefix|: the default changed from |"always"| to |"overflow"| — pasting exactly |maxDigits| digits starting with a |prefixAlias| (e.g. |"8983120489"| into a 10-slot mask) no longer strips the leading digit. Desktop paste now matches Android IME behaviour. Pass |pasteStripPrefix="always"| to restore the previous behaviour.',
+          '|MOCK_DIAL_PLANS| removed — use |DEFAULT_DIAL_PLANS| instead.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.5.5',
     date: '2026-05-28',
     sections: [
@@ -45,9 +86,7 @@ export const changelogEntries: ChangelogEntry[] = [
     sections: [
       {
         type: 'fixed',
-        items: [
-          '|useMask|: fixed |Ctrl+Z| / |Ctrl+Y| — undo/redo now works reliably in controlled components.',
-        ],
+        items: ['|useMask|: fixed |Ctrl+Z| / |Ctrl+Y| — undo/redo now works reliably in controlled components.'],
       },
     ],
   },

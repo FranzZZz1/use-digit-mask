@@ -9,7 +9,7 @@ import styles from './MaskField.module.scss';
 
 type MaskFieldProps = {
   mask: string;
-  allowedPrefixes?: string[];
+  prefixAliases?: string[];
   placeholderChar?: string;
   trimMaskTail?: boolean;
   activateOnFocus?: boolean;
@@ -23,7 +23,7 @@ type MaskFieldProps = {
 
 export function MaskField({
   mask,
-  allowedPrefixes,
+  prefixAliases,
   placeholderChar = '_',
   trimMaskTail,
   activateOnFocus,
@@ -42,7 +42,7 @@ export function MaskField({
       setValue(next);
     },
     mask,
-    allowedPrefixes,
+    prefixAliases,
     placeholderChar,
     trimMaskTail,
     activateOnFocus,

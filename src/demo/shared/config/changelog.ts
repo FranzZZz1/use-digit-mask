@@ -1,4 +1,4 @@
-export type ChangeType = 'added' | 'changed' | 'fixed' | 'breaking';
+export type ChangeType = 'added' | 'changed' | 'fixed' | 'breaking' | 'tradeoff';
 
 export type ChangelogSection = {
   type: ChangeType;

@@ -84,7 +84,7 @@ export const demo = {
       alwaysActive: 'Mask template is always visible — no focus or input required',
       activateOnFocus: 'Mask activates when the input is focused',
       deactivateOnEmptyBlur: 'Mask hides when input loses focus with an empty value',
-      allowedPrefixes: 'Comma-separated prefixes accepted as the start of input',
+      prefixAliases: 'Comma-separated prefixes recognised as equivalent to the mask prefix',
       ghostChar: 'Faded overlay character shown behind untyped digit slots',
       ghostOnlyWhenResolved: 'Show ghost only after the country resolves — hidden while the mask is still ambiguous',
       stickyPins: 'Pinned countries stay at the top even after a candidate is resolved',
@@ -93,7 +93,7 @@ export const demo = {
     },
   },
   codeComments: {
-    allowedPrefixes: "also accepts '8' as a prefix without the '+'",
+    prefixAliases: "also accepts '8' as a prefix without the '+'",
     trimMaskTail: 'trimMaskTail hides placeholder chars until the user reaches that slot',
     normalize: 'called after digit extraction — clamp or transform before the mask is applied',
     uncontrolled: 'No external state needed — the hook manages the value internally',

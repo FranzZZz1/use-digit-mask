@@ -64,6 +64,10 @@
   &--breaking {
     background: var(--color-badge-breaking);
   }
+
+  &--tradeoff {
+    background: var(--color-badge-tradeoff);
+  }
 }
 
 .list {

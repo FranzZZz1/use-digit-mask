@@ -15,7 +15,7 @@ export const USEMASK_SCHEMA: OptionSchema = [
   { type: 'bool', key: 'activateOnFocus' },
   { type: 'bool', key: 'deactivateOnEmptyBlur', requiresParent: 'activateOnFocus' },
   { type: 'divider' },
-  { type: 'str', key: 'allowedPrefixes', placeholder: '+7, 8', defaultValue: '+7, 8', transform: parseCommaSeparated },
+  { type: 'str', key: 'prefixAliases', placeholder: '+7, 8', defaultValue: '+7, 8', transform: parseCommaSeparated },
   {
     type: 'str',
     key: 'ghostChar',
@@ -27,7 +27,7 @@ export const USEMASK_SCHEMA: OptionSchema = [
 ];
 
 export type UseMaskOptions = {
-  allowedPrefixes?: string[];
+  prefixAliases?: string[];
   placeholderChar?: string;
   activateOnFocus?: boolean;
   deactivateOnEmptyBlur?: boolean;

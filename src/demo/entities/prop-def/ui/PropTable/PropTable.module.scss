@@ -5,20 +5,14 @@
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-
-  @include screen-size(mobile) {
-    overflow-x: visible;
-  }
 }
 
 .table {
   border-collapse: collapse;
   width: 100%;
 
-  @include screen-size(tablet) {
-    thead {
-      display: none;
-    }
+  thead {
+    display: none;
   }
 }
 
@@ -31,13 +25,16 @@
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  white-space: nowrap;
-
-  background: rgb(255 255 255 / 2%);
-  border-bottom: 1px solid var(--color-border);
 }
 
 .tr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+
+  padding: var(--space-3) var(--space-4);
+
   border-bottom: 1px solid var(--color-border);
 
   &:last-child {
@@ -55,45 +52,24 @@
       background: rgb(99 102 241 / 5%);
     }
   }
-
-  @include screen-size(tablet) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    align-items: baseline;
-
-    padding: var(--space-3) var(--space-4);
-  }
 }
 
 .td {
-  padding: var(--space-3) var(--space-4);
+  display: block;
+  padding: 0;
 
   @include tg(sm);
 
   color: var(--color-text-secondary);
-  vertical-align: top;
-
-  @include screen-size(tablet) {
-    display: block;
-    padding: 0;
-    vertical-align: unset;
-  }
 
   &__desc {
-    padding: var(--space-3) var(--space-4);
+    display: block;
+    flex: 0 0 100%;
+    padding: var(--space-1) 0 0;
 
     @include tg(sm);
 
     color: var(--color-text-secondary);
-    vertical-align: top;
-
-    @include screen-size(tablet) {
-      display: block;
-      flex: 0 0 100%;
-      padding: var(--space-1) 0 0;
-      vertical-align: unset;
-    }
   }
 }
 

@@ -23,6 +23,7 @@ export const changelog = {
   changed: 'Изменено',
   fixed: 'Исправлено',
   breaking: 'Обратно несовместимые',
+  tradeoff: 'Компромисс',
 };
 
 export const sections = {

@@ -42,7 +42,7 @@ export function useMaskCards(): DemoCardConfig[] {
       description: c.phoneRu.desc,
       code: buildCodePhoneRu(cc),
       component: (
-        <MaskField activateOnFocus deactivateOnEmptyBlur mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} />
+        <MaskField activateOnFocus deactivateOnEmptyBlur mask="+7 (###) ###-##-##" prefixAliases={['+7', '8']} />
       ),
     },
     {
@@ -85,7 +85,7 @@ export function useMaskCards(): DemoCardConfig[] {
       title: c.alwaysActive.title,
       description: c.alwaysActive.desc,
       code: buildCodeAlwaysActive(cc),
-      component: <MaskField alwaysActive mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} />,
+      component: <MaskField alwaysActive mask="+7 (###) ###-##-##" prefixAliases={['+7', '8']} />,
     },
     {
       id: 'ghost-mask',

@@ -10,6 +10,31 @@ html {
   scrollbar-gutter: stable;
 }
 
+// stylelint-disable plugin/no-unsupported-browser-features
+* {
+  scrollbar-color: var(--color-border) transparent;
+  scrollbar-width: thin;
+}
+// stylelint-enable plugin/no-unsupported-browser-features
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
+}
+
 body {
   min-height: 100vh;
   font-family: var(--font-sans);
