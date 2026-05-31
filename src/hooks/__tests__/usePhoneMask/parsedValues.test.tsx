@@ -61,4 +61,18 @@ describe('usePhoneMask - ParsedValues', () => {
     fireChangeAt(getInput(), '7999', 4);
     expect(lastParsed!.isMaskCompleted).toBe(false);
   });
+
+  it('isMaskCompleted = false при теле из 9 цифр', () => {
+    let lastParsed: ParsedValues | null = null;
+    render(
+      <SpyPhone
+        onChangeSpy={(_, parsed) => {
+          lastParsed = parsed;
+        }}
+      />,
+    );
+    fireChangeAt(getInput(), '7999123456', 10);
+    expect(lastParsed!.rawWithoutPrefix).toBe('999123456');
+    expect(lastParsed!.isMaskCompleted).toBe(false);
+  });
 });

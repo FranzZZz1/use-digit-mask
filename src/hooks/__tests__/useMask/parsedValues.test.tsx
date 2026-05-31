@@ -3,8 +3,9 @@ import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../types';
+import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
 
-import { ControlledInput, fireChangeAt, getInput, TestInput } from './_helpers';
+import { ControlledInput, fireChangeAt, firePaste, getInput, TestInput } from './_helpers';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -22,7 +23,7 @@ describe('ParsedValues', () => {
 
   it('prefix корректен для телефонной маски', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} onChangeSpy={spy} />);
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9__) ___-__-__', 5);
@@ -32,7 +33,7 @@ describe('ParsedValues', () => {
 
   it('rawWithoutPrefix при allowedPrefixes = [] не включает цифры маски из видимого префикса', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask="+7 (###) ###-##-##" onChangeSpy={spy} />);
+    render(<TestInput mask={PHONE_MASK} onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
@@ -42,7 +43,7 @@ describe('ParsedValues', () => {
 
   it('rawWithoutPrefix содержит только цифры без префикса', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} onChangeSpy={spy} />);
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9991234567)', 16);
@@ -88,12 +89,42 @@ describe('ParsedValues', () => {
 
   it('rawWithPrefix = prefix + rawWithoutPrefix', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7']} onChangeSpy={spy} />);
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={['+7']} onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9991234567)', 16);
     const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
     expect(parsed.rawWithPrefix).toBe(parsed.prefix + parsed.rawWithoutPrefix);
+  });
+
+  it('formattedWithoutPrefix не содержит затёкшего литерала "(" из визуального префикса', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    fireChangeAt(input, '+7 (9991234567)', 16);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.formattedWithoutPrefix).toBe('999) 123-45-67');
+    expect(parsed.formattedWithoutPrefix.startsWith('(')).toBe(false);
+  });
+
+  it('prefix без allowedPrefixes = "+7" (без затёкшего сепаратора " (")', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '9', 1);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.prefix).toBe('+7');
+    expect(parsed.rawWithPrefix).toBe(parsed.prefix + parsed.rawWithoutPrefix);
+  });
+
+  it('formattedWithoutPlaceholderChars при пустом теле = видимый литерал "+7 ("', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    const input = getInput();
+    firePaste(input, '+7');
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.formattedWithoutPlaceholderChars).toBe('+7 (');
   });
 });
 

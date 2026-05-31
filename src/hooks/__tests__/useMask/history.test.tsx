@@ -3,8 +3,9 @@ import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../types';
+import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
 
-import { AsyncControlledInput, fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
+import { AsyncControlledInput, fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
 
 describe('Undo (Ctrl+Z)', () => {
   it('отменяет последний введённый символ', () => {
@@ -78,13 +79,25 @@ describe('Undo (Ctrl+Z)', () => {
     render(<TestInput mask="####" initialValue="123_" />);
     const input = getInput();
 
-    // Курсор перед первым слотом - Delete удаляет первую цифру ('1')
     placeCaret(input, 0);
     fireKey(input, 'Delete');
     expect(input.value).toBe('23__');
 
     fireKey(input, 'z', { ctrlKey: true });
     expect(input.value).toBe('123_');
+  });
+
+  it('M6: вставка префикса поверх непустого неактивного поля откатывается через Ctrl+Z', () => {
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} initialValue="+7 (983) 120-48-97" />);
+    const input = getInput();
+    expect(input.value).toBe('+7 (983) 120-48-97');
+
+    placeCaret(input, 0, input.value.length);
+    firePaste(input, '+7');
+    expect(input.value).toBe('+7 (___) ___-__-__');
+
+    fireKey(input, 'z', { ctrlKey: true });
+    expect(input.value).toBe('+7 (983) 120-48-97');
   });
 
   it('Ctrl+Z вызывает onChange с корректным значением', () => {
@@ -155,13 +168,12 @@ describe('Redo (Ctrl+Y / Ctrl+Shift+Z)', () => {
     fireChangeAt(input, '1', 1);
     fireChangeAt(input, '12__', 2);
 
-    fireKey(input, 'z', { ctrlKey: true }); // undo -> '1___'
+    fireKey(input, 'z', { ctrlKey: true });
     expect(input.value).toBe('1___');
 
-    fireChangeAt(input, '19__', 2); // новый ввод - redo стек очищается
+    fireChangeAt(input, '19__', 2);
     expect(input.value).toBe('19__');
 
-    // Ctrl+Y больше ничего не делает
     fireKey(input, 'y', { ctrlKey: true });
     expect(input.value).toBe('19__');
   });
@@ -202,9 +214,6 @@ describe('historyLimit', () => {
 
 describe('Сброс истории при внешнем value', () => {
   it('initialValue при маунте не создаёт историю — Ctrl+Z ничего не делает', () => {
-    // Когда хук получает initialValue через внешний value prop, layoutEffect
-    // обнаруживает расхождение cleaned vs digitsRawRef ('' vs '123') и
-    // обнуляет историю - поэтому Ctrl+Z не может откатиться к пустому состоянию.
     render(<TestInput mask="####" initialValue="123_" />);
     const input = getInput();
     expect(input.value).toBe('123_');
@@ -221,7 +230,7 @@ describe('Сброс истории при внешнем value', () => {
     expect(input.value).toBe('123_');
 
     fireKey(input, 'z', { ctrlKey: true });
-    expect(input.value).toBe('12__'); // возврат к состоянию до пользовательского ввода
+    expect(input.value).toBe('12__');
   });
 });
 

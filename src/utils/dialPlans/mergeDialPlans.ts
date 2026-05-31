@@ -12,6 +12,9 @@ import { type DialPlan } from './types';
  * - New key + object             → new entry added; `pattern` is required,
  *   `cc` defaults to the key if omitted.
  *
+ * @remarks Entries with an empty `pattern` are filtered out, so overriding an
+ * existing key with `{ pattern: '' }` also removes it (same effect as `null`).
+ *
  * @throws if a new entry is missing a `pattern` field.
  *
  * @example

@@ -2,6 +2,8 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { PHONE_MASK } from '../constants';
+
 import { fireChangeAt, getInput, TestInput } from './_helpers';
 
 describe('Базовый ввод', () => {
@@ -95,39 +97,35 @@ describe('Ввод в середину заполненной маски', () =>
 
 describe('Ввод в зону префикса (курсор перед буквальной цифрой)', () => {
   it('ввод перед буквальной цифрой префикса — в тело попадает только введённая цифра', () => {
-    // Маска +7 (###)..., prefixLength=4. Без фикса '7' из '+7 (' попадал в тело.
-    // Симулируем то, что браузер отдаёт при вводе '5' в позиции 1 (перед '7').
-    render(<TestInput alwaysActive mask="+7 (###) ###-##-##" />);
+    render(<TestInput alwaysActive mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '+57 (___) ___-__-__', 2);
     expect(input.value).toBe('+7 (5__) ___-__-__');
   });
 
   it('ввод перед самым первым символом префикса (позиция 0) — цифра идёт в первый слот', () => {
-    render(<TestInput alwaysActive mask="+7 (###) ###-##-##" />);
+    render(<TestInput alwaysActive mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '5+7 (___) ___-__-__', 1);
     expect(input.value).toBe('+7 (5__) ___-__-__');
   });
 
   it('ввод в префикс при существующих цифрах — вставляется в начало тела, не дублирует префикс', () => {
-    render(<TestInput mask="+7 (###) ###-##-##" initialValue="9" />);
+    render(<TestInput mask={PHONE_MASK} initialValue="9" />);
     const input = getInput();
-    // rootValue = '+7 (9__) ___-__-__'; симулируем ввод '5' перед '7'
     fireChangeAt(input, '+57 (9__) ___-__-__', 2);
     expect(input.value).toBe('+7 (59_) ___-__-__');
   });
 
   it('ввод в префикс при нескольких цифрах — цифра вставляется в начало тела', () => {
-    render(<TestInput mask="+7 (###) ###-##-##" initialValue="34" />);
+    render(<TestInput mask={PHONE_MASK} initialValue="34" />);
     const input = getInput();
-    // rootValue = '+7 (34_) ___-__-__'; симулируем ввод '5' в позиции 0 (перед '+')
     fireChangeAt(input, '5+7 (34_) ___-__-__', 1);
     expect(input.value).toBe('+7 (534) ___-__-__');
   });
 
   it('не-цифра в зоне префикса — значение не меняется', () => {
-    render(<TestInput alwaysActive mask="+7 (###) ###-##-##" />);
+    render(<TestInput alwaysActive mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '+a7 (___) ___-__-__', 2);
     expect(input.value).toBe('+7 (___) ___-__-__');

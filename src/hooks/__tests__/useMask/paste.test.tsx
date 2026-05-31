@@ -2,6 +2,8 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { PASTE_STRIP_PREFIX, PHONE_MASK, PHONE_PREFIXES } from '../constants';
+
 import { fireChangeAt, firePaste, getInput, placeCaret, TestInput } from './_helpers';
 
 describe('Вставка - без префикса', () => {
@@ -47,8 +49,8 @@ describe('Вставка - без префикса', () => {
 });
 
 describe('Вставка - с видимым префиксом', () => {
-  const MASK = '+7 (###) ###-##-##';
-  const PREFIXES = ['+7', '8'];
+  const MASK = PHONE_MASK;
+  const PREFIXES = PHONE_PREFIXES;
 
   it('вставка "+7 (999) 123-45-67" - стрипает видимый префикс', () => {
     render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
@@ -86,7 +88,7 @@ describe('Вставка - с видимым префиксом', () => {
     expect(input.value).toBe('+7 (999) 123-45-67');
   });
 
-  it('вставка только "+7" в неактивную маску -> активирует маску', () => {
+  it('вставка только "+7" в неактивную маску -> активирует маску, тело пустое', () => {
     render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
     const input = getInput();
     placeCaret(input, 0);
@@ -94,7 +96,7 @@ describe('Вставка - с видимым префиксом', () => {
     expect(input.value).toBe('+7 (___) ___-__-__');
   });
 
-  it('вставка только "8" в неактивную маску -> активирует маску', () => {
+  it('вставка только "8" в неактивную маску -> активирует маску, тело пустое', () => {
     render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
     const input = getInput();
     placeCaret(input, 0);
@@ -102,17 +104,102 @@ describe('Вставка - с видимым префиксом', () => {
     expect(input.value).toBe('+7 (___) ___-__-__');
   });
 
-  it('вставка "7" (цифровой префикс) в неактивную маску -> активирует', () => {
+  it('вставка "7" (цифровой prefix) в неактивную маску -> активирует', () => {
     render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
     const input = getInput();
     placeCaret(input, 0);
     firePaste(input, '7');
     expect(input.value).toBe('+7 (___) ___-__-__');
   });
+
+  it('вставка "+7" в активированную маску -> "7" идёт в первый слот', () => {
+    render(<TestInput alwaysActive mask={MASK} allowedPrefixes={PREFIXES} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '+7');
+    expect(input.value).toBe('+7 (7__) ___-__-__');
+  });
+
+  it('вставка "8" в активированную маску -> "8" идёт в первый слот', () => {
+    render(<TestInput alwaysActive mask={MASK} allowedPrefixes={PREFIXES} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '8');
+    expect(input.value).toBe('+7 (8__) ___-__-__');
+  });
+
+  it('вставка "+7" в активированную маску с уже введёнными цифрами -> "7" вставляется в начало', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} initialValue="+7 (983) 120-48-97" />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '+7');
+    expect(input.value).toBe('+7 (798) 312-04-89');
+  });
+});
+
+describe('Вставка — pasteStripPrefix', () => {
+  const MASK = PHONE_MASK;
+  const PREFIXES = PHONE_PREFIXES;
+
+  it('default "overflow": 10 цифр начинающихся с "8" — "8" остаётся, маска полная', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '8983120489');
+    expect(input.value).toBe('+7 (898) 312-04-89');
+  });
+
+  it('"always": 10 цифр начинающихся с "8" — "8" стрипается, маска неполная', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} pasteStripPrefix={PASTE_STRIP_PREFIX.always} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '8983120489');
+    expect(input.value).toBe('+7 (983) 120-48-9_');
+  });
+
+  it('"overflow": 10 цифр начинающихся с "8" — "8" остаётся в теле, маска полная', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} pasteStripPrefix={PASTE_STRIP_PREFIX.overflow} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '8983120489');
+    expect(input.value).toBe('+7 (898) 312-04-89');
+  });
+
+  it('"overflow": 11 цифр с "8" — overflow, "8" стрипается', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} pasteStripPrefix={PASTE_STRIP_PREFIX.overflow} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '89831204897');
+    expect(input.value).toBe('+7 (983) 120-48-97');
+  });
+
+  it('"overflow": 11 цифр с "+7 (" — overflow, prefix стрипается', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} pasteStripPrefix={PASTE_STRIP_PREFIX.overflow} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '+79831204897');
+    expect(input.value).toBe('+7 (983) 120-48-97');
+  });
+
+  it('default "overflow": частичный "+7 (983) 120-48-" — visiblePrefix стрипается', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '+7 (983) 120-48-');
+    expect(input.value).toBe('+7 (983) 120-48-__');
+  });
+
+  it('default "overflow": частичный "798312048" (raw, 9 цифр) — "7" не стрипается', () => {
+    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '798312048');
+    expect(input.value).toBe('+7 (798) 312-04-8_');
+  });
 });
 
 describe('Вставка при allowedPrefixes = []', () => {
-  const MASK = '+7 (###) ###-##-##';
+  const MASK = PHONE_MASK;
 
   it('вставка "79991234567" — "7" идёт в первый слот, не стрипается как префикс', () => {
     render(<TestInput mask={MASK} />);

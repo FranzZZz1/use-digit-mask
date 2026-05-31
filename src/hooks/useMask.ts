@@ -13,6 +13,8 @@ import {
 
 import { extractDigits } from '../utils/extractDigits';
 
+import { resolveChange } from './internal/resolveChange';
+import { resolvePaste } from './internal/resolvePaste';
 import { useCaretManager } from './internal/useCaretManager';
 import { useCaretPositions } from './internal/useCaretPositions';
 import { useHistory } from './internal/useHistory';
@@ -24,6 +26,8 @@ const useIsomorphicLayoutEffect = typeof document !== 'undefined' ? useLayoutEff
 
 const MASK_SLOT_DIGIT = '#';
 const MASK_PLACEHOLDER_CHAR = '_';
+
+const EMPTY_PREFIX_ALIASES: string[] = [];
 
 const isMobile = () => typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -48,7 +52,8 @@ export function useMask({
   value,
   onChange,
   mask,
-  allowedPrefixes = [],
+  prefixAliases,
+  allowedPrefixes,
   placeholderChar = MASK_PLACEHOLDER_CHAR,
   normalize,
   activateOnFocus = false,
@@ -57,7 +62,10 @@ export function useMask({
   ghostChar,
   alwaysActive = false,
   historyLimit = 100,
+  pasteStripPrefix = 'overflow',
 }: UseMaskProps) {
+  const resolvedPrefixAliases = prefixAliases ?? allowedPrefixes ?? EMPTY_PREFIX_ALIASES;
+
   const inputRef = useRef<HTMLInputElement>(null);
   const isMaskActiveRef = useRef(alwaysActive);
   const prevAlwaysActiveRef = useRef(alwaysActive);
@@ -65,17 +73,14 @@ export function useMask({
   const isApplyingCoreRef = useRef(false);
 
   const caret = useCaretManager(inputRef);
-
-  const [rootValue, setRootValue] = useState<string>('');
-
   const maskMeta = useMaskMeta(mask);
 
   const { allowedPrefixesDigits, stripVisiblePrefix, startsWithAllowedPrefix, stripAllowedPrefix, getVisiblePrefix } =
-    usePrefixHandling(allowedPrefixes, maskMeta);
+    usePrefixHandling(resolvedPrefixAliases, maskMeta);
 
   const { getCaretPosAfterDigits, getPrevCaretPos, getNextCaretPos } = useCaretPositions(maskMeta);
 
-  const extractCleanDigits = useMemo(() => createCleanDigitsExtractor(stripVisiblePrefix), [stripVisiblePrefix]);
+  const extractFormattedDigits = useMemo(() => createCleanDigitsExtractor(stripVisiblePrefix), [stripVisiblePrefix]);
 
   const renderSlots = useCallback(
     (cleanDigits: string) => {
@@ -130,13 +135,30 @@ export function useMask({
     [renderSlots],
   );
 
+  // Lazy-инициализация: на маунте сразу форматируем внешний value, чтобы
+  // SSR/первая отрисовка показывали значение, а не пустую строку.
+  // normalize применяем и здесь (симметрично эффекту), иначе SSR-разметка и
+  // первый клиентский рендер с normalize расходились бы.
+  const [rootValue, setRootValue] = useState<string>(() => {
+    const init = extractFormattedDigits(value || '');
+    return renderText(normalize && init ? normalize(init) : init);
+  });
+
+  const rootValueRef = useRef(rootValue);
+  rootValueRef.current = rootValue;
+
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   const getParsedValues = useCallback(
     (formattedParam?: string): ParsedValues => {
-      const formattedWithPrefix = formattedParam ?? rootValue;
+      const formattedWithPrefix = formattedParam ?? rootValueRef.current;
+
       const actualPrefix = getVisiblePrefix(formattedWithPrefix);
 
-      const sliceStart = actualPrefix.length;
-      const formattedWithoutPrefixRaw = formattedWithPrefix.slice(sliceStart);
+      const literalPrefix = formattedWithPrefix.startsWith(maskMeta.visiblePrefix) ? maskMeta.visiblePrefix : '';
+
+      const formattedWithoutPrefixRaw = formattedWithPrefix.slice(maskMeta.prefixLength);
       const formattedWithoutPrefix = formattedWithoutPrefixRaw.replace(/^\s+/, '');
 
       const digitsOnly = extractDigits(formattedWithPrefix);
@@ -145,10 +167,10 @@ export function useMask({
       const rawWithPrefix = actualPrefix + rawWithoutPrefix;
 
       const formattedWithoutPlaceholderChars = (() => {
-        if (rawWithoutPrefix.length === 0) return actualPrefix || '';
+        if (rawWithoutPrefix.length === 0) return literalPrefix;
         if (rawWithoutPrefix.length >= maskMeta.maxDigits) return formattedWithPrefix;
         const lastFilledSlot = maskMeta.digitSlotIndexes[rawWithoutPrefix.length - 1];
-        return lastFilledSlot != null ? formattedWithPrefix.slice(0, lastFilledSlot + 1) : actualPrefix || '';
+        return lastFilledSlot != null ? formattedWithPrefix.slice(0, lastFilledSlot + 1) : literalPrefix;
       })();
 
       const hasPlaceholderChar = Boolean(placeholderChar && placeholderChar.length > 0);
@@ -174,8 +196,9 @@ export function useMask({
       getVisiblePrefix,
       maskMeta.digitSlotIndexes,
       maskMeta.maxDigits,
+      maskMeta.prefixLength,
+      maskMeta.visiblePrefix,
       placeholderChar,
-      rootValue,
       stripVisiblePrefix,
       trimMaskTail,
     ],
@@ -193,7 +216,7 @@ export function useMask({
       digitsRawRef.current = clampedDigits;
 
       const nextText = renderText(clampedDigits);
-      const valueChanged = nextText !== rootValue;
+      const valueChanged = nextText !== rootValueRef.current;
 
       if (valueChanged) {
         setRootValue(nextText);
@@ -201,20 +224,24 @@ export function useMask({
 
       if (typeof caretDigitsOnLeft === 'number') {
         let pos: number;
-        if (!willBeEmpty) pos = getCaretPosAfterDigits(caretDigitsOnLeft);
-        else if (alwaysActive) pos = maskMeta.prefixLength;
-        else pos = 0;
+        if (!willBeEmpty) {
+          pos = getCaretPosAfterDigits(caretDigitsOnLeft);
+        } else if (alwaysActive) {
+          pos = maskMeta.prefixLength;
+        } else {
+          pos = 0;
+        }
         caret.setCaret(pos);
         caret.pendingDigitsRef.current = willBeEmpty ? null : caretDigitsOnLeft;
       }
 
       if (valueChanged) {
-        // При alwaysActive с пустым значением отправляем '' в onChange, а не шаблон маски.
+        // При alwaysActive с пустым значением отправляем '' в onChange.
         const reportText = alwaysActive && willBeEmpty ? '' : nextText;
         // Следующий вызов layoutEffect - ответ на наш собственный onChange,
         // а не внешнее изменение value. Это предотвращает ложный historyClear().
         isApplyingCoreRef.current = true;
-        onChange(reportText, getParsedValues(reportText));
+        onChangeRef.current(reportText, getParsedValues(reportText));
       }
     },
     [
@@ -224,9 +251,7 @@ export function useMask({
       getParsedValues,
       maskMeta.maxDigits,
       maskMeta.prefixLength,
-      onChange,
       renderText,
-      rootValue,
     ],
   );
 
@@ -257,7 +282,9 @@ export function useMask({
     isApplyingCoreRef.current = false;
 
     const external = value || '';
-    const cleaned = extractCleanDigits(external);
+    const rawCleaned = extractFormattedDigits(external);
+
+    const cleaned = normalize && !wasApplyingCore && rawCleaned ? normalize(rawCleaned) : rawCleaned;
 
     const alwaysActiveChanged = prevAlwaysActiveRef.current !== alwaysActive;
     if (alwaysActiveChanged) {
@@ -269,49 +296,54 @@ export function useMask({
 
     const nextText = renderText(cleaned);
 
-    if (nextText === rootValue) return;
+    const stateInSync = nextText === rootValueRef.current && cleaned === digitsRawRef.current;
 
-    if (wasApplyingCore && cleaned !== digitsRawRef.current) {
-      // applyDigitsCore уже обновил digitsRawRef, но parent ещё не закоммитил
-      // новый value prop - cleaned вычислен по старому значению.
-      // Пропускаем, чтобы не испортить состояние и не сбросить историю.
-      // Корректный layoutEffect придёт, когда parent закоммитит обновление.
-      return;
-    }
+    if (!stateInSync) {
+      if (wasApplyingCore && cleaned !== digitsRawRef.current) {
+        // applyDigitsCore уже обновил digitsRawRef, но parent ещё не закоммитил
+        // новый value prop - cleaned вычислен по старому значению.
+        // Пропускаем, чтобы не испортить состояние и не сбросить историю.
+        // Корректный layoutEffect придёт, когда parent закоммитит обновление.
+        return;
+      }
 
-    // Внешнее изменение value (программный сброс, смена маски, данные с сервера) —
-    // очищаем историю, чтобы Ctrl+Z не откатывал к устаревшему состоянию.
-    // Если wasApplyingCore — это наш собственный onChange, историю не трогаем.
-    if (!wasApplyingCore && cleaned !== digitsRawRef.current) {
-      historyClear();
-    }
+      // Внешнее изменение value (сброс, смена маски, данные с сервера) -
+      // очищаем историю, чтобы Ctrl+Z не откатывал к устаревшему состоянию.
+      // Если wasApplyingCore - это наш собственный onChange, историю не трогаем.
+      if (!wasApplyingCore && cleaned !== digitsRawRef.current) {
+        historyClear();
+      }
 
-    digitsRawRef.current = cleaned;
-    setRootValue(nextText);
+      digitsRawRef.current = cleaned;
+      if (nextText !== rootValueRef.current) setRootValue(nextText);
 
-    if (cleaned.length === 0) {
-      caret.pendingDigitsRef.current = null;
-    } else {
-      const logicalPos = caret.pendingDigitsRef.current;
-      const caretDigits = logicalPos != null ? Math.min(logicalPos, cleaned.length) : cleaned.length;
-      caret.setCaret(getCaretPosAfterDigits(caretDigits));
-      caret.pendingDigitsRef.current = null;
+      if (cleaned.length === 0) {
+        caret.pendingDigitsRef.current = null;
+      } else {
+        const logicalPos = caret.pendingDigitsRef.current;
+        const caretDigits = logicalPos != null ? Math.min(logicalPos, cleaned.length) : cleaned.length;
+        caret.setCaret(getCaretPosAfterDigits(caretDigits));
+        caret.pendingDigitsRef.current = null;
+      }
     }
 
     // Если внешнее value отличается от отформатированного результата (например, пришло с бэка
-    // без маски), уведомляем родителя чтобы его state не расходился с отображаемым значением.
+    // без маски либо выставлено через lazy-init), уведомляем родителя - независимо от того,
+    // совпало ли уже локальное состояние. Иначе на маунте с неформатированным value
+    // родительский state расходится с отображаемым.
     // onChange намеренно не в deps - эффект стреляет только при смене value/маски,
     // и к тому моменту onChange в замыкании уже актуален.
     // При alwaysActive с пустым value не уведомляем: маска отображает шаблон, но
     // value родителя остаётся '' - расхождение намеренное, иначе будет бесконечный цикл.
     if (nextText !== external && !(alwaysActive && cleaned.length === 0)) {
-      onChange(nextText, getParsedValues(nextText));
+      onChangeRef.current(nextText, getParsedValues(nextText));
     }
 
     // rootValue намеренно исключён: эффект реагирует только на внешний value / смену маски.
   }, [
     value,
-    extractCleanDigits,
+    extractFormattedDigits,
+    normalize,
     renderText,
     caret,
     getCaretPosAfterDigits,
@@ -330,108 +362,55 @@ export function useMask({
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       const input = e.target.value;
-      const fullDigits = extractCleanDigits(input);
-
-      if (!isMaskActiveRef.current && digitsRawRef.current.length === 0) {
-        const rawDigits = extractDigits(input);
-        const firstChar = rawDigits.charAt(0);
-
-        if (rawDigits.length === 1 && startsWithAllowedPrefix(firstChar)) {
-          isMaskActiveRef.current = true;
-          setRootValue(formatDigits('').text);
-          caret.setCaret(maskMeta.prefixLength);
-          return;
-        }
-
-        if (rawDigits.length === 1) {
-          isMaskActiveRef.current = true;
-          const normalized = normalize ? normalize(rawDigits) : rawDigits;
-          applyDigits(normalized.slice(0, maskMeta.maxDigits), normalized.length);
-          return;
-        }
-      }
-
       const cursor = e.target.selectionStart ?? input.length;
 
-      // Курсор оказался внутри области префикса (например, пользователь кликнул перед
-      // литеральной цифрой '7' в '+7 (###)' и нажал клавишу до асинхронной коррекции каретки).
-      // Введённый символ смешался с префиксом — восстанавливаем тело цифр из позиции
-      // после префикса+символа и добавляем введённую цифру в начало.
-      if (maskMeta.prefixLength > 0 && cursor <= maskMeta.prefixLength) {
-        const typedChar = cursor > 0 ? (input[cursor - 1] ?? '') : '';
-        const typedDigit = /^\d$/.test(typedChar) ? typedChar : '';
-        const bodyDigits = extractDigits(input.slice(maskMeta.prefixLength + 1));
-        const combined = (typedDigit + bodyDigits).slice(0, maskMeta.maxDigits);
-        const normalizedCombined = normalize ? normalize(combined) : combined;
-        applyDigits(normalizedCombined, typedDigit.length);
+      // Многосимвольный ввод в неактивное поле - активируем явно до resolveChange,
+      // чтобы не полагаться на неявное поведение renderText для непустых цифр.
+      if (!isMaskActiveRef.current && extractDigits(input).length > 1) {
+        isMaskActiveRef.current = true;
+      }
+
+      const result = resolveChange({
+        input,
+        cursor,
+        isMaskActive: isMaskActiveRef.current,
+        prevDigitsLength: digitsRawRef.current.length,
+        maskMeta,
+        allowedPrefixesDigits,
+        stripVisiblePrefix,
+        stripAllowedPrefix,
+        startsWithAllowedPrefix,
+        normalize,
+        pasteStripPrefix,
+      });
+
+      if (result.kind === 'clear') {
+        applyDigits('', 0);
         return;
       }
 
-      const digitsLeft = extractCleanDigits(input.slice(0, cursor)).length;
+      if (result.kind === 'activate-prefix') {
+        isMaskActiveRef.current = true;
+        setRootValue(formatDigits('').text);
+        caret.setCaret(maskMeta.prefixLength);
+        return;
+      }
 
-      // Android IME вставка приходит как обычный onChange (событие paste не срабатывает).
-      // Срезаем allowed-префикс только когда курсор вышел за пределы stripped-диапазона —
-      // это признак полной вставки (курсор в конце вставленного текста).
-      // При обычном вводе курсор всегда стоит внутри тела цифр
-      // (digitsLeft ≤ stripped.length), поэтому такой ввод эта ветка не затрагивает.
-      const strippedCandidate = stripAllowedPrefix(fullDigits);
-      const shouldStripPrefix =
-        strippedCandidate !== fullDigits &&
-        fullDigits.length > maskMeta.maxDigits &&
-        digitsLeft > strippedCandidate.length;
-
-      const strippedDigits = shouldStripPrefix ? strippedCandidate : fullDigits;
-
-      const normalized = normalize ? normalize(strippedDigits) : strippedDigits;
-      applyDigits(normalized, digitsLeft);
+      isMaskActiveRef.current = true;
+      applyDigits(result.digits, result.caretDigitsOnLeft);
     },
     [
+      allowedPrefixesDigits,
       applyDigits,
       caret,
-      extractCleanDigits,
       formatDigits,
-      maskMeta.maxDigits,
-      maskMeta.prefixLength,
+      maskMeta,
       normalize,
+      pasteStripPrefix,
       startsWithAllowedPrefix,
       stripAllowedPrefix,
+      stripVisiblePrefix,
     ],
-  );
-
-  const isPrefixOnlyPaste = useCallback(
-    (pasted: string, pastedDigitsRaw: string): boolean => {
-      const trimmed = pasted.trim();
-      const visibleEq = maskMeta.visiblePrefix ? trimmed === maskMeta.visiblePrefix.trim() : false;
-      const allowedEq = allowedPrefixes.some((prefix) => trimmed === prefix.trim());
-      const digitsEq = allowedPrefixesDigits.some((prefixDigits) => prefixDigits && pastedDigitsRaw === prefixDigits);
-      return visibleEq || allowedEq || digitsEq;
-    },
-    [allowedPrefixes, allowedPrefixesDigits, maskMeta.visiblePrefix],
-  );
-
-  const shouldStripPastedPrefix = useCallback(
-    (
-      pasted: string,
-      pastedDigitsRaw: string,
-      insertingAtStart: boolean,
-      replacingAllDigits: boolean,
-      isPrefixOnly: boolean,
-    ): boolean => {
-      const startsWithVisibleOrDigitsPrefix =
-        allowedPrefixes.some((prefix) => pasted.startsWith(prefix)) ||
-        (maskMeta.visiblePrefix ? pasted.startsWith(maskMeta.visiblePrefix) : false) ||
-        startsWithAllowedPrefix(pastedDigitsRaw);
-
-      const skipPrefixStripOnce = isMaskActiveRef.current && isPrefixOnly;
-
-      return (
-        !skipPrefixStripOnce &&
-        insertingAtStart &&
-        replacingAllDigits &&
-        (startsWithVisibleOrDigitsPrefix || pastedDigitsRaw.length > maskMeta.maxDigits)
-      );
-    },
-    [allowedPrefixes, maskMeta.maxDigits, maskMeta.visiblePrefix, startsWithAllowedPrefix],
   );
 
   const handlePaste = useCallback(
@@ -441,59 +420,51 @@ export function useMask({
       const selectionStart = e.currentTarget.selectionStart ?? maskMeta.prefixLength;
       const selectionEnd = e.currentTarget.selectionEnd ?? selectionStart;
 
-      const leftDigitsStart = extractCleanDigits(rootValue.slice(0, selectionStart)).length;
-      const leftDigitsEnd = extractCleanDigits(rootValue.slice(0, selectionEnd)).length;
+      const leftDigitsStart = extractFormattedDigits(rootValueRef.current.slice(0, selectionStart)).length;
+      const leftDigitsEnd = extractFormattedDigits(rootValueRef.current.slice(0, selectionEnd)).length;
 
-      const pasted = e.clipboardData.getData('text');
-      const pastedDigitsRaw = extractDigits(pasted);
+      const result = resolvePaste({
+        pasted: e.clipboardData.getData('text'),
+        prevDigits: digitsRawRef.current,
+        leftDigitsStart,
+        leftDigitsEnd,
+        isMaskActive: isMaskActiveRef.current,
+        maskMeta,
+        allowedPrefixes: resolvedPrefixAliases,
+        allowedPrefixesDigits,
+        stripAllowedPrefix,
+        startsWithAllowedPrefix,
+        normalize,
+        pasteStripPrefix,
+      });
 
-      const prev = digitsRawRef.current;
-
-      const insertingAtStart = leftDigitsStart === 0;
-      const replacingAllDigits = prev.length === 0 || (insertingAtStart && leftDigitsEnd >= prev.length);
-
-      const prefixOnly = isPrefixOnlyPaste(pasted, pastedDigitsRaw);
-
-      if (insertingAtStart && replacingAllDigits && prefixOnly && !isMaskActiveRef.current) {
+      if (result.kind === 'activate-prefix') {
+        historyPush('');
         isMaskActiveRef.current = true;
         digitsRawRef.current = '';
         const { text } = formatDigits('');
         setRootValue(text);
         caret.setCaret(maskMeta.prefixLength);
-        onChange(text, getParsedValues(text));
+        onChangeRef.current(text, getParsedValues(text));
         return;
       }
 
-      const shouldStrip = shouldStripPastedPrefix(
-        pasted,
-        pastedDigitsRaw,
-        insertingAtStart,
-        replacingAllDigits,
-        prefixOnly,
-      );
-
-      const strippedRaw = shouldStrip ? stripAllowedPrefix(pastedDigitsRaw) : pastedDigitsRaw;
-      const insertDigits = normalize ? normalize(strippedRaw) : strippedRaw;
-
-      const nextRaw = prev.slice(0, leftDigitsStart) + insertDigits + prev.slice(leftDigitsEnd);
-      const next = nextRaw.slice(0, maskMeta.maxDigits);
-      const newLeft = Math.min(leftDigitsStart + insertDigits.length, maskMeta.maxDigits);
-
-      applyDigits(next, newLeft);
+      isMaskActiveRef.current = true;
+      applyDigits(result.digits, result.caretDigitsOnLeft);
     },
     [
+      resolvedPrefixAliases,
+      allowedPrefixesDigits,
       applyDigits,
       caret,
-      extractCleanDigits,
+      extractFormattedDigits,
       formatDigits,
       getParsedValues,
-      isPrefixOnlyPaste,
-      maskMeta.maxDigits,
-      maskMeta.prefixLength,
+      historyPush,
+      maskMeta,
       normalize,
-      onChange,
-      rootValue,
-      shouldStripPastedPrefix,
+      pasteStripPrefix,
+      startsWithAllowedPrefix,
       stripAllowedPrefix,
     ],
   );
@@ -505,8 +476,8 @@ export function useMask({
       const selectionEnd = e.currentTarget.selectionEnd ?? selectionStart;
       const prev = digitsRawRef.current;
 
-      const leftStart = extractCleanDigits(rootValue.slice(0, selectionStart)).length;
-      const leftEnd = extractCleanDigits(rootValue.slice(0, selectionEnd)).length;
+      const leftStart = extractFormattedDigits(rootValueRef.current.slice(0, selectionStart)).length;
+      const leftEnd = extractFormattedDigits(rootValueRef.current.slice(0, selectionEnd)).length;
 
       if (e.code === 'KeyZ' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
@@ -594,14 +565,13 @@ export function useMask({
       alwaysActive,
       applyDigits,
       caret,
-      extractCleanDigits,
+      extractFormattedDigits,
       getCaretPosAfterDigits,
       getNextCaretPos,
       getPrevCaretPos,
       maskMeta.maskLength,
       maskMeta.prefixLength,
       redo,
-      rootValue,
       undo,
     ],
   );
@@ -674,26 +644,32 @@ export function useMask({
       ? ''
       : ' '.repeat(rootValue.length) + renderGhost(digitsRawRef.current).slice(rootValue.length);
 
-  const props = {
-    value: rootValue,
-    ref: inputRef,
-    onChange: handleChange,
-    onKeyDown: handleKeyDown,
-    onPaste: handlePaste,
-    onClick: handleClick,
-    onFocus,
-    onBlur,
-    onMouseDown,
-  };
+  const props = useMemo(
+    () => ({
+      value: rootValue,
+      ref: inputRef,
+      onChange: handleChange,
+      onKeyDown: handleKeyDown,
+      onPaste: handlePaste,
+      onClick: handleClick,
+      onFocus,
+      onBlur,
+      onMouseDown,
+    }),
+    [rootValue, handleChange, handleKeyDown, handlePaste, handleClick, onFocus, onBlur, onMouseDown],
+  );
 
-  const api = {
-    formatDigits,
-    getParsedValues,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  };
+  const api = useMemo(
+    () => ({
+      formatDigits,
+      getParsedValues,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
+    }),
+    [formatDigits, getParsedValues, undo, redo, canUndo, canRedo],
+  );
 
   return { props, api, ghostValue } as const;
 }

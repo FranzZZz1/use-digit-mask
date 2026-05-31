@@ -2,10 +2,12 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
+
 import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
 
 describe('Ввод при allowedPrefixes = []', () => {
-  const MASK = '+7 (###) ###-##-##';
+  const MASK = PHONE_MASK;
 
   it('ввод "7" (совпадает с цифрой маски) кладёт цифру в первый слот, не показывает пустой шаблон', () => {
     render(<TestInput mask={MASK} />);
@@ -31,8 +33,8 @@ describe('Ввод при allowedPrefixes = []', () => {
 });
 
 describe('Активация маски через allowedPrefixes', () => {
-  const MASK = '+7 (###) ###-##-##';
-  const PREFIXES = ['+7', '8'];
+  const MASK = PHONE_MASK;
+  const PREFIXES = PHONE_PREFIXES;
 
   it('ввод "7" активирует маску и показывает пустой шаблон', () => {
     render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
@@ -79,7 +81,7 @@ describe('Активация маски через allowedPrefixes', () => {
 
 describe('activateOnFocus', () => {
   it('фокус показывает пустой шаблон маски', () => {
-    render(<TestInput activateOnFocus mask="+7 (###) ###-##-##" allowedPrefixes={['+7', '8']} />);
+    render(<TestInput activateOnFocus mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} />);
     const input = getInput();
     fireEvent.focus(input);
     expect(input.value).toBe('+7 (___) ___-__-__');

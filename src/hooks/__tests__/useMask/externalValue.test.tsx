@@ -1,10 +1,17 @@
 import React from 'react';
-import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
+import { act, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../types';
+import { PHONE_MASK } from '../constants';
 
 import { ControlledInput, getInput, TestInput } from './_helpers';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // Тесты фиксируют ожидаемое поведение: хук должен вызывать onChange,
 // когда переданное value не совпадает с отформатированным результатом.
@@ -48,11 +55,9 @@ describe('Внешнее value требует форматирования', () 
   });
 
   it('parent state синхронизируется с форматированным значением через onChange', () => {
-    // Симулирует реальный кейс: бэк отдаёт цифры, родитель хранит state через useState
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
     render(<TestInput mask="##/##/####" initialValue="01012024" onChangeSpy={spy} />);
     expect(spy).toHaveBeenCalledWith('01/01/2024', expect.any(Object));
-    // После того как onChange обновил state, инпут должен показывать форматированное значение
     expect(getInput().value).toBe('01/01/2024');
   });
 
@@ -67,6 +72,36 @@ describe('Внешнее value требует форматирования', () 
         isMaskCompleted: true,
       }),
     );
+  });
+
+  it('SSR (M3): первый рендер сразу содержит отформатированное значение (lazy init)', () => {
+    const html = renderToString(<ControlledInput mask="##/##/####" value="01012024" onChange={() => {}} />);
+    expect(html).toContain('01/01/2024');
+  });
+
+  it('SSR: alwaysActive рендерит шаблон маски на сервере', () => {
+    const html = renderToString(<ControlledInput alwaysActive mask={PHONE_MASK} value="" onChange={() => {}} />);
+    expect(html).toContain('+7 (___) ___-__-__');
+  });
+
+  it('SSR→hydrate: нет рассогласования гидрации (значение стабильно client/server)', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const element = <ControlledInput mask="##/##/####" value="01012024" onChange={() => {}} />;
+    const html = renderToString(element);
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    act(() => {
+      hydrateRoot(container, element);
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(container.querySelector('input')?.value).toBe('01/01/2024');
+
+    container.remove();
   });
 
   it('onChange не вызывается повторно при ре-рендере с тем же value', () => {

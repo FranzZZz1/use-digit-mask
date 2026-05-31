@@ -2,13 +2,25 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
+import { ControlledInput, fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('normalize', () => {
+  it('применяется к внешнему value (данные с бэка), а не только к вводу', () => {
+    const norm = (d: string) => d.replace(/0/g, '9');
+    render(<ControlledInput mask="####" normalize={norm} value="1024" onChange={() => {}} />);
+    expect(getInput().value).toBe('1924');
+  });
+
+  it('не вызывается на пустом внешнем value (нет лишнего вызова на маунте)', () => {
+    const spy = vi.fn((d: string) => d);
+    render(<ControlledInput mask="####" normalize={spy} value="" onChange={() => {}} />);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   it('normalize применяется к digits перед рендером', () => {
     const norm = (d: string) => d.slice(0, 4);
     render(<TestInput mask="########" normalize={norm} />);
@@ -26,7 +38,6 @@ describe('normalize', () => {
   });
 
   it('normalize применяется ровно один раз - non-idempotent реверс', () => {
-    // Если бы normalize применялся дважды, reverse(reverse('1234')) = '1234', тест бы провалился
     const norm = (d: string) => d.split('').reverse().join('');
     render(<TestInput mask="####" normalize={norm} />);
     const input = getInput();
@@ -44,9 +55,6 @@ describe('normalize', () => {
   });
 });
 
-// normalizeTime: зажимает часы до [0..23] и минуты до [0..59].
-// Работает с голыми цифрами (без разделителя), которые mask передаёт в normalize.
-// Частичный ввод (< 4 цифр) пропускается без изменений - нечего зажимать.
 const normalizeTime = (d: string): string => {
   const hhRaw = d.slice(0, 2);
   const mmRaw = d.slice(2, 4);

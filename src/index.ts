@@ -11,6 +11,5 @@ export {
   dialPlanToCandidate,
   E164_MASK,
   mergeDialPlans,
-  MOCK_DIAL_PLANS,
   selectPhoneMask,
 } from './utils/dialPlans';

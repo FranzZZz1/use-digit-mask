@@ -35,11 +35,13 @@ export function usePrefixHandling(allowedPrefixes: string[], maskMeta: MaskMeta)
 
   const getVisiblePrefix = useCallback(
     (rawInput: string) => {
-      const fromAllowed = allowedPrefixes.find((prefix) => rawInput.startsWith(prefix));
-      if (fromAllowed) return fromAllowed;
-      return rawInput.startsWith(maskMeta.visiblePrefix) ? maskMeta.visiblePrefix : '';
+      if (maskMeta.prefixLength > 0) {
+        const fromAllowed = allowedPrefixes.find((prefix) => rawInput.startsWith(prefix));
+        if (fromAllowed) return fromAllowed;
+      }
+      return rawInput.startsWith(maskMeta.visiblePrefix) ? maskMeta.visiblePrefix.replace(/\D+$/, '') : '';
     },
-    [allowedPrefixes, maskMeta.visiblePrefix],
+    [allowedPrefixes, maskMeta.prefixLength, maskMeta.visiblePrefix],
   );
 
   return { allowedPrefixesDigits, stripVisiblePrefix, startsWithAllowedPrefix, stripAllowedPrefix, getVisiblePrefix };

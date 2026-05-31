@@ -93,7 +93,18 @@ export type UseCountrySelectResult = {
 };
 
 function buildPlansMap(plans: DialPlan[]): Map<string, DialPlan> {
-  return new Map(plans.map((p) => [p.id ?? p.cc, p]));
+  const map = new Map<string, DialPlan>();
+  plans.forEach((plan) => {
+    const key = plan.id ?? plan.cc;
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production' && map.has(key)) {
+      console.warn(
+        `useCountrySelect: повторяющийся ключ формата "${key}" — у форматов должны быть уникальные id/cc. ` +
+          'Поздние записи затирают ранние, страны теряются из списка.',
+      );
+    }
+    map.set(key, plan);
+  });
+  return map;
 }
 
 /** Return true if `plan` matches a lowercased search query. */

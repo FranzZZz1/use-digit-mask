@@ -11,6 +11,7 @@ import {
 import { extractDigits } from '../utils/extractDigits';
 import { formatDigitsWithMask } from '../utils/formatDigitsWithMask';
 
+import { computeMaskMeta } from './internal/useMaskMeta';
 import { type ParsedValues, type UseMaskProps } from './types';
 import { useMask } from './useMask';
 
@@ -39,10 +40,6 @@ const EMPTY_PLAN: ResolvedPlan = {
   candidates: [],
 };
 
-/**
- * Pure resolver — the single source of truth for mask/prefix derivation.
- * Called both during render (useMemo) and inside onChange to avoid stale closures.
- */
 function resolvePlan(digits: string, plans: DialPlan[], forcedId: string | null): ResolvedPlan {
   if (!digits) return EMPTY_PLAN;
 
@@ -56,18 +53,26 @@ function resolvePlan(digits: string, plans: DialPlan[], forcedId: string | null)
   return { ...result, prefixDigits: extractDigits(result.prefix) };
 }
 
+function isPhoneMaskCompleted(mask: string, allDigits: string): boolean {
+  const meta = computeMaskMeta(mask);
+  const slotDigits =
+    meta.visiblePrefixDigits && allDigits.startsWith(meta.visiblePrefixDigits)
+      ? allDigits.slice(meta.visiblePrefixDigits.length)
+      : allDigits;
+  return meta.maxDigits > 0 && slotDigits.length >= meta.maxDigits;
+}
+
 function patchParsedValues(parsed: ParsedValues, dialPlans: DialPlan[], forcedId: string | null): ParsedValues {
   const rawDigits = extractDigits(parsed.rawWithPrefix);
   const fresh = resolvePlan(rawDigits, dialPlans, forcedId);
   const body = rawDigits.startsWith(fresh.prefixDigits) ? rawDigits.slice(fresh.prefixDigits.length) : rawDigits;
-  const freshTotalSlots = (fresh.mask.match(/#/g) ?? []).length;
 
   return {
     ...parsed,
     prefix: fresh.prefix,
     parentPrefix: fresh.parentPrefix,
     rawWithoutPrefix: body,
-    isMaskCompleted: freshTotalSlots > 0 && rawDigits.length >= freshTotalSlots,
+    isMaskCompleted: isPhoneMaskCompleted(fresh.mask, rawDigits),
   };
 }
 
@@ -82,8 +87,6 @@ function buildCandidateParsedValues(
   nextFormatted: string,
   parentPrefix: string | undefined,
 ): ParsedValues {
-  const totalSlots = (candidate.mask.match(/#/g) ?? []).length;
-
   let lastDigitIdx = -1;
   for (let i = 0; i < nextFormatted.length; i += 1) {
     if (/\d/.test(nextFormatted[i])) lastDigitIdx = i;
@@ -97,7 +100,7 @@ function buildCandidateParsedValues(
     formattedWithPrefix: nextFormatted,
     formattedWithoutPrefix: nextFormatted.slice(candidate.prefix.length).replace(/^\s+/, ''),
     formattedWithoutPlaceholderChars: lastDigitIdx >= 0 ? nextFormatted.slice(0, lastDigitIdx + 1) : candidate.prefix,
-    isMaskCompleted: nextDigits.length >= totalSlots,
+    isMaskCompleted: isPhoneMaskCompleted(candidate.mask, nextDigits),
   };
 }
 

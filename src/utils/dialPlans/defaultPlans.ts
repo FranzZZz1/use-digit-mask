@@ -102,6 +102,3 @@ export const DEFAULT_DIAL_PLANS_MAP: Record<string, DialPlan> = {
 
 /** Default plans as an array — pass directly to `usePhoneMask` / `selectPhoneMask`. */
 export const DEFAULT_DIAL_PLANS: DialPlan[] = Object.values(DEFAULT_DIAL_PLANS_MAP);
-
-/** @deprecated Use `DEFAULT_DIAL_PLANS` instead. */
-export const MOCK_DIAL_PLANS = DEFAULT_DIAL_PLANS;

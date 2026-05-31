@@ -3,12 +3,13 @@ import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { flushRaf } from '../../../test-setup';
+import { PHONE_MASK } from '../constants';
 
-import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
+import { ControlledInput, fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
 
 describe('Навигация клавишами', () => {
   it('Home / ArrowUp -> курсор к началу (prefixLength)', () => {
-    render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7']} />);
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={['+7']} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     placeCaret(input, 10);
@@ -46,7 +47,7 @@ describe('Навигация клавишами', () => {
   });
 
   it('клик перед prefix -> курсор выставляется в начало слотов', () => {
-    render(<TestInput mask="+7 (###) ###-##-##" allowedPrefixes={['+7']} />);
+    render(<TestInput mask={PHONE_MASK} allowedPrefixes={['+7']} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireEvent.click(input, { target: { selectionStart: 1, selectionEnd: 1 } });
@@ -106,5 +107,47 @@ describe('Позиция курсора', () => {
     fireKey(input, 'End');
     flushRaf();
     expect(input.selectionStart).toBe(2);
+  });
+});
+
+describe('Каретка — вставка / история / внешний sync', () => {
+  it('после вставки курсор в конце вставленного', () => {
+    render(<TestInput mask="#### ####" />);
+    const input = getInput();
+    placeCaret(input, 0);
+    firePaste(input, '1234');
+    flushRaf();
+    expect(input.value).toBe('1234 ____');
+    expect(input.selectionStart).toBe(4);
+  });
+
+  it('после вставки в середину курсор после вставленного фрагмента', () => {
+    render(<TestInput mask="#### ####" initialValue="1234 5678" />);
+    const input = getInput();
+    placeCaret(input, 2);
+    firePaste(input, '99');
+    flushRaf();
+    expect(input.value).toBe('1299 3456');
+    expect(input.selectionStart).toBe(4);
+  });
+
+  it('после undo курсор в конце восстановленного значения', () => {
+    render(<TestInput mask="####" />);
+    const input = getInput();
+    fireChangeAt(input, '1', 1);
+    fireChangeAt(input, '12__', 2);
+    fireKey(input, 'z', { ctrlKey: true });
+    flushRaf();
+    expect(input.value).toBe('1___');
+    expect(input.selectionStart).toBe(1);
+  });
+
+  it('внешнее изменение value ставит курсор в конец', () => {
+    const { rerender } = render(<ControlledInput mask="####" value="12__" onChange={() => {}} />);
+    const input = getInput();
+    rerender(<ControlledInput mask="####" value="1234" onChange={() => {}} />);
+    flushRaf();
+    expect(input.value).toBe('1234');
+    expect(input.selectionStart).toBe(4);
   });
 });

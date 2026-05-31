@@ -1,5 +1,11 @@
 export type DialPlan = {
   cc: string;
+  /**
+   * Body mask pattern WITHOUT the country-code prefix — `#` = digit slot, the rest
+   * are literal separators. The prefix slots and a single leading space are prepended
+   * automatically (see `dialPlanToCandidate`), so write the pattern without a leading
+   * separator (e.g. `'(###) ###-##-##'`, not `' (###) …'`).
+   */
   pattern: string;
   /** ISO 3166-1 alpha-2 country code used as a unique key (e.g. "RU", "US"). */
   id?: string;
