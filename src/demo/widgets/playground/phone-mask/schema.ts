@@ -1,23 +1,23 @@
-import { DEFAULT_GHOST_CHAR } from '@/shared/lib';
 import { type OptionSchema } from '@/shared/ui/Playground';
+
+import {
+  ENTRY_GHOST_CHAR,
+  ENTRY_GHOST_ONLY_WHEN_RESOLVED,
+  ENTRY_OVERWRITE,
+  type GhostOptions,
+  type OverwriteOption,
+} from '../shared/schema';
 
 export const USEPHONE_SCHEMA: OptionSchema = [
   { type: 'bool', key: 'trimMaskTail', alwaysSerialize: true },
+  ENTRY_OVERWRITE,
   { type: 'divider' },
-  {
-    type: 'str',
-    key: 'ghostChar',
-    placeholder: DEFAULT_GHOST_CHAR,
-    maxLength: 1,
-    defaultValue: DEFAULT_GHOST_CHAR,
-    fallback: DEFAULT_GHOST_CHAR,
-  },
-  { type: 'bool', key: 'ghostOnlyWhenResolved', requiresParent: 'ghostChar' },
+  ENTRY_GHOST_CHAR,
+  ENTRY_GHOST_ONLY_WHEN_RESOLVED,
 ];
 
-export type UsePhoneMaskOptions = {
-  trimMaskTail?: boolean;
-  placeholderChar?: string;
-  ghostChar?: string;
-  ghostOnlyWhenResolved?: boolean;
-};
+export type UsePhoneMaskOptions = OverwriteOption &
+  GhostOptions & {
+    trimMaskTail?: boolean;
+    placeholderChar?: string;
+  };

@@ -7,6 +7,10 @@ export const demo = {
       title: 'useMask',
       desc: 'Generic hook for any digit-only mask pattern.',
     },
+    useDateMask: {
+      title: 'useDateMask',
+      desc: 'Pass a format string — mask, per-field clamping and February / leap-year validation are wired up automatically.',
+    },
     usePhoneMask: {
       title: 'usePhoneMask',
       desc: 'Auto-detects mask from dial plans. Handles ambiguous country prefixes (e.g. +7 Russia / +7 Kazakhstan).',
@@ -38,6 +42,34 @@ export const demo = {
       title: 'Date',
       desc: 'mask: "##/##/####"',
     },
+    dateMask: {
+      title: 'useDateMask',
+      desc: 'Pass a format string — mask, clamping and February / leap-year validation are set up automatically',
+    },
+    dateMaskIso: {
+      title: 'yyyy-MM-dd',
+      desc: "ISO 8601 — pass the value directly to date-fns parse(value, 'yyyy-MM-dd', refDate)",
+    },
+    dateMaskDatetime: {
+      title: 'dd.MM.yyyy HH:mm',
+      desc: 'Date + time in a single field — hours (0–23) and minutes (0–59) auto-clamped',
+    },
+    dateMaskMax: {
+      title: 'max — date not in the future',
+      desc: 'Restricts the date to today or earlier; month and day limits tighten automatically as the year fills in',
+    },
+    dateMaskBirth: {
+      title: 'Date of birth',
+      desc: 'min + max together: year clamped to 1900 – current; use end-of-year as max to keep month and day unconstrained within the year',
+    },
+    overwrite: {
+      title: 'Overwrite mode',
+      desc: 'Typing or pasting replaces digits at the cursor instead of shifting them — ideal for date inputs',
+    },
+    onComplete: {
+      title: 'onComplete',
+      desc: 'Fires once when the mask transitions from incomplete to fully filled — trigger auto-submit, validation or any side effect',
+    },
     pin: {
       title: 'PIN',
       desc: 'mask: "####"',
@@ -66,9 +98,14 @@ export const demo = {
       title: 'Ghost placeholder',
       desc: 'Ghost appears only after the country code resolves — silent while the format is still ambiguous',
     },
+    phoneOrEmail: {
+      title: 'Phone or email',
+      desc: 'bypassMask — the mask switches off as soon as a letter or "@" is typed, so the field accepts a free-text email',
+    },
   },
   examples: {
     useMask: 'Live demos covering all |useMask| props — activation modes, normalization, ghost overlay and more.',
+    useDateMask: 'Live demos for |useDateMask| — format variants and automatic date validation.',
     usePhoneMask: 'Live demos for |usePhoneMask| — auto-detection and ghost overlay.',
     useCountrySelect: 'Live demos for |useCountrySelect| — custom and Radix UI country selector implementations.',
   },
@@ -84,6 +121,7 @@ export const demo = {
       alwaysActive: 'Mask template is always visible — no focus or input required',
       activateOnFocus: 'Mask activates when the input is focused',
       deactivateOnEmptyBlur: 'Mask hides when input loses focus with an empty value',
+      bypassMask: 'Bypasses all mask processing — the input behaves like a plain controlled <input>',
       prefixAliases: 'Comma-separated prefixes recognised as equivalent to the mask prefix',
       ghostChar: 'Faded overlay character shown behind untyped digit slots',
       ghostOnlyWhenResolved: 'Show ghost only after the country resolves — hidden while the mask is still ambiguous',
@@ -93,6 +131,16 @@ export const demo = {
     },
   },
   codeComments: {
+    onComplete: 'called once when every digit slot is filled',
+    overwrite: 'replace digits at cursor instead of shifting them right',
+    dateMask: 'named tokens become ## slots; separators stay as literals',
+    dynamicMask: 'pass a function — the mask updates automatically on every keystroke',
+    recipeOnComplete: 'fires once when every digit slot is filled',
+    recipeBlocks: 'named tokens become digit groups; constraint functions receive other groups by name',
+    recipeBlocksDays: 'max days for DD depends on MM and YYYY — leap years included',
+    recipeDateMax: 'prevent selecting a date after today',
+    recipeBirthDate: 'end-of-year max keeps month/day unconstrained within the current year',
+    recipeTimeRange: 'min re-evaluates automatically when the start value changes',
     prefixAliases: "also accepts '8' as a prefix without the '+'",
     trimMaskTail: 'trimMaskTail hides placeholder chars until the user reaches that slot',
     normalize: 'called after digit extraction — clamp or transform before the mask is applied',
@@ -111,5 +159,6 @@ export const demo = {
     ghostChar: 'fill empty ghost slots with a custom char instead of placeholderChar',
     hideGhostOnInput: 'hide ghost as soon as the user starts typing — with trimMaskTail, value is empty string until first digit',
     ghostOnlyWhenResolved: 'show ghost only after a country is detected — check mask !== E164_MASK',
+    recipePhoneOrEmail: 'switch off the mask once the input looks like an email — letters or "@"',
   },
 };

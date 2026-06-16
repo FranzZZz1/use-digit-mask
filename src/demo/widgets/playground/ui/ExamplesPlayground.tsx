@@ -1,12 +1,11 @@
 import { useState } from 'react';
 
 import { PlaygroundCard } from '@/shared/ui/PlaygroundCard';
+import { PlaygroundSwitchModal } from '@/widgets/playground';
 
 import { type PlaygroundId } from '../registry';
 
-import { PlaygroundSwitchModal } from './PlaygroundSwitchModal';
-
-import exStyles from '@/shared/ui/doc/examples.module.scss';
+import styles from './ExamplesPlayground.module.scss';
 
 type Props = {
   initialHook: PlaygroundId;
@@ -16,7 +15,7 @@ type Props = {
 export function ExamplesPlayground({ initialHook, initialProp }: Props) {
   const [open, setOpen] = useState(false);
   return (
-    <section className={exStyles.card}>
+    <section className={styles.card}>
       <PlaygroundCard
         onOpen={() => {
           setOpen(true);

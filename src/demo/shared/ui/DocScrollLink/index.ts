@@ -1,0 +1,1 @@
+export { DocScrollLink } from './DocScrollLink';

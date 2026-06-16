@@ -11,7 +11,7 @@ export const code = {
   copied: '✓ Copied',
   close: 'Close',
   expand: 'Expand to fullscreen',
-  collapse: 'Exit fullscreen',
+  collapse: 'Collapse',
   ts: 'TS',
   js: 'JS',
 };

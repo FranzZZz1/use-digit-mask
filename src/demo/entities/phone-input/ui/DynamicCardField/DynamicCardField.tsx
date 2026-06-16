@@ -16,30 +16,24 @@ function getCardMask(digits: string): string {
 
 export function DynamicCardField() {
   const [value, setValue] = useState('');
-  const [mask, setMask] = useState(MASK_DEFAULT);
-
-  const isAmex = mask === MASK_AMEX;
 
   const { props, api } = useMask({
-    mask,
+    mask: getCardMask,
     value,
-    onChange: (next, parsed) => {
-      setValue(next);
-      setMask(getCardMask(parsed.rawWithoutPrefix));
-    },
+    onChange: setValue,
   });
 
   const parsedValues = api.getParsedValues();
+  const currentMask = getCardMask(parsedValues.rawWithoutPrefix);
+
+  const isAmex = currentMask === MASK_AMEX;
 
   return (
-    <FieldLayout
-      parsed={parsedValues}
-      showCase={['formattedWithPrefix', 'rawWithoutPrefix', 'isMaskCompleted']}
-    >
+    <FieldLayout parsed={parsedValues} showCase={['formattedWithPrefix', 'rawWithoutPrefix', 'isMaskCompleted']}>
       <FieldInputWrapper>
-        <Input {...props} type="text" inputMode="numeric" />
+        <Input {...props} type="text" />
         <div className={styles.hint__row}>
-          <MaskHint>{mask}</MaskHint>
+          <MaskHint>{currentMask}</MaskHint>
           {parsedValues.rawWithoutPrefix.length > 0 && (
             <span className={cx(styles.badge, isAmex && styles['badge--amex'])}>
               {isAmex ? 'Amex · 4-6-5' : 'Visa / MC · 4-4-4-4'}

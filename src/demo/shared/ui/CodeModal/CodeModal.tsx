@@ -131,7 +131,7 @@ function CodeModalComponent({
           />
 
           <div className={styles.code__scroll}>
-            <MemoizedCodePane html={currentHighlighted} isLoading={isLoading} lineCount={lineCount} />
+            <MemoizedCodePane gutter html={currentHighlighted} isLoading={isLoading} lineCount={lineCount} />
           </div>
         </div>
       </div>

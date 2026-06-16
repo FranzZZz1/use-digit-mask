@@ -22,7 +22,7 @@ export const changelog = {
   added: 'Добавлено',
   changed: 'Изменено',
   fixed: 'Исправлено',
-  breaking: 'Обратно несовместимые',
+  breaking: 'Breaking',
   tradeoff: 'Компромисс',
 };
 

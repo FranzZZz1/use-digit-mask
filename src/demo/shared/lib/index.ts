@@ -4,7 +4,9 @@ export { type Syntax, SyntaxProvider, useSyntax } from './context/SyntaxContext'
 export { highlightTsx } from './helpers/highlight';
 export { useAppLocation } from './hooks/useAppLocation';
 export { useHighlighted, useHighlightedAll } from './hooks/useCodeHighlight';
+export { useControlled } from './hooks/useControlled';
 export { useCopyToClipboard } from './hooks/useCopyToClipboard';
+export { useDebounced } from './hooks/useDebounced';
 export { useDocsHistory } from './hooks/useDocsHistory';
 export { useDocsNavigate } from './hooks/useDocsNavigate';
 export { useDocsScrollRestoration } from './hooks/useDocsScrollRestoration';

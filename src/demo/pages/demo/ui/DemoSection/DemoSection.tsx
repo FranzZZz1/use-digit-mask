@@ -9,8 +9,8 @@ type Props = {
   id: string;
   title: string;
   desc: string;
-  docTo: string;
   children: ReactNode;
+  docTo?: string;
   moreTo?: string;
 };
 
@@ -21,7 +21,7 @@ export function DemoSection({ id, title, desc, docTo, moreTo, children }: Props)
     <section id={id} className={styles.section}>
       <div className={styles.section__header}>
         <h2 className={styles.section__title}>{title}</h2>
-        <DocLink to={docTo}>{t.nav.docs} →</DocLink>
+        {docTo && <DocLink to={docTo}>{t.nav.docs} →</DocLink>}
       </div>
       <p className={styles.section__desc}>{desc}</p>
       <div className={styles.grid}>{children}</div>

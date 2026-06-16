@@ -4,8 +4,7 @@ export function numericInput(placeholder?: string): string {
   const placeholderAttr = placeholder ? `\n  placeholder="${placeholder}"` : '';
   return `<input
   {...props}
-  type="text"
-  inputMode="numeric"${placeholderAttr}
+  type="text"${placeholderAttr}
 />`;
 }
 
@@ -80,6 +79,43 @@ function buildPlaceholderAttr(placeholder?: string, extraCondition?: string): st
   return `\n        placeholder="${placeholder}"`;
 }
 
+export function ghostCandidatesJsx(placeholder?: string, extraCondition?: string): string {
+  const condition = extraCondition ? `${extraCondition} && ghostValue` : 'ghostValue';
+  let placeholderAttr = '';
+  if (placeholder && extraCondition) {
+    placeholderAttr = `\n          placeholder={${extraCondition} ? undefined : "${placeholder}"}`;
+  } else if (placeholder) {
+    placeholderAttr = `\n          placeholder="${placeholder}"`;
+  }
+
+  return dedent`
+    <section>
+      <div className={styles.wrapper}>
+        <input
+          {...props}
+          type="text"${placeholderAttr}
+        />
+        {${condition} && (
+          <span aria-hidden="true" className={styles.overlay}>
+            <span className={styles.overlay__filled}>{ghostValue.slice(0, value.length)}</span>
+            <span className={styles.overlay__empty}>{ghostValue.slice(value.length)}</span>
+          </span>
+        )}
+      </div>
+      {candidates.length > 1 && (
+        <fieldset>
+          <legend>Select country</legend>
+          {candidates.map((c) => (
+            <button key={c.id} type="button" onClick={() => selectCandidate(c)}>
+              {c.label} {c.prefix}
+            </button>
+          ))}
+        </fieldset>
+      )}
+    </section>
+  `;
+}
+
 export function ghostOverlayJsx(placeholder?: string, extraCondition?: string): string {
   const placeholderAttr = buildPlaceholderAttr(placeholder, extraCondition);
   const condition = extraCondition ? `${extraCondition} && ghostValue` : 'ghostValue';
@@ -88,8 +124,7 @@ export function ghostOverlayJsx(placeholder?: string, extraCondition?: string): 
     <div className={styles.wrapper}>
       <input
         {...props}
-        type="text"
-        inputMode="numeric"${placeholderAttr}
+        type="text"${placeholderAttr}
       />
       {${condition} && (
         <span aria-hidden="true" className={styles.overlay}>

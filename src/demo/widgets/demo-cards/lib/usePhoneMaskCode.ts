@@ -9,10 +9,11 @@ import {
 } from '@/shared/lib/snippetUtils';
 
 export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
-  return withGhostScssTab([
-    createCodeTab(
-      'TSX',
-      dedent`
+  return withGhostScssTab(
+    [
+      createCodeTab(
+        'TSX',
+        dedent`
       import { useState } from 'react';
       import { usePhoneMask, E164_MASK } from 'use-digit-mask';
 
@@ -26,7 +27,7 @@ export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
           onChange: (next) => setValue(next),
           trimMaskTail: true,
           // ${c.ghostChar}
-          ghostChar: '·',
+          ghostChar: '9',
         });
 
         // ${c.ghostOnlyWhenResolved}
@@ -37,7 +38,6 @@ export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
             <input
               {...props}
               type="text"
-              inputMode="numeric"
               placeholder="Start typing a number..."
             />
             {showGhost && ghostValue && (
@@ -53,8 +53,11 @@ export function buildCodeGhostPhone(c: CodeComments): CodeTab[] {
         );
       }
     `,
-    ),
-  ], true, GHOST_PHONE_SCSS);
+      ),
+    ],
+    true,
+    GHOST_PHONE_SCSS,
+  );
 }
 
 export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
@@ -80,7 +83,7 @@ export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
 
         return (
           <div>
-            <input {...props} type="text" inputMode="numeric" />
+            <input {...props} type="text" />
 
             {/* ${c.candidates} */}
             {candidates.length > 1 && (
@@ -111,7 +114,7 @@ export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
 
         return (
           <div>
-            <input {...props} type="text" inputMode="numeric" />
+            <input {...props} type="text" />
 
             {candidates.length > 1 && (
               <div>
@@ -134,7 +137,7 @@ export function buildCodePhoneAuto(c: CodeComments): CodeTab[] {
       destructure: '{ props, candidates, selectCandidate }',
       hookOptions: ['trimMaskTail: true,'],
       jsx: `<div>
-  <input {...props} type="text" inputMode="numeric" />
+  <input {...props} type="text" />
 
   {candidates.length > 1 && (
     <div>

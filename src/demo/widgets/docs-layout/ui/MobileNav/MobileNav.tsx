@@ -5,10 +5,10 @@ import MenuIcon from '@/shared/assets/icons/MenuIcon.svg?react';
 import XIcon from '@/shared/assets/icons/XIcon.svg?react';
 import { type TocEntry, useLang } from '@/shared/i18n';
 import { useOutsideClose } from '@/shared/lib';
-import { HOOKS } from '@/widgets/docs-layout/const/const';
+import { HOOKS } from '@/widgets/docs-layout';
 
-import { HookNavList } from '../HookNavList/HookNavList';
-import { TocNavList } from '../TocNavList/TocNavList';
+import { HookNavList } from '../HookNavList';
+import { TocNavList } from '../TocNavList';
 
 import styles from './MobileNav.module.scss';
 

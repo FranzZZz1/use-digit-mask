@@ -2,6 +2,7 @@ import { type PropDef } from './useMaskDef';
 
 const bool = { kind: 'boolean' as const };
 const str = (placeholder?: string, maxLength?: number) => ({ kind: 'string' as const, placeholder, maxLength });
+const select = { kind: 'select' as const };
 
 export const USE_PHONE_MASK_PARAMS: PropDef[] = [
   { name: 'value', type: 'string' },
@@ -9,6 +10,7 @@ export const USE_PHONE_MASK_PARAMS: PropDef[] = [
   { name: 'onChange', type: '(value: string, parsed: ParsedValues) => void' },
   { name: 'placeholderChar', type: 'string', default: '"_"', control: str('_', 1) },
   { name: 'dialPlans', type: 'DialPlan[]', default: 'DEFAULT_DIAL_PLANS' },
+  { name: 'country', type: 'DefaultCountryId | string', control: select },
   { name: 'trimMaskTail', type: 'boolean', default: 'false', control: bool },
   { name: 'ghostChar', type: 'string', default: 'placeholderChar', control: str('·', 1) },
 ];

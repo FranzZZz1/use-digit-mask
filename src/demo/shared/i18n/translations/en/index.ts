@@ -1,8 +1,9 @@
 import { type Translation } from '@/shared/i18n';
 
-import { useCountrySelect } from './docs/useCountrySelect';
-import { useMask } from './docs/useMask';
-import { usePhoneMask } from './docs/usePhoneMask';
+import { useCountrySelect } from './docs/useCountrySelect.en';
+import { useDateMask } from './docs/useDateMask.en';
+import { useMask } from './docs/useMask.en';
+import { usePhoneMask } from './docs/usePhoneMask.en';
 import { changelogEntries } from './changelog';
 import { changelog, code, nav, sections } from './common';
 import { demo } from './demo';
@@ -15,5 +16,5 @@ export const en: Translation = {
   sections,
   changelog: { ...changelog, entries: changelogEntries },
   toc,
-  docs: { useMask, usePhoneMask, useCountrySelect },
+  docs: { useMask, useDateMask, usePhoneMask, useCountrySelect },
 };

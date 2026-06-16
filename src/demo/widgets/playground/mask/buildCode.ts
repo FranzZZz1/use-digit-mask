@@ -1,4 +1,4 @@
-import { DEFAULT_GHOST_CHAR, DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
+import { DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
 import {
   buildMaskCodeTab,
   ghostOverlayJsx,
@@ -6,8 +6,24 @@ import {
   type ImportSpec,
   type MaskTabOpts,
   numericInput,
+  rawCode,
 } from '@/shared/lib/snippetUtils';
 import { type OptionsState, type StrOptionState } from '@/shared/ui/Playground';
+
+import { pushBoolArg, readGhostState } from '../shared/buildCode';
+
+export type BlockConstraintRecord = Record<string, { min?: number; max?: number } | null>;
+
+function serializeBlocksArg(blocks: BlockConstraintRecord): HookArg {
+  const lines = Object.entries(blocks).map(([key, c]) => {
+    if (c === null) return `      ${key}: null`;
+    const parts: string[] = [];
+    if (c.min !== undefined) parts.push(`min: ${c.min}`);
+    if (c.max !== undefined) parts.push(`max: ${c.max}`);
+    return `      ${key}: { ${parts.join(', ')} }`;
+  });
+  return { key: 'blocks', value: rawCode(`{\n${lines.join(',\n')}\n    }`) };
+}
 
 function parsePrefixAliases(str: string): string[] {
   return str
@@ -16,8 +32,19 @@ function parsePrefixAliases(str: string): string[] {
     .filter(Boolean);
 }
 
-function collectUseMaskArgs(mask: string, placeholderChar: string, state: OptionsState, withGhost: boolean): HookArg[] {
+function collectUseMaskArgs(
+  mask: string,
+  placeholderChar: string,
+  state: OptionsState,
+  withGhost: boolean,
+  ghostCharValue: string,
+  blocks?: BlockConstraintRecord,
+): HookArg[] {
   const args: HookArg[] = [{ key: 'mask', value: mask }];
+
+  if (blocks && Object.keys(blocks).length > 0) {
+    args.push(serializeBlocksArg(blocks));
+  }
 
   const prefixAliases = state.prefixAliases as StrOptionState | undefined;
   if (prefixAliases?.enabled) {
@@ -31,22 +58,28 @@ function collectUseMaskArgs(mask: string, placeholderChar: string, state: Option
     args.push({ key: 'placeholderChar', value: placeholderChar });
   }
 
-  if (state.activateOnFocus?.enabled) args.push({ key: 'activateOnFocus', value: true });
-  if (state.deactivateOnEmptyBlur?.enabled) args.push({ key: 'deactivateOnEmptyBlur', value: true });
-  if (state.trimMaskTail?.enabled) args.push({ key: 'trimMaskTail', value: true });
+  pushBoolArg(args, state, 'activateOnFocus');
+  pushBoolArg(args, state, 'deactivateOnEmptyBlur');
+  pushBoolArg(args, state, 'trimMaskTail');
+  pushBoolArg(args, state, 'overwrite');
+  pushBoolArg(args, state, 'bypassMask');
 
   if (withGhost) {
-    const ghostChar = (state.ghostChar as StrOptionState | undefined)?.value || DEFAULT_GHOST_CHAR;
-    args.push({ key: 'ghostChar', value: ghostChar });
+    args.push({ key: 'ghostChar', value: ghostCharValue });
   }
 
-  if (state.alwaysActive?.enabled) args.push({ key: 'alwaysActive', value: true });
+  pushBoolArg(args, state, 'alwaysActive');
 
   return args;
 }
 
-export function buildUseMaskTab(mask: string, placeholderChar: string, state: OptionsState) {
-  const withGhost = state.ghostChar?.enabled ?? false;
+export function buildUseMaskTab(
+  mask: string,
+  placeholderChar: string,
+  state: OptionsState,
+  blocks?: BlockConstraintRecord,
+) {
+  const { withGhost, ghostCharValue } = readGhostState(state);
 
   const extraImports: ImportSpec[] = withGhost
     ? [{ from: './CustomInput.module.scss', default: 'styles', isStyle: true }]
@@ -54,7 +87,7 @@ export function buildUseMaskTab(mask: string, placeholderChar: string, state: Op
 
   const tabOpts: MaskTabOpts = {
     componentName: 'CustomInput',
-    hookOptions: collectUseMaskArgs(mask, placeholderChar, state, withGhost),
+    hookOptions: collectUseMaskArgs(mask, placeholderChar, state, withGhost, ghostCharValue, blocks),
     jsx: withGhost ? ghostOverlayJsx() : numericInput(),
     destructure: withGhost ? '{ props, ghostValue }' : '{ props }',
     extraImports,

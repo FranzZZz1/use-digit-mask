@@ -1,5 +1,12 @@
-import { DEFAULT_GHOST_CHAR } from '@/shared/lib';
 import { type OptionSchema } from '@/shared/ui/Playground';
+
+import {
+  ENTRY_GHOST_CHAR,
+  ENTRY_GHOST_ONLY_WHEN_RESOLVED,
+  ENTRY_OVERWRITE,
+  type GhostOptions,
+  type OverwriteOption,
+} from '../shared/schema';
 
 function parseCommaSeparated(v: string): string[] | null {
   const items = v
@@ -11,6 +18,7 @@ function parseCommaSeparated(v: string): string[] | null {
 
 export const USECOUNTRYSELECT_SCHEMA: OptionSchema = [
   { type: 'bool', key: 'trimMaskTail', alwaysSerialize: true },
+  ENTRY_OVERWRITE,
   { type: 'bool', key: 'stickyPins' },
   { type: 'bool', key: 'disableSort' },
   { type: 'divider' },
@@ -22,23 +30,15 @@ export const USECOUNTRYSELECT_SCHEMA: OptionSchema = [
     defaultEnabled: true,
     transform: parseCommaSeparated,
   },
-  {
-    type: 'str',
-    key: 'ghostChar',
-    placeholder: DEFAULT_GHOST_CHAR,
-    maxLength: 1,
-    defaultValue: DEFAULT_GHOST_CHAR,
-    fallback: DEFAULT_GHOST_CHAR,
-  },
-  { type: 'bool', key: 'ghostOnlyWhenResolved', requiresParent: 'ghostChar' },
+  ENTRY_GHOST_CHAR,
+  ENTRY_GHOST_ONLY_WHEN_RESOLVED,
 ];
 
-export type UseCountrySelectOptions = {
-  trimMaskTail?: boolean;
-  stickyPins?: boolean;
-  disableSort?: boolean;
-  priorityIds?: string[];
-  ghost?: boolean;
-  ghostChar?: string;
-  ghostOnlyWhenResolved?: boolean;
-};
+export type UseCountrySelectOptions = OverwriteOption &
+  GhostOptions & {
+    trimMaskTail?: boolean;
+    stickyPins?: boolean;
+    disableSort?: boolean;
+    priorityIds?: string[];
+    ghost?: boolean;
+  };

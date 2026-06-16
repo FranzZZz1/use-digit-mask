@@ -1,9 +1,9 @@
 import { withGhostScssTab } from '@/shared/lib/snippetUtils';
 import { type PlaygroundSlot, serializeSchemaState, usePlaygroundState } from '@/shared/ui/Playground';
 
+import { UseCountrySelectPreview } from './ui/UseCountrySelectPreview';
 import { buildUseCountrySelectCode } from './buildCode';
 import { USECOUNTRYSELECT_SCHEMA, type UseCountrySelectOptions } from './schema';
-import { UseCountrySelectPreview } from './UseCountrySelectPreview';
 
 export function useCountrySelectPlaygroundSlot(initialProp: string): PlaygroundSlot {
   const pg = usePlaygroundState(USECOUNTRYSELECT_SCHEMA, initialProp);

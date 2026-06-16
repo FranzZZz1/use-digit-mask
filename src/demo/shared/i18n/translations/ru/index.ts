@@ -1,6 +1,7 @@
-import { useCountrySelect } from './docs/useCountrySelect';
-import { useMask } from './docs/useMask';
-import { usePhoneMask } from './docs/usePhoneMask';
+import { useCountrySelect } from './docs/useCountrySelect.ru';
+import { useDateMask } from './docs/useDateMask.ru';
+import { useMask } from './docs/useMask.ru';
+import { usePhoneMask } from './docs/usePhoneMask.ru';
 import { changelogEntries } from './changelog';
 import { changelog, code, nav, sections } from './common';
 import { demo } from './demo';
@@ -13,5 +14,5 @@ export const ru = {
   sections,
   changelog: { ...changelog, entries: changelogEntries },
   toc,
-  docs: { useMask, usePhoneMask, useCountrySelect },
+  docs: { useMask, useDateMask, usePhoneMask, useCountrySelect },
 };

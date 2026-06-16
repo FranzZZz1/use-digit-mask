@@ -1,15 +1,17 @@
-import { DEFAULT_GHOST_CHAR, DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
+import { DEFAULT_PLACEHOLDER_CHAR } from '@/shared/lib';
 import {
   buildMaskCodeTab,
   dedent,
-  ghostOverlayJsx,
+  ghostCandidatesJsx,
   type HookArg,
   type ImportSpec,
   indentLines,
   type MaskTabOpts,
   numericInput,
 } from '@/shared/lib/snippetUtils';
-import { type OptionsState, type StrOptionState } from '@/shared/ui/Playground';
+import { type OptionsState } from '@/shared/ui/Playground';
+
+import { pushBoolArg, readGhostState } from '../shared/buildCode';
 
 const CANDIDATES_JSX = dedent`
   <section>
@@ -27,16 +29,16 @@ ${indentLines(numericInput(), 4)}
   </section>
 `;
 
-function collectBasePhoneArgs(placeholderChar: string, state: OptionsState): HookArg[] {
+function collectBasePhoneArgs(placeholderChar: string, state: OptionsState, country?: string): HookArg[] {
   const args: HookArg[] = [];
-
-  if (state.trimMaskTail?.enabled) {
-    args.push({ key: 'trimMaskTail', value: true });
-  }
+  pushBoolArg(args, state, 'trimMaskTail');
+  pushBoolArg(args, state, 'overwrite');
   if (placeholderChar && placeholderChar !== DEFAULT_PLACEHOLDER_CHAR) {
     args.push({ key: 'placeholderChar', value: placeholderChar });
   }
-
+  if (country) {
+    args.push({ key: 'country', value: country });
+  }
   return args;
 }
 
@@ -46,7 +48,9 @@ function buildGhostPhoneTab(
   withGhostOnlyWhenResolved: boolean,
 ): ReturnType<typeof buildMaskCodeTab> {
   const hookOptions: HookArg[] = [...baseArgs, { key: 'ghostChar', value: ghostCharValue }];
-  const destructure = withGhostOnlyWhenResolved ? '{ props, ghostValue, mask }' : '{ props, ghostValue }';
+  const destructure = withGhostOnlyWhenResolved
+    ? '{ props, ghostValue, mask, candidates, selectCandidate }'
+    : '{ props, ghostValue, candidates, selectCandidate }';
   const extraCondition = withGhostOnlyWhenResolved ? 'showGhost' : undefined;
 
   const extraImports: ImportSpec[] = [
@@ -61,7 +65,7 @@ function buildGhostPhoneTab(
     componentName: 'PhoneField',
     hookOptions,
     destructure,
-    jsx: ghostOverlayJsx('Start typing a number...', extraCondition),
+    jsx: ghostCandidatesJsx('Start typing a number...', extraCondition),
     extraImports,
     extraVars,
   };
@@ -84,12 +88,10 @@ function buildCandidatesPhoneTab(baseArgs: HookArg[]): ReturnType<typeof buildMa
 export function buildUsePhoneMaskTab(
   placeholderChar: string,
   state: OptionsState,
+  country?: string,
 ): ReturnType<typeof buildMaskCodeTab> {
-  const withGhost = state.ghostChar?.enabled ?? false;
-  const withGhostOnlyWhenResolved = withGhost && (state.ghostOnlyWhenResolved?.enabled ?? false);
-  const ghostCharValue = (state.ghostChar as StrOptionState | undefined)?.value || DEFAULT_GHOST_CHAR;
-
-  const baseArgs = collectBasePhoneArgs(placeholderChar, state);
+  const { withGhost, ghostCharValue, withGhostOnlyWhenResolved } = readGhostState(state);
+  const baseArgs = collectBasePhoneArgs(placeholderChar, state, country);
 
   if (withGhost) {
     return buildGhostPhoneTab(baseArgs, ghostCharValue, withGhostOnlyWhenResolved);

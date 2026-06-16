@@ -7,12 +7,14 @@ export const SECTION_IDS = {
   parameters: 'parameters',
   returnValue: 'return-value',
   parsedValues: 'parsed-values',
+  recipes: 'recipes',
   dialPlan: 'dial-plan',
   phoneMaskCandidate: 'phone-mask-candidate',
   customization: 'customization',
   radixExample: 'radix-example',
   home: {
     useMask: 'use-mask',
+    useDateMask: 'use-date-mask',
     usePhoneMask: 'use-phone-mask',
     useCountrySelect: 'use-country-select',
   },
@@ -20,6 +22,7 @@ export const SECTION_IDS = {
 
 export const SEGMENTS = {
   useMask: 'use-mask',
+  useDateMask: 'use-date-mask',
   usePhoneMask: 'use-phone-mask',
   useCountrySelect: 'use-country-select',
   examples: 'examples',
@@ -31,6 +34,8 @@ export const PATHS = {
   docs: '/docs',
   useMask: `/docs/${SEGMENTS.useMask}`,
   useMaskExamples: `/docs/${SEGMENTS.useMask}/${SEGMENTS.examples}`,
+  useDateMask: `/docs/${SEGMENTS.useDateMask}`,
+  useDateMaskExamples: `/docs/${SEGMENTS.useDateMask}/${SEGMENTS.examples}`,
   usePhoneMask: `/docs/${SEGMENTS.usePhoneMask}`,
   usePhoneMaskExamples: `/docs/${SEGMENTS.usePhoneMask}/${SEGMENTS.examples}`,
   useCountrySelect: `/docs/${SEGMENTS.useCountrySelect}`,

@@ -11,7 +11,7 @@ import { buildSnippetAdd, buildSnippetOverride, buildSnippetRemove } from '@/pag
 import { useLang } from '@/shared/i18n';
 import { createCodeTab } from '@/shared/lib/snippetUtils';
 import { PATHS, SECTION_IDS, TYPE_LINKS } from '@/shared/router';
-import { DocPage } from '@/widgets/docs-layout';
+import { DocPage } from '@/shared/ui/DocPage';
 import { PlaygroundSwitchModal } from '@/widgets/playground';
 
 export function UsePhoneMaskDocView() {
@@ -58,9 +58,9 @@ export function UsePhoneMaskDocView() {
             heading: d.customization.heading,
             intro: d.customization.intro,
             snippets: [
-              { ...createCodeTab('', buildSnippetOverride(c)), label: d.customization.snippetOverride },
-              { ...createCodeTab('', buildSnippetRemove(c)), label: d.customization.snippetRemove },
-              { ...createCodeTab('', buildSnippetAdd(c)), label: d.customization.snippetAdd },
+              { tabs: [createCodeTab('', buildSnippetOverride(c))], label: d.customization.snippetOverride },
+              { tabs: [createCodeTab('', buildSnippetRemove(c))], label: d.customization.snippetRemove },
+              { tabs: [createCodeTab('', buildSnippetAdd(c))], label: d.customization.snippetAdd },
             ],
           },
         ]}

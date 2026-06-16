@@ -4,19 +4,24 @@ import cx from 'clsx';
 
 import styles from './VariantSelect.module.scss';
 
-export type VariantSelectOption = {
+export type VariantSelectOption<T extends string | number = number> = {
   label: string;
-  value: number;
+  value: T;
 };
 
-type VariantSelectProps = {
-  options: VariantSelectOption[];
-  value: number;
-  onChange: (value: number) => void;
+type VariantSelectProps<T extends string | number = number> = {
+  options: VariantSelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
   triggerClassName?: string;
 };
 
-export function VariantSelect({ options, value, onChange, triggerClassName = '' }: VariantSelectProps) {
+export function VariantSelect<T extends string | number = number>({
+  options,
+  value,
+  onChange,
+  triggerClassName = '',
+}: VariantSelectProps<T>) {
   const [open, setOpen] = useState(false);
   const currentLabel = options.find((o) => o.value === value)?.label ?? '';
 

@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { useMask } from 'use-digit-mask';
+import { type NamedBlock, type ParsedValues, useMask } from 'use-digit-mask';
 
-import { ConditionalWrap } from '@/shared/lib';
+import { ConditionalWrap, useControlled } from '@/shared/lib';
 import { FieldInputWrapper, FieldLayout, MaskHint } from '@/shared/ui/FieldLayout';
 import { Input } from '@/shared/ui/Input';
 
@@ -9,6 +8,8 @@ import styles from './MaskField.module.scss';
 
 type MaskFieldProps = {
   mask: string;
+  value?: string;
+  onChange?: (v: string) => void;
   prefixAliases?: string[];
   placeholderChar?: string;
   trimMaskTail?: boolean;
@@ -19,10 +20,16 @@ type MaskFieldProps = {
   hideGhostOnInput?: boolean;
   ghostChar?: string;
   alwaysActive?: boolean;
+  overwrite?: boolean;
+  blocks?: Record<string, NamedBlock>;
+  onComplete?: (parsed: ParsedValues) => void;
+  bypassMask?: boolean | ((value: string) => boolean);
 };
 
 export function MaskField({
   mask,
+  value: controlledValue,
+  onChange: controlledOnChange,
   prefixAliases,
   placeholderChar = '_',
   trimMaskTail,
@@ -33,13 +40,18 @@ export function MaskField({
   hideGhostOnInput,
   ghostChar,
   alwaysActive,
+  overwrite,
+  blocks,
+  onComplete,
+  bypassMask,
 }: MaskFieldProps) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useControlled(controlledValue, '');
 
   const { props, ghostValue, api } = useMask({
     value,
     onChange: (next) => {
       setValue(next);
+      controlledOnChange?.(next);
     },
     mask,
     prefixAliases,
@@ -50,6 +62,10 @@ export function MaskField({
     normalize,
     ghostChar,
     alwaysActive,
+    overwrite,
+    blocks,
+    onComplete,
+    bypassMask,
   });
 
   const showGhost = ghost && (!hideGhostOnInput || props.value.length === 0);
@@ -62,7 +78,7 @@ export function MaskField({
     <FieldLayout parsed={parsed} showCase={['formattedWithPrefix', 'rawWithoutPrefix', 'prefix', 'isMaskCompleted']}>
       <FieldInputWrapper>
         <ConditionalWrap condition={ghost} wrapIn={<div className={styles.ghost__wrapper} />}>
-          <Input {...props} type="text" inputMode="numeric" />
+          <Input {...props} type="text" />
           {showGhost && (
             <span className={styles.ghost__overlay} aria-hidden="true">
               <span className={styles.ghost__filled}>{ghostFilled}</span>

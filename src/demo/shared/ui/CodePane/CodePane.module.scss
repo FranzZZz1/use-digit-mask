@@ -5,6 +5,10 @@
   display: flex;
   min-height: 100%;
 
+  &--loading {
+    position: relative;
+  }
+
   &__gutter,
   &__code {
     @include tg(sm, r, mono);
@@ -52,13 +56,17 @@
     }
   }
 
-  &__spinner-wrapper {
+  &__skeleton {
+    visibility: hidden;
+  }
+
+  &__spinner-overlay {
+    position: absolute;
+    inset: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
-
-    min-height: 80px;
-    padding: var(--space-6);
   }
 
   &__spinner {

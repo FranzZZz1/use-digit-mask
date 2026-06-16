@@ -1,0 +1,27 @@
+@mixin doc-classes {
+  .doc { composes: doc from global; }
+
+  .doc__title_row { composes: doc__title_row from global; }
+
+  .doc__title { composes: doc__title from global; }
+
+  .doc__title--offset { composes: doc__title--offset from global; }
+
+  .doc__lead { composes: doc__lead from global; }
+
+  .doc__section { composes: doc__section from global; }
+
+  .doc__heading { composes: doc__heading from global; }
+
+  .doc__text { composes: doc__text from global; }
+
+  .doc__code { composes: doc__code from global; }
+
+  .doc__link { composes: doc__link from global; }
+}
+
+@mixin examples-classes {
+  .grid { composes: grid from global; }
+
+  .card { composes: card from global; }
+}

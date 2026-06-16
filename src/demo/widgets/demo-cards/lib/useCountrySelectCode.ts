@@ -68,7 +68,7 @@ export function buildCodeCountrySelectRadix(c: CodeComments): CodeTab[] {
             </Popover.Root>
 
             {/* ${c.phoneInput} */}
-            <input ref={inputRef} {...props} type="text" inputMode="numeric" />
+            <input ref={inputRef} {...props} type="text" />
           </div>
         );
       }
@@ -141,7 +141,7 @@ export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
             </div>
 
             {/* ${c.phoneInput} */}
-            <input {...props} type="text" inputMode="numeric" />
+            <input {...props} type="text" />
           </div>
         );
       }
@@ -207,7 +207,7 @@ export function buildCodePhoneCountrySelect(c: CodeComments): CodeTab[] {
               )}
             </div>
 
-            <input {...props} type="text" inputMode="numeric" />
+            <input {...props} type="text" />
           </div>
         );
       }

@@ -3,15 +3,20 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ChangelogView } from '@/pages/changelog';
 import { DemoView } from '@/pages/demo';
 import { UseCountrySelectDocView } from '@/pages/use-country-select-doc';
-import { UseCountrySelectExamplesView } from '@/pages/use-country-select-examples';
+import { UseDateMaskDocView } from '@/pages/use-date-mask-doc';
 import { UseMaskDocView } from '@/pages/use-mask-doc';
-import { UseMaskExamplesView } from '@/pages/use-mask-examples';
 import { UsePhoneMaskDocView } from '@/pages/use-phone-mask-doc';
-import { UsePhoneMaskExamplesView } from '@/pages/use-phone-mask-examples';
 import { PATHS, SEGMENTS } from '@/shared/router';
 import { DocsLayout } from '@/widgets/docs-layout';
 import { Footer } from '@/widgets/footer';
 import { Header } from '@/widgets/header';
+
+import {
+  UseCountrySelectExamplesView,
+  UseDateMaskExamplesView,
+  UseMaskExamplesView,
+  UsePhoneMaskExamplesView,
+} from './examples-routes';
 
 function DocsRoot() {
   return (
@@ -43,6 +48,13 @@ export const router = createBrowserRouter(
           children: [
             { index: true, element: <UseMaskDocView />, handle: { hook: 'useMask' } },
             { path: SEGMENTS.examples, element: <UseMaskExamplesView /> },
+          ],
+        },
+        {
+          path: SEGMENTS.useDateMask,
+          children: [
+            { index: true, element: <UseDateMaskDocView />, handle: { hook: 'useDateMask' } },
+            { path: SEGMENTS.examples, element: <UseDateMaskExamplesView /> },
           ],
         },
         {

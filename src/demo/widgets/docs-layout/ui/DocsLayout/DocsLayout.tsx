@@ -4,13 +4,15 @@ import cx from 'clsx';
 
 import { type TocEntry, useLang } from '@/shared/i18n';
 import { useDocsUI } from '@/shared/lib';
+import { DocsNavContext } from '@/shared/lib/context/docsNavContext';
 import { SEGMENTS } from '@/shared/router';
-import { DocsNavContext } from '@/shared/ui/doc/docsNavContext';
 import { PageWithBanner } from '@/shared/ui/PageWithBanner';
-import { HOOKS, MobileNav, useTocHighlight } from '@/widgets/docs-layout';
+import { HOOKS } from '@/widgets/docs-layout';
 
-import { HookNavList } from '../HookNavList/HookNavList';
-import { TocNavList } from '../TocNavList/TocNavList';
+import { useTocHighlight } from '../../hooks/useTocHighlight';
+import { HookNavList } from '../HookNavList';
+import { MobileNav } from '../MobileNav/MobileNav';
+import { TocNavList } from '../TocNavList';
 
 import styles from './DocsLayout.module.scss';
 

@@ -2,6 +2,42 @@ import { type ChangelogEntry } from '@/shared/config';
 
 export const changelogEntries: ChangelogEntry[] = [
   {
+    version: '0.7.0',
+    date: '2026-06-16',
+    sections: [
+      {
+        type: 'added',
+        items: [
+          '|useMask|: |onComplete| callback — fires once when the mask transitions from incomplete to fully filled. Only triggered by user interaction (typing, paste), not by programmatic |value| changes.',
+          '|useMask|: |mask| now accepts a function |(digits: string) => string| — the mask updates automatically on every keystroke. Ideal for card inputs that switch between Visa/MC (16 slots) and Amex (15 slots) based on the first digit.',
+          '|useMask|: |overwrite| mode — typing or pasting replaces the digit at the cursor position instead of inserting and shifting existing digits. Paste without a selection also overwrites; paste with a selection behaves like insert (replaces the selected range).',
+          '|useMask|: |inputMode| prop included in returned |props| — defaults to |"numeric"| so the numeric keyboard appears on mobile without any extra attribute on |<input>|.',
+          '|useMask|: |blocks| prop for per-group digit constraints. Accepts a positional array (|Block[]|) or a named object (|Record<string, NamedBlock>|). Named form: tokens in the mask string that match a key in |blocks| become digit groups; everything else stays a literal. Constraint functions receive the other groups by name: |DD: ({ MM, YYYY }) => ({ min: 1, max: getMaxDays(MM, YYYY) })|.',
+          '|useDateMask|: new hook. Pass a format string (moment-style |DD/MM/YYYY| or date-fns-style |dd/MM/yyyy|) and get the right mask, per-field clamping and February / leap-year validation for free. The formatted value is directly compatible with |date-fns| |parse()| and |moment()|.',
+          '|useMask|: |normalize| now receives block values as a second argument |(digits, blockValues) => string|. |blockValues| is an array of current digit strings — one per |#|-group in the mask. Existing single-argument functions continue to work unchanged.',
+          '|useMask|: |ParsedValues| now includes |blockValues: string[]| (one entry per |#|-group in the mask) and |namedBlockValues: Record<string, string>| (keyed by name when named |blocks| are used). Both fields are always present — empty array / empty object when blocks are not defined.',
+          '|useMask|: new |bypassMask| prop — bypasses all mask processing, so the input behaves like a plain controlled |<input>|. Accepts a |boolean| or a function |(value: string) => boolean| evaluated against the raw input on every keystroke, for fields that switch between a masked format and free text, e.g. a "phone or email" login field.',
+          '|usePhoneMask|: new |country| prop — pre-fills the input with the selected country\'s dialing prefix on mount and whenever the prop changes. Matches |DialPlan.id| (falls back to |DialPlan.cc|). The user can erase the prefix and type any number freely.',
+          '|usePhoneMask|: |UsePhoneMaskProps<T>| is now generic over the |dialPlans| array — |country| autocomplete reflects the actual plan IDs in use, including IDs added via |mergeDialPlans()|.',
+          '|mergeDialPlans()|: now generic — returns |(DialPlan & { id: MergedIds<O> })[]|, accurately tracking which IDs remain after additions and removals.',
+          'New exported types: |DefaultCountryId| (union of all built-in plan IDs from |DEFAULT_DIAL_PLANS_MAP|) and |MergedIds<O>| (IDs produced by |mergeDialPlans()|).',
+        ],
+      },
+      {
+        type: 'fixed',
+        items: [
+          '|usePhoneMask|: |formattedWithoutPlaceholderChars| no longer gets truncated by literal digits in the mask — only actually entered digits are counted.',
+        ],
+      },
+      {
+        type: 'breaking',
+        items: [
+          '|DialPlan.label| / |PhoneMaskCandidate.label| is now |{ en: string; ru: string }| instead of a plain string — |DEFAULT_DIAL_PLANS_MAP| ships Russian country names alongside English ones. Custom plans passed via |mergeDialPlans()| must update their |label| field accordingly.',
+        ],
+      },
+    ],
+  },
+  {
     version: '0.6.0',
     date: '2026-05-30',
     sections: [

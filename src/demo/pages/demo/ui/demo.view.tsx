@@ -8,7 +8,7 @@ import { DemoCard } from '@/shared/ui/DemoCard';
 import { PageWithBanner } from '@/shared/ui/PageWithBanner';
 import { PlaygroundCard } from '@/shared/ui/PlaygroundCard';
 import { Toast } from '@/shared/ui/Toast';
-import { useCountrySelectCards, useMaskCards, usePhoneMaskCards } from '@/widgets/demo-cards';
+import { useCountrySelectCards, useDateMaskCards, useMaskCards, usePhoneMaskCards } from '@/widgets/demo-cards';
 import { Footer } from '@/widgets/footer';
 import { Header } from '@/widgets/header';
 import { PlaygroundSwitchModal } from '@/widgets/playground';
@@ -23,6 +23,7 @@ export function DemoView() {
   const sec = t.demo.sections;
 
   const maskCards = useMaskCards();
+  const dateMaskCards = useDateMaskCards();
   const phoneMaskCards = usePhoneMaskCards();
   const countrySelectCards = useCountrySelectCards();
 
@@ -72,6 +73,20 @@ export function DemoView() {
               setIsPlaygroundOpen(true);
             }}
           />
+        </DemoSection>
+
+        <DemoSection
+          id={SECTION_IDS.home.useDateMask}
+          title={sec.useDateMask.title}
+          desc={sec.useDateMask.desc}
+          docTo={PATHS.useDateMask}
+          moreTo={dateMaskCards.length > PREVIEW_COUNT ? PATHS.useDateMaskExamples : undefined}
+        >
+          {dateMaskCards.slice(0, PREVIEW_COUNT).map(({ id, component, ...card }) => (
+            <DemoCard key={id} {...card}>
+              {component}
+            </DemoCard>
+          ))}
         </DemoSection>
 
         <DemoSection

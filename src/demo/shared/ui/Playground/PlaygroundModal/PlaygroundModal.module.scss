@@ -48,7 +48,9 @@
   position: relative;
   z-index: 2;
 
-  overflow: hidden;
+  overflow: hidden auto;
+  /* stylelint-disable-next-line plugin/no-unsupported-browser-features */
+  overscroll-behavior: contain;
 
   border-right: 1px solid var(--color-border);
 

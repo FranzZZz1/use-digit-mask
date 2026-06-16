@@ -6,12 +6,16 @@ import {
   buildCodeDynamicMask,
   buildCodeGhostMask,
   buildCodeNormalize,
+  buildCodeOverwrite,
+  buildCodePhoneOrEmail,
   buildCodePhoneRu,
   buildCodePin,
   CODE_CREDIT_CARD,
   CODE_DATE,
 } from '../lib/useMaskCode';
 import { type DemoCardConfig } from '../types';
+
+const isEmailLike = (value: string): boolean => /[a-zA-Z@]/.test(value);
 
 function normalizeTime(digits: string): string {
   let result = digits;
@@ -49,7 +53,7 @@ export function useMaskCards(): DemoCardConfig[] {
       id: 'dynamic-mask',
       title: c.dynamicMask.title,
       description: c.dynamicMask.desc,
-      code: buildCodeDynamicMask(),
+      code: buildCodeDynamicMask(cc),
       component: <DynamicCardField />,
     },
     {
@@ -79,6 +83,20 @@ export function useMaskCards(): DemoCardConfig[] {
       description: c.normalize.desc,
       code: buildCodeNormalize(cc),
       component: <MaskField mask="##:##" normalize={normalizeTime} />,
+    },
+    {
+      id: 'overwrite',
+      title: c.overwrite.title,
+      description: c.overwrite.desc,
+      code: buildCodeOverwrite(cc),
+      component: <MaskField overwrite mask="##/##/####" />,
+    },
+    {
+      id: 'phone-or-email',
+      title: c.phoneOrEmail.title,
+      description: c.phoneOrEmail.desc,
+      code: buildCodePhoneOrEmail(cc),
+      component: <MaskField bypassMask={isEmailLike} mask="+7 (###) ###-##-##" prefixAliases={['+7', '8']} />,
     },
     {
       id: 'always-active',

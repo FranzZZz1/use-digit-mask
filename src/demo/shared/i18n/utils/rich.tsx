@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 
-import { DocScrollLink } from '@/shared/ui/doc/DocScrollLink';
+import { DocScrollLink } from '@/shared/ui/DocScrollLink';
 
 export function rich(text: string, codeClass?: string, linkClass?: string): ReactNode[] {
   const parts = text.split(/(\|[^|]+\||\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/);

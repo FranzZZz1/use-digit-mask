@@ -59,7 +59,7 @@ export function PlaygroundModal({ title, tabs, onClose, children }: Props) {
           />
 
           <div className={styles.code__scroll}>
-            <CodePane html={html} isLoading={isLoading} lineCount={lineCount} />
+            <CodePane gutter html={html} isLoading={isLoading} lineCount={lineCount} />
           </div>
         </div>
       </div>

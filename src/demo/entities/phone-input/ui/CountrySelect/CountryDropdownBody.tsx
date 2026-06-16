@@ -2,6 +2,8 @@ import { Fragment, type RefObject } from 'react';
 import cx from 'clsx';
 import { type DialPlan } from 'use-digit-mask';
 
+import { useLang } from '@/shared/i18n';
+
 import { getFlag } from '../../utils/getFlag';
 
 import styles from './CountrySelect.module.scss';
@@ -25,6 +27,8 @@ export function CountryDropdownBody({
   searchRef,
   onSelect,
 }: CountryDropdownBodyProps) {
+  const { lang } = useLang();
+
   return (
     <>
       <div className={styles.search__wrapper}>
@@ -53,7 +57,7 @@ export function CountryDropdownBody({
               }}
             >
               <span className={styles.item__flag}>{getFlag(plan.id)}</span>
-              <span className={styles.item__label}>{plan.label ?? plan.cc}</span>
+              <span className={styles.item__label}>{plan.label?.[lang] ?? plan.cc}</span>
               <span className={styles.item__cc}>+{plan.cc}</span>
             </li>
           </Fragment>

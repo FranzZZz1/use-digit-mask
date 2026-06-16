@@ -1,5 +1,7 @@
 @use 'styles/mixins' as *;
 @use 'styles/typography' as *;
+@use 'styles/compose' as *;
+@include doc-classes;
 
 .page {
   display: flex;
@@ -67,6 +69,17 @@
 
   &--tradeoff {
     background: var(--color-badge-tradeoff);
+  }
+}
+
+.subgroup {
+  &:not(:last-child) {
+    margin-bottom: var(--space-3);
+  }
+
+  &__hook {
+    display: inline-block;
+    margin-bottom: var(--space-1);
   }
 }
 

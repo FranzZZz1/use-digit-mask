@@ -1,4 +1,3 @@
-import { DEFAULT_GHOST_CHAR } from '@/shared/lib';
 import {
   ghostOverlayJsx,
   type HookArg,
@@ -8,6 +7,8 @@ import {
   renderHookOptions,
 } from '@/shared/lib/snippetUtils';
 import { type OptionsState, type StrOptionState } from '@/shared/ui/Playground';
+
+import { pushBoolArg, readGhostState } from '../shared/buildCode';
 
 function parsePriorityIds(v: string): string[] {
   return v
@@ -20,7 +21,6 @@ type PhoneMaskSectionOpts = {
   withGhost: boolean;
   withGhostOnlyWhenResolved: boolean;
   ghostCharValue: string;
-  trimMaskTail: boolean;
 };
 
 type PhoneMaskSection = {
@@ -32,14 +32,13 @@ type PhoneMaskSection = {
   inputJsx: string;
 };
 
-function buildPhoneMaskSection({
-  withGhost,
-  withGhostOnlyWhenResolved,
-  ghostCharValue,
-  trimMaskTail,
-}: PhoneMaskSectionOpts): PhoneMaskSection {
+function buildPhoneMaskSection(
+  state: OptionsState,
+  { withGhost, withGhostOnlyWhenResolved, ghostCharValue }: PhoneMaskSectionOpts,
+): PhoneMaskSection {
   const hookArgs: HookArg[] = [];
-  if (trimMaskTail) hookArgs.push({ key: 'trimMaskTail', value: true });
+  pushBoolArg(hookArgs, state, 'trimMaskTail');
+  pushBoolArg(hookArgs, state, 'overwrite');
   if (withGhost) hookArgs.push({ key: 'ghostChar', value: ghostCharValue });
 
   const destructure = withGhost
@@ -142,10 +141,7 @@ ${phone.inputJsx}
 }
 
 export function buildUseCountrySelectCode(state: OptionsState): string {
-  const withGhost = state.ghostChar?.enabled ?? false;
-  const withGhostOnlyWhenResolved = withGhost && (state.ghostOnlyWhenResolved?.enabled ?? false);
-  const ghostCharValue = (state.ghostChar as StrOptionState | undefined)?.value || DEFAULT_GHOST_CHAR;
-  const trimMaskTail = state.trimMaskTail?.enabled ?? false;
+  const { withGhost, ghostCharValue, withGhostOnlyWhenResolved } = readGhostState(state);
   const stickyPins = state.stickyPins?.enabled ?? false;
   const disableSort = state.disableSort?.enabled ?? false;
 
@@ -153,7 +149,7 @@ export function buildUseCountrySelectCode(state: OptionsState): string {
   const parsedIds =
     priorityIdsOpt?.enabled && priorityIdsOpt.value.trim() ? parsePriorityIds(priorityIdsOpt.value) : [];
 
-  const phone = buildPhoneMaskSection({ withGhost, withGhostOnlyWhenResolved, ghostCharValue, trimMaskTail });
+  const phone = buildPhoneMaskSection(state, { withGhost, withGhostOnlyWhenResolved, ghostCharValue });
   const countrySelectArgs = collectCountrySelectArgs({ parsedIds, stickyPins, disableSort });
 
   return renderTemplate(phone, countrySelectArgs);

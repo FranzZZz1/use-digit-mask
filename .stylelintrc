@@ -8,6 +8,12 @@
         "ignorePseudoClasses": ["global"]
       }
     ],
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreProperties": ["composes"]
+      }
+    ],
     "media-feature-range-notation": "prefix",
     "selector-class-pattern": [
       "^([a-z][a-z0-9]*)((__|_|-|--)[a-z0-9]+)*$",

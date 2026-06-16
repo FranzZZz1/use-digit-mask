@@ -12,6 +12,8 @@ export const theme: ThemeInput = {
       scope: [
         'keyword.control',
         'keyword.declaration',
+        'keyword.operator.new.tsx',
+        'keyword.operator.new.ts',
         'constant.language.boolean',
         'constant.language.null',
         'constant.language.undefined',
@@ -128,8 +130,13 @@ const hookSetterTransformer: ShikiTransformer = {
     const props = properties as Record<string, string>;
     if (/^use[A-Z]/.test(text)) {
       props.style = 'color: var(--code-attributes-foreground)';
+    } else if (/^[A-Z]/.test(text)) {
+      if ((props.style ?? '').includes('--code-functions-foreground')) {
+        props.style = 'color: var(--code-attributes-foreground)';
+      }
     } else if (/^(?:set|on|handle)[A-Z]/.test(text)) {
-      if (!(props.style ?? '').includes('--code-attributes-foreground')) {
+      const existing = props.style ?? '';
+      if (!existing.includes('--code-attributes-foreground') && !existing.includes('--code-parameters-foreground')) {
         props.style = 'color: var(--code-functions-foreground)';
       }
     }

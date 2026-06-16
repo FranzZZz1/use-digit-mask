@@ -2,14 +2,16 @@ import { type ReactNode } from 'react';
 import cx from 'clsx';
 
 import { rich, useLang } from '@/shared/i18n';
-import { DocScrollLink } from '@/shared/ui/doc/DocScrollLink';
+import { DocScrollLink } from '@/shared/ui/DocScrollLink';
 
 import styles from './PropTable.module.scss';
 
 export type PropControl =
   | { kind: 'boolean' }
   | { kind: 'string'; placeholder?: string; maxLength?: number }
-  | { kind: 'stringArray'; placeholder?: string };
+  | { kind: 'stringArray'; placeholder?: string }
+  | { kind: 'blocks' }
+  | { kind: 'select' };
 
 export type PropRow = {
   name: string;

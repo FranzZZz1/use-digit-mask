@@ -1,31 +1,44 @@
+import cx from 'clsx';
+
 import styles from './CodePane.module.scss';
 
 type CodePaneProps = {
   html: string;
   isLoading: boolean;
-  lineCount?: number;
+  lineCount: number;
+  gutter?: boolean;
 };
 
-export function CodePane({ html, isLoading, lineCount }: CodePaneProps) {
+export function CodePane({ html, isLoading, lineCount, gutter }: CodePaneProps) {
+  const gutterNode = gutter && (
+    <div className={styles.pane__gutter} aria-hidden="true">
+      {Array.from({ length: lineCount }, (_, i) => (
+        <span key={i} className={styles['pane__gutter-num']}>
+          {i + 1}
+        </span>
+      ))}
+    </div>
+  );
+
   if (isLoading) {
     return (
-      <div className={styles['pane__spinner-wrapper']}>
-        <span className={styles.pane__spinner} aria-label="Loading…" />
+      <div className={cx(styles.pane, styles['pane--loading'])}>
+        {gutterNode}
+        <div className={styles.pane__code}>
+          <pre className={styles.pane__skeleton} aria-hidden="true">
+            {Array.from({ length: lineCount }, () => ' ').join('\n')}
+          </pre>
+        </div>
+        <div className={styles['pane__spinner-overlay']}>
+          <span className={styles.pane__spinner} aria-label="Loading…" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className={styles.pane}>
-      {lineCount !== undefined && (
-        <div className={styles.pane__gutter} aria-hidden="true">
-          {Array.from({ length: lineCount }, (_, i) => (
-            <span key={i} className={styles['pane__gutter-num']}>
-              {i + 1}
-            </span>
-          ))}
-        </div>
-      )}
+      {gutterNode}
       <div className={styles.pane__code} dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );

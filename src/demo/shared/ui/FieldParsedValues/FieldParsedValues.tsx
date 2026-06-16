@@ -40,8 +40,12 @@ const getValue = (item: ConfigKey, parsed: ParsedValues | null, mask?: string, i
       return id || '—';
     case 'isMaskCompleted':
       return parsed ? String(parsed.isMaskCompleted) : '—';
-    default:
-      return parsed?.[item];
+    default: {
+      const v = parsed?.[item as ParsedKey];
+      if (v == null) return undefined;
+      if (typeof v === 'string') return v;
+      return JSON.stringify(v);
+    }
   }
 };
 

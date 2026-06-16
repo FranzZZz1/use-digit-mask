@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { buildRows, USE_COUNTRY_SELECT_PARAMS, USE_COUNTRY_SELECT_RETURN_VALUES } from '@/entities/prop-def';
 import { useLang } from '@/shared/i18n';
 import { PATHS, SECTION_IDS, TYPE_LINKS } from '@/shared/router';
-import { DocPage } from '@/widgets/docs-layout';
+import { DocPage } from '@/shared/ui/DocPage';
 import { PlaygroundSwitchModal } from '@/widgets/playground';
 
 export function UseCountrySelectDocView() {

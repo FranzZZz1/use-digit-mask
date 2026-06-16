@@ -4,6 +4,7 @@ import { E164_MASK, usePhoneMask } from 'use-digit-mask';
 
 import { CountrySelect } from '@/entities/phone-input/ui/CountrySelect/CountrySelect';
 import { CountrySelectRadix } from '@/entities/phone-input/ui/CountrySelect/CountrySelectRadix';
+import { useLang } from '@/shared/i18n';
 import { ConditionalWrap } from '@/shared/lib';
 import { FieldLayout } from '@/shared/ui/FieldLayout';
 import { Input } from '@/shared/ui/Input';
@@ -18,10 +19,12 @@ type PhoneFieldProps = {
   disableSort?: boolean;
   radixSelect?: boolean;
   trimMaskTail?: boolean;
+  overwrite?: boolean;
   placeholderChar?: string;
   ghost?: boolean;
   ghostChar?: string;
   ghostOnlyWhenResolved?: boolean;
+  country?: string;
 };
 
 export function PhoneField({
@@ -32,12 +35,15 @@ export function PhoneField({
   disableSort,
   radixSelect = false,
   trimMaskTail = true,
+  overwrite,
   placeholderChar,
   ghost,
   ghostChar,
   ghostOnlyWhenResolved,
+  country,
 }: PhoneFieldProps) {
   const [value, setValue] = useState('');
+  const { lang } = useLang();
 
   const { props, mask, id, prefix, candidates, selectCandidate, selectPlan, allPlans, ghostValue, api } = usePhoneMask({
     value,
@@ -45,8 +51,10 @@ export function PhoneField({
       setValue(next);
     },
     trimMaskTail,
+    overwrite,
     placeholderChar,
     ghostChar,
+    country,
   });
 
   const showGhost = ghost && (!ghostOnlyWhenResolved || mask !== E164_MASK);
@@ -91,7 +99,6 @@ export function PhoneField({
             {...props}
             className={cx(showCountrySelect && styles['input--attached'], ghost && styles['input--ghost'])}
             type="text"
-            inputMode="numeric"
             placeholder={showGhost ? undefined : 'Start typing a number...'}
           />
           {showGhost && (
@@ -114,7 +121,7 @@ export function PhoneField({
                 selectCandidate(c);
               }}
             >
-              {c.label ?? c.cc} <span className={styles.candidate__prefix}>{c.prefix}</span>
+              {c.label?.[lang] ?? c.cc} <span className={styles.candidate__prefix}>{c.prefix}</span>
             </button>
           ))}
         </div>
