@@ -37,4 +37,12 @@ describe('usePhoneMask - базовое поведение', () => {
     firePaste(input, '79991234567');
     expect(input.value).toBe('+7 (999) 123-45-67');
   });
+
+  it('bypassMask недоступен: переданный в runtime проп игнорируется, маска применяется как обычно', () => {
+    // @ts-expect-error bypassMask не входит в UsePhoneMaskProps (never)
+    render(<UncontrolledPhone bypassMask />);
+    const input = getInput();
+    fireChangeAt(input, '79991234567', 11);
+    expect(input.value).toBe('+7 (999) 123-45-67');
+  });
 });

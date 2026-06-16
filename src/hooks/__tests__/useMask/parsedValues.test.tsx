@@ -1,11 +1,10 @@
-import React from 'react';
 import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../types';
-import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
+import { PHONE_MASK } from '../constants';
 
-import { ControlledInput, fireChangeAt, firePaste, getInput, TestInput } from './_helpers';
+import { ControlledInput, fireChangeAt, firePaste, getInput, RussiaPhone, TestInput, UkPhone } from './_helpers';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -23,7 +22,7 @@ describe('ParsedValues', () => {
 
   it('prefix корректен для телефонной маски', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    render(<RussiaPhone onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9__) ___-__-__', 5);
@@ -43,7 +42,7 @@ describe('ParsedValues', () => {
 
   it('rawWithoutPrefix содержит только цифры без префикса', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    render(<RussiaPhone onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9991234567)', 16);
@@ -99,7 +98,7 @@ describe('ParsedValues', () => {
 
   it('formattedWithoutPrefix не содержит затёкшего литерала "(" из визуального префикса', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    render(<RussiaPhone onChangeSpy={spy} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9991234567)', 16);
@@ -120,7 +119,7 @@ describe('ParsedValues', () => {
 
   it('formattedWithoutPlaceholderChars при пустом теле = видимый литерал "+7 ("', () => {
     const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} onChangeSpy={spy} />);
+    render(<RussiaPhone onChangeSpy={spy} />);
     const input = getInput();
     firePaste(input, '+7');
     const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
@@ -166,5 +165,50 @@ describe('Внешнее значение (controlled)', () => {
 
     rerender(<ControlledInput mask="##-##" value="12" onChange={spy} />);
     expect(getInput().value).toBe('12-__');
+  });
+});
+
+describe('ParsedValues — Великобритания "+44 #### ######" (двузначный prefix)', () => {
+  it('полный номер: prefix="+44", rawWithoutPrefix="1234567890", isMaskCompleted=true', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<UkPhone onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '441234567890', 12);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.prefix).toBe('+44');
+    expect(parsed.rawWithoutPrefix).toBe('1234567890');
+    expect(parsed.rawWithPrefix).toBe('+441234567890');
+    expect(parsed.isMaskCompleted).toBe(true);
+  });
+
+  it('частичный без cc: prefix="+44", rawWithoutPrefix="1234", isMaskCompleted=false', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<UkPhone onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '1234', 4);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.prefix).toBe('+44');
+    expect(parsed.rawWithoutPrefix).toBe('1234');
+    expect(parsed.rawWithPrefix).toBe('+441234');
+    expect(parsed.isMaskCompleted).toBe(false);
+  });
+
+  it('formattedWithoutPrefix не содержит ведущих пробелов', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<UkPhone onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '441234567890', 12);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.formattedWithoutPrefix.startsWith(' ')).toBe(false);
+    expect(parsed.formattedWithoutPrefix).toBe('1234 567890');
+  });
+
+  it('formattedWithoutPlaceholderChars для частичного — обрезается по последней цифре', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<UkPhone onChangeSpy={spy} />);
+    const input = getInput();
+    fireChangeAt(input, '12345678', 8);
+    const [, parsed] = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(parsed.formattedWithoutPlaceholderChars).toBe('+44 1234 5678');
   });
 });

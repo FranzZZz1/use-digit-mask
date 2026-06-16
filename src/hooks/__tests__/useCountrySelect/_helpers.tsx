@@ -2,11 +2,11 @@ import React from 'react';
 import { type DialPlan, type PhoneMaskCandidate, useCountrySelect, type UseCountrySelectOptions } from 'use-digit-mask';
 
 export const PLANS: DialPlan[] = [
-  { id: 'US', cc: '1', pattern: '(###) ###-####', label: 'United States' },
-  { id: 'GB', cc: '44', pattern: '#### ######', label: 'United Kingdom' },
-  { id: 'RU', cc: '7', pattern: '(###) ###-##-##', label: 'Russia' },
-  { id: 'DE', cc: '49', pattern: '### #######', label: 'Germany' },
-  { id: 'FR', cc: '33', pattern: '# ## ## ## ##', label: 'France' },
+  { id: 'US', cc: '1', pattern: '(###) ###-####', label: { en: 'United States', ru: 'США' } },
+  { id: 'GB', cc: '44', pattern: '#### ######', label: { en: 'United Kingdom', ru: 'Великобритания' } },
+  { id: 'RU', cc: '7', pattern: '(###) ###-##-##', label: { en: 'Russia', ru: 'Россия' } },
+  { id: 'DE', cc: '49', pattern: '### #######', label: { en: 'Germany', ru: 'Германия' } },
+  { id: 'FR', cc: '33', pattern: '# ## ## ## ##', label: { en: 'France', ru: 'Франция' } },
 ];
 
 export function makeCandidate(id: string, cc: string): PhoneMaskCandidate {
@@ -36,7 +36,7 @@ export function CountrySelectTest({ props }: { props: UseCountrySelectOptions & 
                       hook.select(plan);
                     }}
                   >
-                    {plan.label}
+                    {plan.label?.en}
                   </button>
                 </li>
               ))}

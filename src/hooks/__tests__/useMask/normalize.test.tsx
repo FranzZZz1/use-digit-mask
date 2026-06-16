@@ -2,7 +2,16 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ControlledInput, fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
+import {
+  ControlledInput,
+  fireChangeAt,
+  fireKey,
+  firePaste,
+  getInput,
+  placeCaret,
+  RussiaPhone,
+  TestInput,
+} from './_helpers';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -74,7 +83,7 @@ describe('normalize: нормализация времени (##:##)', () => {
     expect(input.value).toBe('23:59');
   });
 
-  it('часы > 23, минуты валидны -> зажимаются только часы (42:42 -> 23:42)', () => {
+  it('часы > 23, минуты валидны -> ограничиваются только часы (42:42 -> 23:42)', () => {
     render(<TestInput mask="##:##" normalize={normalizeTime} />);
     const input = getInput();
     fireChangeAt(input, '4242', 4);
@@ -109,7 +118,7 @@ describe('normalize: нормализация времени (##:##)', () => {
     expect(input.value).toBe('23:__');
   });
 
-  it('частичный ввод: одна цифра часов - без зажима', () => {
+  it('частичный ввод: одна цифра часов - без ограничения', () => {
     render(<TestInput mask="##:##" normalize={normalizeTime} />);
     const input = getInput();
     fireChangeAt(input, '4', 1);
@@ -146,7 +155,7 @@ describe('normalize: нормализация времени (##:##)', () => {
     const input = getInput();
     fireChangeAt(input, '4264', 4);
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('4264');
+    expect(spy).toHaveBeenCalledWith('4264', ['42', '64']);
   });
 
   it('normalize вызывается ровно один раз при вставке (spy)', () => {
@@ -156,6 +165,34 @@ describe('normalize: нормализация времени (##:##)', () => {
     placeCaret(input, 0);
     firePaste(input, '4264');
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('4264');
+    expect(spy).toHaveBeenCalledWith('4264', ['42', '64']);
+  });
+});
+
+describe('normalize + маска с префиксом (Россия)', () => {
+  it('применяется к body-цифрам (cursor > prefixLength)', () => {
+    const norm = (d: string) => d.slice(0, 5);
+    render(<RussiaPhone alwaysActive normalize={norm} />);
+    const input = getInput();
+    fireChangeAt(input, '9991234567', 10);
+    expect(input.value).toBe('+7 (999) 12_-__-__');
+  });
+
+  it('применяется при вводе в prefix-зону (cursor ≤ prefixLength)', () => {
+    const norm = (d: string) => d.replace(/1/g, '5');
+    render(<RussiaPhone alwaysActive normalize={norm} />);
+    const input = getInput();
+    fireChangeAt(input, '+7 (123) ___-__-__', 18);
+    fireChangeAt(input, '+57 (123) ___-__-__', 2);
+    expect(input.value).toBe('+7 (552) 3__-__-__');
+  });
+
+  it('вызывается ровно один раз при вводе', () => {
+    const spy = vi.fn((d: string) => d);
+    render(<RussiaPhone alwaysActive normalize={spy} />);
+    const input = getInput();
+    spy.mockClear();
+    fireChangeAt(input, '+7 (9__) ___-__-__', 5);
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

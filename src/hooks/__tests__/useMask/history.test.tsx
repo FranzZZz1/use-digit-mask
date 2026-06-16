@@ -1,11 +1,18 @@
-import React from 'react';
 import { act, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { type ParsedValues } from '../../types';
-import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
 
-import { AsyncControlledInput, fireChangeAt, fireKey, firePaste, getInput, placeCaret, TestInput } from './_helpers';
+import {
+  AsyncControlledInput,
+  fireChangeAt,
+  fireKey,
+  firePaste,
+  getInput,
+  placeCaret,
+  RussiaPhone,
+  TestInput,
+} from './_helpers';
 
 describe('Undo (Ctrl+Z)', () => {
   it('отменяет последний введённый символ', () => {
@@ -88,7 +95,7 @@ describe('Undo (Ctrl+Z)', () => {
   });
 
   it('M6: вставка префикса поверх непустого неактивного поля откатывается через Ctrl+Z', () => {
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} initialValue="+7 (983) 120-48-97" />);
+    render(<RussiaPhone initialValue="+7 (983) 120-48-97" />);
     const input = getInput();
     expect(input.value).toBe('+7 (983) 120-48-97');
 

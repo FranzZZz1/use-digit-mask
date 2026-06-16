@@ -3,6 +3,7 @@ import { fireEvent, screen } from '@testing-library/react';
 
 import { type ParsedValues, type UseMaskProps } from '../../types';
 import { useMask } from '../../useMask';
+import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
 
 export type TestInputProps = Omit<UseMaskProps, 'value' | 'onChange'> & {
   initialValue?: string;
@@ -58,6 +59,32 @@ export function fireKey(
 
 export function placeCaret(input: HTMLInputElement, start: number, end: number = start): void {
   input.setSelectionRange(start, end);
+}
+
+type FixedMaskProps = Omit<TestInputProps, 'mask' | 'allowedPrefixes' | 'prefixAliases'>;
+
+export function RussiaPhone(props: FixedMaskProps) {
+  return <TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} {...props} />;
+}
+
+export const US_MASK = '+1 (###) ###-####';
+export const US_PREFIXES = ['+1'];
+
+export function UsPhone(props: FixedMaskProps) {
+  return <TestInput mask={US_MASK} allowedPrefixes={US_PREFIXES} {...props} />;
+}
+
+export const UK_MASK = '+44 #### ######';
+export const UK_PREFIXES = ['+44'];
+
+export function UkPhone(props: FixedMaskProps) {
+  return <TestInput mask={UK_MASK} allowedPrefixes={UK_PREFIXES} {...props} />;
+}
+
+export const PREFIXLESS_MASK = '##########';
+
+export function PrefixlessPhone(props: FixedMaskProps) {
+  return <TestInput mask={PREFIXLESS_MASK} allowedPrefixes={PHONE_PREFIXES} {...props} />;
 }
 
 export function AsyncControlledInput({ initialValue = '', onChangeSpy = undefined, ...maskProps }: TestInputProps) {

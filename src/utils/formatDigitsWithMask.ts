@@ -1,3 +1,5 @@
+import { fillSlots } from './fillSlots';
+
 const MASK_DIGIT_SLOT = '#';
 
 /**
@@ -5,9 +7,7 @@ const MASK_DIGIT_SLOT = '#';
  * Pure function — no hook dependency.
  */
 export function formatDigitsWithMask(digits: string, mask: string, placeholderChar: string): string {
-  const slots = [...mask].filter((c) => c === MASK_DIGIT_SLOT).length;
-  const clamped = digits.slice(0, slots);
-  let i = 0;
-  // eslint-disable-next-line no-plusplus
-  return [...mask].map((char) => (char === MASK_DIGIT_SLOT ? (clamped[i++] ?? placeholderChar) : char)).join('');
+  const chars = [...mask];
+  const slots = chars.filter((c) => c === MASK_DIGIT_SLOT).length;
+  return fillSlots(chars, digits.slice(0, slots), placeholderChar);
 }

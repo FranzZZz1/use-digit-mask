@@ -12,11 +12,11 @@ export function usePrefixHandling(allowedPrefixes: string[], maskMeta: MaskMeta)
 
   const stripVisiblePrefix = useCallback(
     (digits: string) => {
-      const prefixDigits = extractDigits(maskMeta.visiblePrefix);
+      const prefixDigits = maskMeta.visiblePrefixDigits;
       if (!prefixDigits) return digits;
       return digits.startsWith(prefixDigits) ? digits.slice(prefixDigits.length) : digits;
     },
-    [maskMeta.visiblePrefix],
+    [maskMeta.visiblePrefixDigits],
   );
 
   const startsWithAllowedPrefix = useCallback(

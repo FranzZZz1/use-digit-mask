@@ -2,9 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
-
-import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
+import { fireChangeAt, fireKey, getInput, placeCaret, RussiaPhone, TestInput } from './_helpers';
 
 describe('Backspace', () => {
   it('удаляет последнюю цифру', () => {
@@ -50,8 +48,7 @@ describe('Backspace', () => {
   });
 
   it('перед первым слотом (позиция prefixLength) с цифрами — не сбрасывает значение', () => {
-    const MASK = PHONE_MASK;
-    render(<TestInput mask={MASK} allowedPrefixes={PHONE_PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (9__) ___-__-__', 5);
@@ -62,7 +59,7 @@ describe('Backspace', () => {
   });
 
   it('в начале активной маски без цифр — деактивирует (корректное поведение не сломано)', () => {
-    render(<TestInput mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     expect(input.value).toBe('+7 (___) ___-__-__');

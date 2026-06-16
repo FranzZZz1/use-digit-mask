@@ -1,3 +1,9 @@
+/** Localized display label — country name in each supported language. */
+export type DialPlanLabel = {
+  en: string;
+  ru: string;
+};
+
 export type DialPlan = {
   cc: string;
   /**
@@ -9,7 +15,7 @@ export type DialPlan = {
   pattern: string;
   /** ISO 3166-1 alpha-2 country code used as a unique key (e.g. "RU", "US"). */
   id?: string;
-  label?: string;
+  label?: DialPlanLabel;
   /**
    * Whether to prepend `+` to the country code when displaying the prefix.
    * Defaults to `true`. Set to `false` for plans where the number is dialled without a plus sign.
@@ -41,7 +47,7 @@ export type PhoneMaskCandidate = {
   cc: string;
   prefix: string;
   prefixDigits: string;
-  label?: string;
+  label?: DialPlanLabel;
   /**
    * Canonical E.164-style prefix for this candidate when it was matched via an `altPrefixes` entry.
    * For example, Russia's `altPrefix: '8'` produces `parentPrefix: '+7'`.

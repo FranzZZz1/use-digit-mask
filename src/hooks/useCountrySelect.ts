@@ -109,7 +109,11 @@ function buildPlansMap(plans: DialPlan[]): Map<string, DialPlan> {
 
 /** Return true if `plan` matches a lowercased search query. */
 function matchesQuery(plan: DialPlan, q: string): boolean {
-  return (plan.label?.toLowerCase().includes(q) ?? false) || `+${plan.cc}`.includes(q);
+  return (
+    (plan.label?.en.toLowerCase().includes(q) ?? false) ||
+    (plan.label?.ru.toLowerCase().includes(q) ?? false) ||
+    `+${plan.cc}`.includes(q)
+  );
 }
 
 /**
@@ -206,9 +210,7 @@ export function useCountrySelect({
   const [query, setQuery] = useState('');
 
   const onSelectRef = useRef(onSelect);
-  useEffect(() => {
-    onSelectRef.current = onSelect;
-  });
+  onSelectRef.current = onSelect;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);

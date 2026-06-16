@@ -28,7 +28,7 @@ function opts7(overrides: Partial<ResolveChangeOptions> = {}): ResolveChangeOpti
     input: '',
     cursor: 0,
     isMaskActive: true,
-    prevDigitsLength: 0,
+    prevDigits: '',
     maskMeta: meta,
     allowedPrefixesDigits: PHONE_PREFIX_DIGITS,
     normalize: undefined,
@@ -44,7 +44,7 @@ function opts77(overrides: Partial<ResolveChangeOptions> = {}): ResolveChangeOpt
     input: '',
     cursor: 0,
     isMaskActive: true,
-    prevDigitsLength: 10,
+    prevDigits: '1234567890',
     maskMeta: meta,
     allowedPrefixesDigits: ['77'],
     normalize: undefined,
@@ -55,25 +55,30 @@ function opts77(overrides: Partial<ResolveChangeOptions> = {}): ResolveChangeOpt
 
 describe('resolveChange — неактивное поле (isMaskActive=false, prevDigitsLength=0)', () => {
   it('первый символ совпадает с allowed-prefix -> activate-prefix', () => {
-    const result = resolveChange(opts7({ isMaskActive: false, prevDigitsLength: 0, input: '7', cursor: 1 }));
+    const result = resolveChange(opts7({ isMaskActive: false, prevDigits: '', input: '7', cursor: 1 }));
     expect(result).toEqual({ kind: 'activate-prefix' });
   });
 
   it('первый символ — обычная цифра -> apply с этой цифрой', () => {
-    const result = resolveChange(opts7({ isMaskActive: false, prevDigitsLength: 0, input: '9', cursor: 1 }));
+    const result = resolveChange(opts7({ isMaskActive: false, prevDigits: '', input: '9', cursor: 1 }));
     expect(result).toEqual({ kind: 'apply', digits: '9', caretDigitsOnLeft: 1 });
   });
 
   it('isMaskActive=false но prevDigitsLength>0 -> не входим в блок неактивной маски', () => {
-    const result = resolveChange(opts7({ isMaskActive: false, prevDigitsLength: 10, input: '+7', cursor: 2 }));
+    const result = resolveChange(opts7({ isMaskActive: false, prevDigits: '1234567890', input: '+7', cursor: 2 }));
     expect(result).toEqual({ kind: 'clear' });
   });
 });
 
 describe('resolveChange — многосимвольный ввод в неактивное поле', () => {
   it('10 цифр вставлены в неактивное поле -> apply без stripped-prefix (length не > maxDigits)', () => {
-    const result = resolveChange(opts7({ isMaskActive: false, prevDigitsLength: 0, input: '9831204897', cursor: 10 }));
+    const result = resolveChange(opts7({ isMaskActive: false, prevDigits: '', input: '9831204897', cursor: 10 }));
     expect(result).toEqual({ kind: 'apply', digits: '9831204897', caretDigitsOnLeft: 10 });
+  });
+
+  it('курсор не в конце вставленных цифр -> caretDigitsOnLeft соответствует курсору, а не длине digits', () => {
+    const result = resolveChange(opts7({ isMaskActive: false, prevDigits: '', input: '9831204897', cursor: 5 }));
+    expect(result).toEqual({ kind: 'apply', digits: '9831204897', caretDigitsOnLeft: 5 });
   });
 });
 
@@ -141,7 +146,7 @@ describe('resolveChange — нормальный ввод', () => {
   });
 
   it('ввод цифры "9" в первый слот активного поля', () => {
-    const result = resolveChange(opts7({ input: '+7 (9__) ___-__-__', cursor: 6, prevDigitsLength: 0 }));
+    const result = resolveChange(opts7({ input: '+7 (9__) ___-__-__', cursor: 6, prevDigits: '' }));
     expect(result.kind).toBe('apply');
     if (result.kind === 'apply') {
       expect(result.digits).toBe('9');
@@ -184,12 +189,35 @@ describe('resolveChange — Android IME paste (через onChange)', () => {
   });
 
   it('guard: ввод "8" в середину заполненной маски — strip не происходит', () => {
-    const result = resolveChange(opts7({ input: '+7 (8983) 120-48-97', cursor: 6, prevDigitsLength: 10 }));
+    const result = resolveChange(opts7({ input: '+7 (8983) 120-48-97', cursor: 6, prevDigits: '9831204897' }));
     expect(result.kind).toBe('apply');
     if (result.kind === 'apply') {
       expect(result.digits).toBe('89831204897');
       expect(result.caretDigitsOnLeft).toBe(2);
     }
+  });
+});
+
+describe('resolveChange — выделение цифр + невалидный символ', () => {
+  it('выделили последние 2 цифры заполненной маски и набрали букву -> ignore, каретка остаётся на месте выделения', () => {
+    const result = resolveChange(
+      opts7({ input: '+7 (983) 120-48-x', cursor: 17, prevDigits: '9831204897' }),
+    );
+    expect(result).toEqual({ kind: 'ignore', caretDigitsOnLeft: 10 });
+  });
+
+  it('выделили цифры в середине заполненной маски и набрали букву -> ignore, каретка на конце выделения', () => {
+    const result = resolveChange(
+      opts7({ input: '+7 (983) x-48-97', cursor: 10, prevDigits: '9831204897' }),
+    );
+    expect(result).toEqual({ kind: 'ignore', caretDigitsOnLeft: 6 });
+  });
+
+  it('выделение захватывает prefix + часть тела, набрали букву -> ignore, каретка на конце выделения', () => {
+    const result = resolveChange(
+      opts7({ input: 'x-48-97', cursor: 1, prevDigits: '9831204897' }),
+    );
+    expect(result).toEqual({ kind: 'ignore', caretDigitsOnLeft: 6 });
   });
 });
 
@@ -211,7 +239,7 @@ describe('resolveChange — pasteStripPrefix', () => {
       opts7({
         input: '+7 (8983) 120-48-97',
         cursor: 6,
-        prevDigitsLength: 10,
+        prevDigits: '1234567890',
         pasteStripPrefix: PASTE_STRIP_PREFIX.always,
       }),
     );

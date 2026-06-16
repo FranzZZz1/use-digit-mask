@@ -4,27 +4,25 @@ import { describe, expect, it } from 'vitest';
 
 import { PHONE_MASK, PHONE_PREFIXES } from '../constants';
 
-import { fireChangeAt, fireKey, getInput, placeCaret, TestInput } from './_helpers';
+import { fireChangeAt, fireKey, getInput, placeCaret, RussiaPhone, TestInput } from './_helpers';
 
 describe('Ввод при allowedPrefixes = []', () => {
-  const MASK = PHONE_MASK;
-
   it('ввод "7" (совпадает с цифрой маски) кладёт цифру в первый слот, не показывает пустой шаблон', () => {
-    render(<TestInput mask={MASK} />);
+    render(<TestInput mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     expect(input.value).toBe('+7 (7__) ___-__-__');
   });
 
   it('ввод "9" кладёт цифру в первый слот', () => {
-    render(<TestInput mask={MASK} />);
+    render(<TestInput mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '9', 1);
     expect(input.value).toBe('+7 (9__) ___-__-__');
   });
 
   it('продолжение ввода после первой цифры корректно заполняет следующие слоты', () => {
-    render(<TestInput mask={MASK} />);
+    render(<TestInput mask={PHONE_MASK} />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     fireChangeAt(input, '+7 (79_) ___-__-__', 6);
@@ -33,32 +31,29 @@ describe('Ввод при allowedPrefixes = []', () => {
 });
 
 describe('Активация маски через allowedPrefixes', () => {
-  const MASK = PHONE_MASK;
-  const PREFIXES = PHONE_PREFIXES;
-
   it('ввод "7" активирует маску и показывает пустой шаблон', () => {
-    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     expect(input.value).toBe('+7 (___) ___-__-__');
   });
 
   it('ввод "8" активирует маску', () => {
-    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '8', 1);
     expect(input.value).toBe('+7 (___) ___-__-__');
   });
 
   it('ввод любой другой цифры не активирует', () => {
-    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '5', 1);
     expect(input.value).toBe('+7 (5__) ___-__-__');
   });
 
   it('после активации ввод цифр заполняет слоты', () => {
-    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     expect(input.value).toBe('+7 (___) ___-__-__');
@@ -68,7 +63,7 @@ describe('Активация маски через allowedPrefixes', () => {
   });
 
   it('backspace в начале активной маски -> деактивирует', () => {
-    render(<TestInput mask={MASK} allowedPrefixes={PREFIXES} />);
+    render(<RussiaPhone />);
     const input = getInput();
     fireChangeAt(input, '7', 1);
     expect(input.value).toBe('+7 (___) ___-__-__');
@@ -81,7 +76,7 @@ describe('Активация маски через allowedPrefixes', () => {
 
 describe('activateOnFocus', () => {
   it('фокус показывает пустой шаблон маски', () => {
-    render(<TestInput activateOnFocus mask={PHONE_MASK} allowedPrefixes={PHONE_PREFIXES} />);
+    render(<RussiaPhone activateOnFocus />);
     const input = getInput();
     fireEvent.focus(input);
     expect(input.value).toBe('+7 (___) ___-__-__');
@@ -145,5 +140,35 @@ describe('trimMaskTail', () => {
     const input = getInput();
     fireChangeAt(input, '0101', 4);
     expect(input.value).toBe('01/01');
+  });
+});
+
+describe('prefixAliases (актуальное имя вместо устаревшего allowedPrefixes)', () => {
+  it('"7" активирует маску', () => {
+    render(<TestInput mask={PHONE_MASK} prefixAliases={PHONE_PREFIXES} />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    expect(input.value).toBe('+7 (___) ___-__-__');
+  });
+
+  it('"8" также активирует маску', () => {
+    render(<TestInput mask={PHONE_MASK} prefixAliases={PHONE_PREFIXES} />);
+    const input = getInput();
+    fireChangeAt(input, '8', 1);
+    expect(input.value).toBe('+7 (___) ___-__-__');
+  });
+
+  it('overflow-стрипинг работает через prefixAliases', () => {
+    render(<TestInput mask={PHONE_MASK} prefixAliases={PHONE_PREFIXES} />);
+    const input = getInput();
+    fireChangeAt(input, '89831204897', 11);
+    expect(input.value).toBe('+7 (983) 120-48-97');
+  });
+
+  it('RussiaPhone использует allowedPrefixes — тест контракта хелпера', () => {
+    render(<RussiaPhone />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    expect(input.value).toBe('+7 (___) ___-__-__');
   });
 });

@@ -2,7 +2,9 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { flushRaf } from '../../../test-setup';
 import { type ParsedValues } from '../../types';
+import { PHONE_MASK } from '../constants';
 
 import { ControlledInput, fireChangeAt, firePaste, getInput, TestInput } from './_helpers';
 
@@ -63,8 +65,6 @@ describe('Edge cases', () => {
   });
 
   it('composition-события не мешают вводу (обработчики не нужны)', () => {
-    // На Samsung Galaxy нажатие на символы вроде "-" оборачивается в composition-события.
-    // Хук не перехватывает onCompositionStart/End — ввод работает корректно в любом случае.
     render(<TestInput mask="####" />);
     const input = getInput();
     fireEvent.compositionStart(input);
@@ -76,5 +76,49 @@ describe('Edge cases', () => {
   it('initialValue правильно рендерится при маунте', () => {
     render(<TestInput mask="##-##" initialValue="12-34" />);
     expect(getInput().value).toBe('12-34');
+  });
+
+  it('выделение всего значения и недопустимый символ откатывают ввод без очистки', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} prefixAliases={['+7', '8']} initialValue="983" onChangeSpy={spy} />);
+    const input = getInput();
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    spy.mockClear();
+
+    fireChangeAt(input, 'x', 1);
+
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    expect(spy).not.toHaveBeenCalled();
+
+    flushRaf();
+    expect(input.selectionStart).toBe(7);
+  });
+
+  it('выделение префикса с цифрами и недопустимый символ — откат без очистки (граница префикса)', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} prefixAliases={['+7', '8']} initialValue="983" onChangeSpy={spy} />);
+    const input = getInput();
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    spy.mockClear();
+
+    // выделено "+7 (983", введена буква "x" -> "x) ___-__-__"
+    fireChangeAt(input, 'x) ___-__-__', 1);
+
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('выделение цифр и литералов после префикса и недопустимый символ — откат без очистки', () => {
+    const spy = vi.fn<(value: string, parsed: ParsedValues) => void>();
+    render(<TestInput mask={PHONE_MASK} prefixAliases={['+7', '8']} initialValue="983" onChangeSpy={spy} />);
+    const input = getInput();
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    spy.mockClear();
+
+    // выделено "983) ___", введена буква "x" -> "+7 (x-__-__"
+    fireChangeAt(input, '+7 (x-__-__', 5);
+
+    expect(input.value).toBe('+7 (983) ___-__-__');
+    expect(spy).not.toHaveBeenCalled();
   });
 });

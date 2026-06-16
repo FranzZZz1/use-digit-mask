@@ -179,6 +179,32 @@ describe('resolvePaste — частичная вставка', () => {
   });
 });
 
+describe('resolvePaste — вставка без цифр', () => {
+  it('вставка текста без цифр поверх выделения -> ignore, выделенные цифры не удаляются', () => {
+    const result = resolvePaste(
+      opts({
+        pasted: 'abc',
+        prevDigits: '1234',
+        leftDigitsStart: 1,
+        leftDigitsEnd: 3,
+      }),
+    );
+    expect(result).toEqual({ kind: 'ignore' });
+  });
+
+  it('вставка текста без цифр без выделения (курсор) -> apply без изменений', () => {
+    const result = resolvePaste(
+      opts({
+        pasted: 'abc',
+        prevDigits: '1234',
+        leftDigitsStart: 2,
+        leftDigitsEnd: 2,
+      }),
+    );
+    expect(result).toEqual({ kind: 'apply', digits: '1234', caretDigitsOnLeft: 2 });
+  });
+});
+
 describe('resolvePaste — skipPrefixStripOnce', () => {
   it('"+7" вставлен в активное пустое поле -> "7" идёт в тело (strip пропускается)', () => {
     const result = resolvePaste(opts({ pasted: '+7', isMaskActive: true }));

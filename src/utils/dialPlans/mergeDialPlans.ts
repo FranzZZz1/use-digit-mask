@@ -1,5 +1,34 @@
-import { DEFAULT_DIAL_PLANS_MAP } from './defaultPlans';
+import { DEFAULT_DIAL_PLANS_MAP, type DefaultCountryId } from './defaultPlans';
 import { type DialPlan } from './types';
+
+type DialPlanPatch = Partial<Omit<DialPlan, 'id'>> | null;
+
+/**
+ * Overrides object for `mergeDialPlans()`.
+ *
+ * Keys of `DEFAULT_DIAL_PLANS_MAP` (e.g. `"US"`, `"RU"`, `"GB"`) are suggested by
+ * autocomplete, but any other string key is also allowed — for custom entries.
+ */
+export type DialPlanOverrides = {
+  [K in keyof typeof DEFAULT_DIAL_PLANS_MAP]?: DialPlanPatch;
+} & Record<string, DialPlanPatch>;
+
+type NullKeys<O extends DialPlanOverrides> = {
+  [K in keyof O]: O[K] extends null ? K : never;
+}[keyof O] &
+  string;
+
+type NonNullKeys<O extends DialPlanOverrides> = {
+  [K in keyof O]: O[K] extends null ? never : K;
+}[keyof O] &
+  string;
+
+/**
+ * Union of plan IDs produced by `mergeDialPlans<O>`:
+ * default IDs minus removed keys, plus all non-null override keys.
+ * Assumes the default `base` (`DEFAULT_DIAL_PLANS_MAP`) is used.
+ */
+export type MergedIds<O extends DialPlanOverrides> = Exclude<DefaultCountryId, NullKeys<O>> | NonNullKeys<O>;
 
 /**
  * Merge overrides into a dial-plans map and return the result as an array.
@@ -21,13 +50,13 @@ import { type DialPlan } from './types';
  * const myPlans = mergeDialPlans({
  *   DE: { pattern: '## #########' },                         // change Germany's pattern
  *   US: null,                                                // remove United States
- *   XX: { cc: '999', pattern: '###-###', label: 'Custom' }, // add new
+ *   XX: { cc: '999', pattern: '###-###', label: { en: 'Custom', ru: 'Кастом' } }, // add new
  * });
  */
-export function mergeDialPlans(
-  overrides: Record<string, Partial<Omit<DialPlan, 'id'>> | null>,
+export function mergeDialPlans<O extends DialPlanOverrides>(
+  overrides: O,
   base: Record<string, DialPlan> = DEFAULT_DIAL_PLANS_MAP,
-): DialPlan[] {
+): (DialPlan & { id: MergedIds<O> })[] {
   const result: Record<string, DialPlan> = { ...base };
 
   Object.entries(overrides).forEach(([key, patch]) => {
@@ -47,5 +76,5 @@ export function mergeDialPlans(
     }
   });
 
-  return Object.values(result).filter((plan) => Boolean(plan.pattern));
+  return Object.values(result).filter((plan) => Boolean(plan.pattern)) as (DialPlan & { id: MergedIds<O> })[];
 }

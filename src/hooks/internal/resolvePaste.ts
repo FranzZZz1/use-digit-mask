@@ -1,6 +1,7 @@
 import { extractDigits } from '../../utils/extractDigits';
 import { type PasteStripPrefix } from '../types';
 
+import { applyNormalize } from './applyNormalize';
 import { type MaskMeta } from './useMaskMeta';
 
 /**
@@ -8,10 +9,13 @@ import { type MaskMeta } from './useMaskMeta';
  *
  * activate-prefix — вставлен только prefix (например '+7') в неактивное поле.
  *                   Активируем маску, тело остаётся пустым.
+ * ignore          — во вставленном тексте нет ни одной цифры (например, скопировали
+ *                    слово) -> откатить вставку, не удаляя выделенные цифры.
  * apply           — применить digits к маске начиная с leftDigitsStart.
  */
 export type ResolvePasteResult =
   | { kind: 'activate-prefix' }
+  | { kind: 'ignore' }
   | { kind: 'apply'; digits: string; caretDigitsOnLeft: number };
 
 export type ResolvePasteOptions = {
@@ -30,6 +34,11 @@ export type ResolvePasteOptions = {
   startsWithAllowedPrefix: (digits: string) => boolean;
   normalize?: (digits: string) => string;
   pasteStripPrefix?: PasteStripPrefix;
+  /**
+   * When `true` and there is no active selection, pasted digits overwrite
+   * existing digits starting at the cursor position instead of inserting them.
+   */
+  overwrite?: boolean;
 };
 
 function isPrefixOnly(
@@ -100,8 +109,8 @@ export function resolvePaste({
   startsWithAllowedPrefix,
   normalize,
   pasteStripPrefix = 'overflow',
+  overwrite = false,
 }: ResolvePasteOptions): ResolvePasteResult {
-  const norm = (d: string) => (normalize ? normalize(d) : d);
   const pastedDigitsRaw = extractDigits(pasted);
 
   const insertingAtStart = leftDigitsStart === 0;
@@ -127,9 +136,17 @@ export function resolvePaste({
   });
 
   const strippedRaw = strip ? stripAllowedPrefix(pastedDigitsRaw) : pastedDigitsRaw;
-  const insertDigits = norm(strippedRaw);
+  const insertDigits = applyNormalize(normalize, strippedRaw);
 
-  const nextRaw = prevDigits.slice(0, leftDigitsStart) + insertDigits + prevDigits.slice(leftDigitsEnd);
+  const hasSelection = leftDigitsStart !== leftDigitsEnd;
+
+  if (insertDigits === '' && pasted !== '' && hasSelection) {
+    return { kind: 'ignore' };
+  }
+
+  const tailStart = overwrite && !hasSelection ? leftDigitsStart + insertDigits.length : leftDigitsEnd;
+
+  const nextRaw = prevDigits.slice(0, leftDigitsStart) + insertDigits + prevDigits.slice(tailStart);
   const digits = nextRaw.slice(0, maskMeta.maxDigits);
   const caretDigitsOnLeft = Math.min(leftDigitsStart + insertDigits.length, maskMeta.maxDigits);
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PHONE_MASK } from '../constants';
 
-import { fireChangeAt, getInput, TestInput } from './_helpers';
+import { fireChangeAt, getInput, RussiaPhone, TestInput, UkPhone, UsPhone } from './_helpers';
 
 describe('Базовый ввод', () => {
   it('пустая маска - инпут пуст', () => {
@@ -129,5 +129,113 @@ describe('Ввод в зону префикса (курсор перед бук�
     const input = getInput();
     fireChangeAt(input, '+a7 (___) ___-__-__', 2);
     expect(input.value).toBe('+7 (___) ___-__-__');
+  });
+});
+
+describe('Ввод в зону префикса — США "+1 (###) ###-####"', () => {
+  it('cursor=3 ≤ prefixLength=4 — цифра идёт в первый слот тела', () => {
+    render(<UsPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+15 (___) ___-____', 3);
+    expect(input.value).toBe('+1 (5__) ___-____');
+  });
+
+  it('cursor=1 (перед первым символом) — цифра идёт в первый слот', () => {
+    render(<UsPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '5+1 (___) ___-____', 1);
+    expect(input.value).toBe('+1 (5__) ___-____');
+  });
+
+  it('clear: входная строка является началом visiblePrefix — поле очищается', () => {
+    render(<UsPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+1 ', 3);
+    expect(input.value).toBe('+1 (___) ___-____');
+  });
+
+  it('не-цифра в зоне префикса — значение не меняется', () => {
+    render(<UsPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+a1 (___) ___-____', 2);
+    expect(input.value).toBe('+1 (___) ___-____');
+  });
+
+  it('с существующими цифрами — новая цифра встаёт в начало тела', () => {
+    render(<UsPhone initialValue="+1 (234) 567-8901" />);
+    const input = getInput();
+    fireChangeAt(input, '+51 (234) 567-8901', 2);
+    expect(input.value).toBe('+1 (523) 456-7890');
+  });
+});
+
+describe('Ввод в зону префикса — Великобритания "+44 #### ######" (двузначный cc)', () => {
+  it('cursor=3 ≤ prefixLength=4 — цифра идёт в первый слот тела', () => {
+    render(<UkPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+454 ____ ______', 3);
+    expect(input.value).toBe('+44 5___ ______');
+  });
+
+  it('cursor=4 = prefixLength (граница) — цифра идёт в первый слот', () => {
+    render(<UkPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+445 ____ ______', 4);
+    expect(input.value).toBe('+44 5___ ______');
+  });
+
+  it('clear: часть двузначного префикса "+4" — поле очищается до шаблона', () => {
+    render(<UkPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+4', 2);
+    expect(input.value).toBe('+44 ____ ______');
+  });
+
+  it('не-цифра в зоне двузначного префикса — значение не меняется', () => {
+    render(<UkPhone alwaysActive />);
+    const input = getInput();
+    fireChangeAt(input, '+4a4 ____ ______', 3);
+    expect(input.value).toBe('+44 ____ ______');
+  });
+
+  it('с существующими цифрами — новая цифра встаёт в начало тела', () => {
+    render(<UkPhone initialValue="+44 1234 567890" />);
+    const input = getInput();
+    fireChangeAt(input, '+454 1234 567890', 3);
+    expect(input.value).toBe('+44 5123 456789');
+  });
+});
+
+describe('trimMaskTail + префикс-маска', () => {
+  it('пустое неактивное поле — показывает ""', () => {
+    render(<RussiaPhone trimMaskTail />);
+    expect(getInput().value).toBe('');
+  });
+
+  it('alwaysActive, пустое поле — показывает только visiblePrefix', () => {
+    render(<RussiaPhone alwaysActive trimMaskTail />);
+    expect(getInput().value).toBe('+7 (');
+  });
+
+  it('1 цифра — prefix + одна цифра, без плейсхолдеров', () => {
+    render(<RussiaPhone trimMaskTail />);
+    const input = getInput();
+    fireChangeAt(input, '7', 1);
+    fireChangeAt(input, '+7 (9__) ___-__-__', 5);
+    expect(input.value).toBe('+7 (9');
+  });
+
+  it('частичное заполнение — обрезается по последнему заполненному слоту', () => {
+    render(<RussiaPhone trimMaskTail />);
+    const input = getInput();
+    fireChangeAt(input, '999123', 6);
+    expect(input.value).toBe('+7 (999) 123');
+  });
+
+  it('полная маска — нет хвостовых плейсхолдеров', () => {
+    render(<RussiaPhone trimMaskTail />);
+    const input = getInput();
+    fireChangeAt(input, '79991234567', 11);
+    expect(input.value).toBe('+7 (999) 123-45-67');
   });
 });

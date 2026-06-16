@@ -73,7 +73,7 @@ describe('useCountrySelect - inputRef фокус после выбора', () =>
                 <li key={p.id}>
                   <button
                     type="button"
-                    aria-label={p.label ?? p.id ?? p.cc}
+                    aria-label={p.label?.en ?? p.id ?? p.cc}
                     data-testid={`item-${p.id}`}
                     onClick={() => {
                       hook.select(p);

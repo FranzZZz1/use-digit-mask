@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
 
-import { type MaskMeta } from './useMaskMeta';
+import { clamp } from '../../utils/clamp';
 
-const clamp = (num: number, min: number, max: number) => Math.max(min, Math.min(max, num));
+import { detectGroups } from './applyBlocks';
+import { type MaskMeta } from './useMaskMeta';
 
 export function useCaretPositions(maskMeta: MaskMeta) {
   const getCaretPosAfterDigits = useCallback(
@@ -44,5 +45,46 @@ export function useCaretPositions(maskMeta: MaskMeta) {
     [allowedCaretPositions, maskMeta.maskLength],
   );
 
-  return { getCaretPosAfterDigits, allowedCaretPositions, getPrevCaretPos, getNextCaretPos };
+  const groupBoundaries = useMemo(() => {
+    const { digitSlotIndexes, prefixLength, maskLength } = maskMeta;
+    const boundaries = new Set<number>([prefixLength, maskLength]);
+    detectGroups(digitSlotIndexes).forEach((group) => {
+      const startIdx = digitSlotIndexes[group.start];
+      const endIdx = digitSlotIndexes[group.start + group.length - 1];
+      if (startIdx != null) boundaries.add(startIdx);
+      if (endIdx != null) boundaries.add(endIdx + 1);
+    });
+    return Array.from(boundaries).sort((a, b) => a - b);
+  }, [maskMeta]);
+
+  const getPrevGroupBoundary = useCallback(
+    (pos: number): number => {
+      for (let i = groupBoundaries.length - 1; i >= 0; i -= 1) {
+        const candidate = groupBoundaries[i];
+        if (candidate !== undefined && candidate < pos) return candidate;
+      }
+      return groupBoundaries[0] ?? maskMeta.prefixLength;
+    },
+    [groupBoundaries, maskMeta.prefixLength],
+  );
+
+  const getNextGroupBoundary = useCallback(
+    (pos: number): number => {
+      for (let i = 0; i < groupBoundaries.length; i += 1) {
+        const candidate = groupBoundaries[i];
+        if (candidate !== undefined && candidate > pos) return candidate;
+      }
+      return groupBoundaries[groupBoundaries.length - 1] ?? maskMeta.maskLength;
+    },
+    [groupBoundaries, maskMeta.maskLength],
+  );
+
+  return {
+    getCaretPosAfterDigits,
+    allowedCaretPositions,
+    getPrevCaretPos,
+    getNextCaretPos,
+    getPrevGroupBoundary,
+    getNextGroupBoundary,
+  };
 }

@@ -67,7 +67,7 @@ export function CandidatePhone({ onChangeSpy = undefined }: { onChangeSpy?: (v: 
             selectCandidate(c);
           }}
         >
-          {c.label} {c.prefix}
+          {c.label?.en} {c.prefix}
         </button>
       ))}
     </div>
